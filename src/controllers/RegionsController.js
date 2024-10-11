@@ -1,4 +1,4 @@
-const RegionsService = require('../services/RegionsService');
+import RegionsService from '../services/RegionsService.js'; // Atualize para usar 'import' com a extensão '.js'
 
 class RegionsController {
   async getAll(req, res) {
@@ -22,4 +22,4 @@ class RegionsController {
   }
 }
 
-module.exports = new RegionsController();
+export default new RegionsController(); // Substitui 'module.exports' por 'export default'
