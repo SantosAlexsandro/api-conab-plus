@@ -14,7 +14,7 @@ import tokenRoutes from './routes/tokenRoutes';
 import itemRoutes from './routes/itemRoutes';
 import transactionRoutes from './routes/transactionRoutes';
 import transactionItemRoutes from './routes/transactionItemRoutes';
-import regionsRoutes from './routes/RegionsRoutes';
+import regionsRoutes from './routes/regionsRoutes';
 
 const whiteList = [
   'http://localhost:8080',
