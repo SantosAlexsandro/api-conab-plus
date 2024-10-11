@@ -6,4 +6,4 @@ const router = express.Router();
 router.get('/regioes', RegioesController.getAll);
 router.get('/regioes/:id', RegioesController.getById);
 
-module.exports = router;
+export default router;
