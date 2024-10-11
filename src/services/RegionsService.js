@@ -1,9 +1,9 @@
-const axios = require('axios');
+import axios from 'axios';
 
 class RegionsService {
   // Método para buscar todas as regiões
   async getAll(page = 1, filter = '') {
-    // const url = `https://erpteste.conab.com.br/api/Regiao/RetrievePage?filter=${filter}&pageIndex=${page}&pageSize=10`;
+        // const url = `https://erpteste.conab.com.br/api/Regiao/RetrievePage?filter=${filter}&pageIndex=${page}&pageSize=10`;
     const url = `https://erpteste.conab.com.br/api/Regiao/RetrievePage?filter&order&pageSize=8000&pageIndex=1`;
 
     try {
@@ -31,4 +31,4 @@ class RegionsService {
   }
 }
 
-module.exports = new RegionsService();
+export default new RegionsService(); // Substitui 'module.exports' por 'export default'
