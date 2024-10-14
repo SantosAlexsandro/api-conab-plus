@@ -3,7 +3,7 @@ import CategoryController from '../controllers/CategoryController.js'; // Certif
 
 const router = express.Router();
 
-router.get('/Categoria', CategoryController.getAll);
-router.get('/Categoria/:id', CategoryController.getById);
+router.get('/categorias', CategoryController.getAll);
+router.get('/categorias/:id', CategoryController.getById);
 
 export default router;
