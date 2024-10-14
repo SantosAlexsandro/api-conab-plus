@@ -15,8 +15,7 @@ class RegionsService {
         'Accept': 'application/json, text/plain, */*',
       },
       httpsAgent: new _https2.default.Agent({
-        rejectUnauthorized: false, // Desabilita a verificação do certificado SSL (não recomendado em produção)
-        keepAlive: true, // Mantém a conexão viva
+        rejectUnauthorized: false // Desabilita a verificação do certificado SSL (não recomendado em produção)
       }),
 
     });

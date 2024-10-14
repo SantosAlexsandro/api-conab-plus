@@ -3,8 +3,8 @@
 class RegionsController {
   async getAll(req, res) {
     try {
-      const { page = 1, filter = '' } = req.query;
-      const data = await _RegionsServicejs2.default.getAll(page, filter);
+      const { page = 1, filter = "" } = req.query;
+      const { data } = await _RegionsServicejs2.default.getAll(page, filter);
       return res.json(data);
     } catch (error) {
       return res.status(500).json({ message: error.message });
