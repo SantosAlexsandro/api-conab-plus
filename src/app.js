@@ -15,6 +15,7 @@ import itemRoutes from './routes/itemRoutes';
 import transactionRoutes from './routes/transactionRoutes';
 import transactionItemRoutes from './routes/transactionItemRoutes';
 import regionsRoutes from './routes/regionsRoutes';
+import categoryRoutes from './routes/categoryRoutes';
 
 const whiteList = [
   'http://localhost:8080',
@@ -51,6 +52,7 @@ class App {
     this.app.use('/entidades/', entityRoutes);
     this.app.use('/tokens/', tokenRoutes);
     this.app.use('/api/', regionsRoutes);
+    this.app.use('/api/', categoryRoutes);
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
     //this.app.use('/transactions/items/', transactionItemRoutes);
