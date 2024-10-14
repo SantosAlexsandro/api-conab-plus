@@ -13,7 +13,11 @@ class RegionsService {
       headers: {
         'Riosoft-Token': this.token,
         'Accept': 'application/json, text/plain, */*',
-      }
+      },
+      httpsAgent: new _https2.default.Agent({
+        rejectUnauthorized: false // Desabilita a verificação do certificado SSL (não recomendado em produção)
+      }),
+
     });
   }
 
