@@ -49,7 +49,7 @@ class App {
 
   routes() {
     this.app.use('/', _homeRoutes2.default);
-    this.app.use('/entidades/', _entityRoutes2.default);
+    this.app.use('/entities/', _entityRoutes2.default);
     this.app.use('/tokens/', _tokenRoutes2.default);
     this.app.use('/api/', _regionsRoutes2.default);
     this.app.use('/api/', _categoryRoutes2.default);
