@@ -1,15 +1,17 @@
 import Entity from '../models/Entity';
+import EntityService from '../services/EntityService';
 
 class EntityController {
-  async store(req, res) {
+  async create(req, res) {
     try {
-      const novoUser = await Entity.create(req.body);
-      const { id, entity_first_name, entity_email, entity_phone } = novoUser;
-      return res.json({ id, entity_first_name, entity_email, entity_phone });
+      const newEntity = await EntityService.create(req.body);
+      const { data } = newEntity;
+      return res.json( data );
     } catch (e) {
       return res.status(400).json({ errors: e.errors.map((err) => err.message) });
     }
   }
+  /*
 
   //  Index
   async index(req, res) {
@@ -63,7 +65,9 @@ class EntityController {
     } catch (e) {
       return res.status(400).json({ errors: e.errors.map((err) => err.message) });
     }
-  }
+  }*/
+
+
 }
 
 export default new EntityController();
