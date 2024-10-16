@@ -11,18 +11,19 @@ class EntityController {
       return res.status(400).json({ errors: e.errors.map((err) => err.message) });
     }
   }
-  /*
 
-  //  Index
-  async index(req, res) {
+
+  async getAll(req, res) {
     try {
-      const users = await Entity.findAll({ attributes: ['id', 'entity_first_name', 'entity_email', 'entity_phone'] });
-      return res.json(users);
-    } catch (e) {
-      return res.status(400).json({ errors: e.errors.map((err) => err.message) });
+      const { page = 1, filter = "" } = req.query;
+      const { data } = await EntityService.getAll(page, filter);
+      return res.json(data);
+    } catch (error) {
+      return res.status(500).json({ message: error.message });
     }
   }
 
+   /*
   // Show
   async show(req, res) {
     try {

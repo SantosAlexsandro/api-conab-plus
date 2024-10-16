@@ -31,6 +31,24 @@ class EntityService {
     }
   }
 
+  async getAll(page = 1, filter = "") {
+    filter =
+      "DataCadastro >= %232024-10-15T03:00:00.000Z%23 AND DataCadastro < %232024-10-31T03:00:00.000Z%23";
+    const pageSize = 10;
+    const order = "Codigo desc";
+    const url = `/api/Entidade/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=1`;
+    try {
+      // console.log("url", url);
+      const { data, headers } = await this.axiosInstance.get(url);
+      return {
+        data,
+        totalCount: headers["x-total-count"] || 10, // Fallback para 10 se o cabeçalho não existir
+      };
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   // Método para lidar com erros de forma padronizada
   handleError(error) {
     if (error.response) {
@@ -43,7 +61,6 @@ class EntityService {
       console.error("Erro ao configurar a requisição:", error.message);
     }
   }
-
 }
 
 export default new EntityService();
