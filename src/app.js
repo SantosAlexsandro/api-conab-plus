@@ -19,7 +19,8 @@ import categoryRoutes from './routes/categoryRoutes';
 
 const whiteList = [
   'http://localhost:8080',
-  'https://app.conabbombas.com.br'
+  'https://app.conabbombas.com.br',
+  'https://sb.conabbombas.com.br'
 ];
 
 const corsOptions = {
