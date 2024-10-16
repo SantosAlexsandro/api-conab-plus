@@ -19,7 +19,8 @@ var _categoryRoutes = require('./routes/categoryRoutes'); var _categoryRoutes2 =
 
 const whiteList = [
   'http://localhost:8080',
-  'https://app.conabbombas.com.br'
+  'https://app.conabbombas.com.br',
+  'https://sb.conabbombas.com.br'
 ];
 
 const corsOptions = {
