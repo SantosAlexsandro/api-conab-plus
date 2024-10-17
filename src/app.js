@@ -18,6 +18,7 @@ import transactionItemRoutes from './routes/transactionItemRoutes';
 import regionsRoutes from './routes/regionsRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import typeServOrdRoutes from './routes/typeServOrdRoutes';
+import typeAssistanceRoutes from './routes/typeAssistanceRoutes';
 import productRoutes from './routes/productRoutes';
 
 const whiteList = [
@@ -59,6 +60,7 @@ class App {
     this.app.use('/api/', regionsRoutes);
     this.app.use('/api/', categoryRoutes);
     this.app.use('/types-serv-ord/', typeServOrdRoutes);
+    this.app.use('/types-assistance/', typeAssistanceRoutes);
     this.app.use('/products/', productRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);

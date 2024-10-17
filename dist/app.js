@@ -18,6 +18,7 @@ var _transactionItemRoutes = require('./routes/transactionItemRoutes'); var _tra
 var _regionsRoutes = require('./routes/regionsRoutes'); var _regionsRoutes2 = _interopRequireDefault(_regionsRoutes);
 var _categoryRoutes = require('./routes/categoryRoutes'); var _categoryRoutes2 = _interopRequireDefault(_categoryRoutes);
 var _typeServOrdRoutes = require('./routes/typeServOrdRoutes'); var _typeServOrdRoutes2 = _interopRequireDefault(_typeServOrdRoutes);
+var _typeAssistanceRoutes = require('./routes/typeAssistanceRoutes'); var _typeAssistanceRoutes2 = _interopRequireDefault(_typeAssistanceRoutes);
 var _productRoutes = require('./routes/productRoutes'); var _productRoutes2 = _interopRequireDefault(_productRoutes);
 
 const whiteList = [
@@ -59,6 +60,7 @@ class App {
     this.app.use('/api/', _regionsRoutes2.default);
     this.app.use('/api/', _categoryRoutes2.default);
     this.app.use('/types-serv-ord/', _typeServOrdRoutes2.default);
+    this.app.use('/types-assistance/', _typeAssistanceRoutes2.default);
     this.app.use('/products/', _productRoutes2.default);
 
     //this.app.use('/transactions/', transactionRoutes);
