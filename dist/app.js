@@ -16,6 +16,8 @@ var _transactionRoutes = require('./routes/transactionRoutes'); var _transaction
 var _transactionItemRoutes = require('./routes/transactionItemRoutes'); var _transactionItemRoutes2 = _interopRequireDefault(_transactionItemRoutes);
 var _regionsRoutes = require('./routes/regionsRoutes'); var _regionsRoutes2 = _interopRequireDefault(_regionsRoutes);
 var _categoryRoutes = require('./routes/categoryRoutes'); var _categoryRoutes2 = _interopRequireDefault(_categoryRoutes);
+var _typeServOrdRoutes = require('./routes/typeServOrdRoutes'); var _typeServOrdRoutes2 = _interopRequireDefault(_typeServOrdRoutes);
+var _productRoutes = require('./routes/productRoutes'); var _productRoutes2 = _interopRequireDefault(_productRoutes);
 
 const whiteList = [
   'http://localhost:8080',
@@ -47,13 +49,16 @@ class App {
     this.app.use(_express2.default.json());
     // this.app.use('/images/', express.static(resolve(__dirname, '..', 'uploads', 'images')));
   }
-
+//
   routes() {
     this.app.use('/', _homeRoutes2.default);
     this.app.use('/entities/', _entityRoutes2.default);
     this.app.use('/tokens/', _tokenRoutes2.default);
     this.app.use('/api/', _regionsRoutes2.default);
     this.app.use('/api/', _categoryRoutes2.default);
+    this.app.use('/types-serv-ord/', _typeServOrdRoutes2.default);
+    this.app.use('/products/', _productRoutes2.default);
+
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
     //this.app.use('/transactions/items/', transactionItemRoutes);
