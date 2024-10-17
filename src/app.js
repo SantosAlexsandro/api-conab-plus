@@ -16,6 +16,8 @@ import transactionRoutes from './routes/transactionRoutes';
 import transactionItemRoutes from './routes/transactionItemRoutes';
 import regionsRoutes from './routes/regionsRoutes';
 import categoryRoutes from './routes/categoryRoutes';
+import typeServOrdRoutes from './routes/typeServOrdRoutes';
+import productRoutes from './routes/productRoutes';
 
 const whiteList = [
   'http://localhost:8080',
@@ -47,13 +49,16 @@ class App {
     this.app.use(express.json());
     // this.app.use('/images/', express.static(resolve(__dirname, '..', 'uploads', 'images')));
   }
-
+//
   routes() {
     this.app.use('/', homeRoutes);
     this.app.use('/entities/', entityRoutes);
     this.app.use('/tokens/', tokenRoutes);
     this.app.use('/api/', regionsRoutes);
     this.app.use('/api/', categoryRoutes);
+    this.app.use('/types-serv-ord/', typeServOrdRoutes);
+    this.app.use('/products/', productRoutes);
+
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
     //this.app.use('/transactions/items/', transactionItemRoutes);
