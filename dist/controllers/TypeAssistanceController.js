@@ -5,9 +5,17 @@ class TypeAssistanceController {
     try {
       const response = await _TypeAssistanceService2.default.getAll();
       const { data } = response;
-      return res.json( data );
+
+      const updatedData = data.map((typeAssistance) => ({
+        Codigo: typeAssistance.Codigo,
+        Nome: typeAssistance.Descricao,
+      }));
+
+      return res.json(updatedData);
     } catch (e) {
-      return res.status(400).json({ errors: e.errors.map((err) => err.message) });
+      return res
+        .status(400)
+        .json({ errors: e.errors.map((err) => err.message) });
     }
   }
 }
