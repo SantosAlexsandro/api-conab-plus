@@ -33,10 +33,10 @@ class WorkOrderService {
 
   async getAll(page = 1, filter = "") {
     filter =
-      "DataCadastro >= %232024-10-15T03:00:00.000Z%23 AND DataCadastro < %232024-10-31T03:00:00.000Z%23";
+      "DataCadastro >= %232024-10-18T03:00:00.000Z%23 AND DataCadastro < %232024-10-31T03:00:00.000Z%23";
     const pageSize = 10;
-    const order = "Codigo desc";
-    const url = `/api/Entidade/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=1`;
+    const order = ""; // Codigo desc
+    const url = `/api/OrdServ/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=1`;
     try {
       // console.log("url", url);
       const { data, headers } = await this.axiosInstance.get(url);
