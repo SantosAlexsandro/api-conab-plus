@@ -19,6 +19,7 @@ class TypeServOrdService {
 
   // Método para buscar todas as regiões
   async getAll(page = 1, filter = '') {
+    filter = "Codigo = '001' OR Codigo = '007' OR Codigo = '014'"
     const pageSize = 8000;
     const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
 
