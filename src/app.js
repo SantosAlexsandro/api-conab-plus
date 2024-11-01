@@ -24,7 +24,8 @@ import productRoutes from './routes/productRoutes';
 const whiteList = [
   'http://localhost:8080',
   'https://app.conabbombas.com.br',
-  'https://sb.conabbombas.com.br'
+  'https://sb.conabbombas.com.br',
+  'https://app.conabplus.com.br'
 ];
 
 const corsOptions = {
