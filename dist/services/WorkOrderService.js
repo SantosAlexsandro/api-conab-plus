@@ -33,7 +33,7 @@ class WorkOrderService {
 
   async getAll(page = 1, filter = "") {
     filter =
-      "DataCadastro >= %232024-10-18T03:00:00.000Z%23 AND DataCadastro < %232024-10-31T03:00:00.000Z%23";
+      "DataCadastro >= %232024-10-29T03:00:00.000Z%23 AND DataCadastro < %232024-11-30T03:00:00.000Z%23";
     const pageSize = 10;
     const order = "Numero Desc"; //
     const url = `/api/OrdServ/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=1`;
