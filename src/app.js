@@ -23,7 +23,7 @@ import productRoutes from './routes/productRoutes';
 
 const whiteList = [
   'http://localhost:8080',
-  'https://app.conabplus.com.br'
+  'https://app.conabplus.com.br',
   'https://staging.conabplus.com.br'
 ];
 
