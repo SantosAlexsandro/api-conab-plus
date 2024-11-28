@@ -1,4 +1,4 @@
-import StreetTypeService from '../services/CitiesService'; // Atualize para usar 'import' com a extensão '.js'
+import StreetTypeService from '../services/StreetTypeService'; // Atualize para usar 'import' com a extensão '.js'
 
 class StreetTypeController {
   async getAll(req, res) {
