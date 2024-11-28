@@ -20,6 +20,7 @@ import categoryRoutes from './routes/categoryRoutes';
 import typeServOrdRoutes from './routes/typeServOrdRoutes';
 import typeAssistanceRoutes from './routes/typeAssistanceRoutes';
 import productRoutes from './routes/productRoutes';
+import citiesRoutes from './routes/citiesRoutes';
 
 const whiteList = [
   'http://localhost:8080',
@@ -63,6 +64,7 @@ class App {
     this.app.use('/types-serv-ord/', typeServOrdRoutes);
     this.app.use('/types-assistance/', typeAssistanceRoutes);
     this.app.use('/products/', productRoutes);
+    this.app.use('/cities/', citiesRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
