@@ -5,6 +5,7 @@ class RegionsController {
     try {
       const { page = 1, filter = "" } = req.query;
       const { data } = await _RegionsServicejs2.default.getAll(page, filter);
+      res.set('Cache-Control', 'public, max-age=86400'); // Configura o cabeçalho
       return res.json(data);
     } catch (error) {
       return res.status(500).json({ message: error.message });

@@ -20,12 +20,14 @@ var _categoryRoutes = require('./routes/categoryRoutes'); var _categoryRoutes2 =
 var _typeServOrdRoutes = require('./routes/typeServOrdRoutes'); var _typeServOrdRoutes2 = _interopRequireDefault(_typeServOrdRoutes);
 var _typeAssistanceRoutes = require('./routes/typeAssistanceRoutes'); var _typeAssistanceRoutes2 = _interopRequireDefault(_typeAssistanceRoutes);
 var _productRoutes = require('./routes/productRoutes'); var _productRoutes2 = _interopRequireDefault(_productRoutes);
+var _citiesRoutes = require('./routes/citiesRoutes'); var _citiesRoutes2 = _interopRequireDefault(_citiesRoutes);
+var _streetTypeRoutes = require('./routes/streetTypeRoutes'); var _streetTypeRoutes2 = _interopRequireDefault(_streetTypeRoutes);
 
 const whiteList = [
   'http://localhost:8080',
-  'https://app.conabbombas.com.br',
-  'https://sb.conabbombas.com.br',
-  'https://app.conabplus.com.br'
+  'https://app.conabplus.com.br',
+  'https://staging.conabplus.com.br',
+  'https://sb.conabbombas.com.br'
 ];
 
 const corsOptions = {
@@ -63,6 +65,8 @@ class App {
     this.app.use('/types-serv-ord/', _typeServOrdRoutes2.default);
     this.app.use('/types-assistance/', _typeAssistanceRoutes2.default);
     this.app.use('/products/', _productRoutes2.default);
+    this.app.use('/cities/', _citiesRoutes2.default);
+    this.app.use('/street-types/', _streetTypeRoutes2.default);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
