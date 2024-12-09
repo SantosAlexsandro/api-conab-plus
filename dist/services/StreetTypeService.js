@@ -19,7 +19,7 @@ class StreetTypeService {
 
   // Método para buscar todas as regiões
   async getAll(page = 1, filter = '') {
-    const pageSize = 10; // TODO: Ajustar
+    const pageSize = 600;
     const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
 
     try {
