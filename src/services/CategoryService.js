@@ -11,7 +11,6 @@ class CategoryService {
     // Instância configurada do Axios
     this.axiosInstance = axios.create({
       baseURL: this.apiUrl,
-      timeout: 20000, // 10 segundos de timeout
       headers: {
         'Riosoft-Token': this.token,
         'Accept': 'application/json, text/plain, */*',
@@ -21,7 +20,7 @@ class CategoryService {
 
   // Método para buscar todas as regiões
   async getAll(page = 1, filter = '') {
-    const pageSize = 8000;
+    const pageSize = 50;
     const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
 
     try {
