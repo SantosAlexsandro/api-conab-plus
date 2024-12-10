@@ -3,8 +3,9 @@ var _https = require('https'); var _https2 = _interopRequireDefault(_https);
 
 class CitiesService {
   constructor() {
-    this.apiUrl = 'https://erpteste.conab.com.br:7211/api/Cidade';
-    this.token = 'fwqSxis3uU79zWrAxDMAhvtLCMLlyrjQZ44veS2MoTSppX9k4xFJURiEt+UQwpEqFLV77fhb+35l0hVovHB/am51s0ieQvhGCh7FZ2IEnOpdQAHZlltOxVO19iawFO9r8s/3ynyM4BjsRhSq/gJF8mF1nszLuNMwuxKZ74T7eXlMLjpxjmkmX4SxdIa6PlMXgC/PwPRTisBm1Dz7/1KSVpmgokToGoVV/91pVS8DNAXTSI9eR91xccZkOqyVjzDUlO7sj9vRlz9owJ6JUULmt+utMcnDI/gM9PUyCPUSSFJn0sFLmTbenEQnLQJLNf53dxqE+NmuXlB9GDPbnkPeCAcsfBq2CXnqRvPfKy1zBR8HpTSD120NSS2R6ccQkT6kTya1DIzASi3D6/ZgE69cJyXNcwl1nJhhbbv1znxU22AnX4plGMi3kvbv7Ten+QsEKqNDvvqpYCtbsAdanIAMVkkGyQDscZ92TIIrpZ1KHSM=';
+    //this.apiUrl = 'https://erpteste.conab.com.br:7211/api/Cidade';
+    this.apiUrl = 'https://servicodados.ibge.gov.br/api/v1'
+    //this.token = 'fwqSxis3uU79zWrAxDMAhvtLCMLlyrjQZ44veS2MoTSppX9k4xFJURiEt+UQwpEqFLV77fhb+35l0hVovHB/am51s0ieQvhGCh7FZ2IEnOpdQAHZlltOxVO19iawFO9r8s/3ynyM4BjsRhSq/gJF8mF1nszLuNMwuxKZ74T7eXlMLjpxjmkmX4SxdIa6PlMXgC/PwPRTisBm1Dz7/1KSVpmgokToGoVV/91pVS8DNAXTSI9eR91xccZkOqyVjzDUlO7sj9vRlz9owJ6JUULmt+utMcnDI/gM9PUyCPUSSFJn0sFLmTbenEQnLQJLNf53dxqE+NmuXlB9GDPbnkPeCAcsfBq2CXnqRvPfKy1zBR8HpTSD120NSS2R6ccQkT6kTya1DIzASi3D6/ZgE69cJyXNcwl1nJhhbbv1znxU22AnX4plGMi3kvbv7Ten+QsEKqNDvvqpYCtbsAdanIAMVkkGyQDscZ92TIIrpZ1KHSM=';
 
     // Instância configurada do Axios
     this.axiosInstance = _axios2.default.create({
@@ -19,14 +20,21 @@ class CitiesService {
 
   // Método para buscar todas as regiões
   async getAll(page = 1, filter = '') {
-    const pageSize = 6000;
-    const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
+    // const pageSize = 6000;
+    // const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
+    const url = '/localidades/municipios'
 
     try {
       const { data } = await this.axiosInstance.get(url);
-      const brazilianCities = data.filter(city => city.SiglaPais === 'BRA')
+      // console.log(data)
+      const transformedData = data.map(city => ({
+        Codigo: city.id,
+        Nome: city.nome.toUpperCase(),
+        SiglaUnidFederacao: city.microrregiao.mesorregiao.UF.sigla
+      }))
+      // console.log(transformedData)
       return {
-        data: brazilianCities
+        data: transformedData
       };
     } catch (error) {
       this.handleError(error);
