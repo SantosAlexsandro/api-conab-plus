@@ -19,14 +19,14 @@ class CitiesService {
 
   // Método para buscar todas as regiões
   async getAll(page = 1, filter = '') {
-    const pageSize = 40000;
+    const pageSize = 6000;
     const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
 
     try {
-      const { data, headers } = await this.axiosInstance.get(url);
+      const { data } = await this.axiosInstance.get(url);
+      const brazilianCities = data.filter(city => city.SiglaPais === 'BRA')
       return {
-        data,
-        totalCount: headers['x-total-count'] || 10, // Fallback para 10 se o cabeçalho não existir
+        data: brazilianCities
       };
     } catch (error) {
       this.handleError(error);
