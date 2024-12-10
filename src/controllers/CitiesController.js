@@ -5,6 +5,12 @@ class CitiesController {
     try {
       const { page = 1, filter = "" } = req.query;
       const { data } = await CitiesService.getAll(page, filter);
+      console.log(data.length)
+
+      if (!data || data.length === 0) {
+        return res.status(404).json({ message: "No cities found" });
+      }
+
       return res.json(data);
     } catch (error) {
       return res.status(500).json({ message: error.message });
