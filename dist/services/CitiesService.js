@@ -26,16 +26,9 @@ class CitiesService {
 
     try {
       const { data } = await this.axiosInstance.get(url);
-      // console.log(data)
-      const transformedData = data.slice(0, 874).map((city) => ({
-        Codigo: city.id,
-        Nome: city.nome.toUpperCase(),
-        SiglaUnidFederacao: city.microrregiao.mesorregiao.UF.sigla,
-      }));
-      // console.log(transformedData)
 
       return {
-        data: transformedData,
+        data: data,
       };
     } catch (error) {
       this.handleError(error);
