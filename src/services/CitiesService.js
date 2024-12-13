@@ -3,9 +3,10 @@ import https from "https";
 
 class CitiesService {
   constructor() {
-    //this.apiUrl = 'https://erpteste.conab.com.br:7211/api/Cidade';
-    this.apiUrl = "https://servicodados.ibge.gov.br/api/v1";
-    //this.token = 'fwqSxis3uU79zWrAxDMAhvtLCMLlyrjQZ44veS2MoTSppX9k4xFJURiEt+UQwpEqFLV77fhb+35l0hVovHB/am51s0ieQvhGCh7FZ2IEnOpdQAHZlltOxVO19iawFO9r8s/3ynyM4BjsRhSq/gJF8mF1nszLuNMwuxKZ74T7eXlMLjpxjmkmX4SxdIa6PlMXgC/PwPRTisBm1Dz7/1KSVpmgokToGoVV/91pVS8DNAXTSI9eR91xccZkOqyVjzDUlO7sj9vRlz9owJ6JUULmt+utMcnDI/gM9PUyCPUSSFJn0sFLmTbenEQnLQJLNf53dxqE+NmuXlB9GDPbnkPeCAcsfBq2CXnqRvPfKy1zBR8HpTSD120NSS2R6ccQkT6kTya1DIzASi3D6/ZgE69cJyXNcwl1nJhhbbv1znxU22AnX4plGMi3kvbv7Ten+QsEKqNDvvqpYCtbsAdanIAMVkkGyQDscZ92TIIrpZ1KHSM=';
+    this.apiUrl = "https://erpteste.conab.com.br:7211/api/Cidade";
+    //this.apiUrl = "https://servicodados.ibge.gov.br/api/v1";
+    this.token =
+      "fwqSxis3uU79zWrAxDMAhvtLCMLlyrjQZ44veS2MoTSppX9k4xFJURiEt+UQwpEqFLV77fhb+35l0hVovHB/am51s0ieQvhGCh7FZ2IEnOpdQAHZlltOxVO19iawFO9r8s/3ynyM4BjsRhSq/gJF8mF1nszLuNMwuxKZ74T7eXlMLjpxjmkmX4SxdIa6PlMXgC/PwPRTisBm1Dz7/1KSVpmgokToGoVV/91pVS8DNAXTSI9eR91xccZkOqyVjzDUlO7sj9vRlz9owJ6JUULmt+utMcnDI/gM9PUyCPUSSFJn0sFLmTbenEQnLQJLNf53dxqE+NmuXlB9GDPbnkPeCAcsfBq2CXnqRvPfKy1zBR8HpTSD120NSS2R6ccQkT6kTya1DIzASi3D6/ZgE69cJyXNcwl1nJhhbbv1znxU22AnX4plGMi3kvbv7Ten+QsEKqNDvvqpYCtbsAdanIAMVkkGyQDscZ92TIIrpZ1KHSM=";
 
     // Instância configurada do Axios
     this.axiosInstance = axios.create({
@@ -20,22 +21,28 @@ class CitiesService {
 
   // Método para buscar todas as regiões
   async getAll(page = 1, filter = "") {
-    // const pageSize = 6000;
-    // const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
-    const url = "/localidades/municipios";
+    const pageSize = 6000;
+    const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=${page}`;
+    // const url = "/localidades/municipios";
 
     try {
       const { data } = await this.axiosInstance.get(url);
-      // console.log(data)
-      const transformedData = data.map((city) => ({
-        Codigo: city.id,
-        Nome: city.nome.toUpperCase(),
-        SiglaUnidFederacao: city.microrregiao.mesorregiao.UF.sigla,
-      }));
-      // console.log(transformedData)
+
+      const seenIds = new Set(); // Criamos um Set vazio para rastrear IDs únicos.
+
+      const uniqueItems = data.filter((item) => {
+        if (seenIds.has(item.CodigoMunicipioIBGE)) {
+          // Verifica se o ID já foi adicionado ao Set.
+          return false; // Se o ID já existe no Set, este item é descartado (não incluído no array final).
+        }
+        seenIds.add(item.CodigoMunicipioIBGE); // Caso contrário, adicionamos o ID ao Set.
+        return true; // Mantemos este item no array final.
+      });
+
+      console.log('uniqueItems', uniqueItems)
 
       return {
-        data: transformedData,
+        data: uniqueItems,
       };
     } catch (error) {
       this.handleError(error);
