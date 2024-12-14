@@ -1,4 +1,4 @@
-import Item from '../models/Item';
+import Item from '../models/City';
 // import Foto from '../models/Foto';
 
 class ItemController {

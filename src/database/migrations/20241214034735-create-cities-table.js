@@ -1,44 +1,28 @@
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('estimates', {
+    await queryInterface.createTable('cities', {
       id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
       },
-      receiving_date: {
-        type: Sequelize.DATE,
-        allowNull: true,
-      },
-      name_client: {
+      city_cod: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      phone: {
+      full_name: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      name_item: {
+      acronym_federal_unit: {
         type: Sequelize.STRING,
+        allowNull: false,
       },
-      brand_item: {
+      ibge_city_cod: {
         type: Sequelize.STRING,
-      },
-      model_item: {
-        type: Sequelize.STRING,
-      },
-      defect_description: {
-        type: Sequelize.STRING,
-      },
-      technical_report: {
-        type: Sequelize.STRING,
-      },
-      status_transaction: {
-        type: Sequelize.STRING,
-      },
-      total_service_charge: {
-        type: Sequelize.FLOAT,
+        allowNull: false,
+        unique: true, // Garante unicidade no banco de dados
       },
       created_at: {
         type: Sequelize.DATE,
@@ -47,11 +31,11 @@ module.exports = {
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-      },
+      }
     });
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable('estimates');
+    await queryInterface.dropTable('cities');
   },
 };

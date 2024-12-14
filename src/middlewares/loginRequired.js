@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import Entity from '../models/Entity';
+// import Entity from '../models/Entity';
 
 export default async (req, res, next) => {
   const { authorization } = req.headers;

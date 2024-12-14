@@ -12,15 +12,15 @@ import homeRoutes from './routes/homeRoutes';
 import entityRoutes from './routes/entityRoutes';
 import workOrderRoutes from './routes/workOrderRoutes';
 import tokenRoutes from './routes/tokenRoutes';
-import itemRoutes from './routes/itemRoutes';
-import transactionRoutes from './routes/transactionRoutes';
-import transactionItemRoutes from './routes/transactionItemRoutes';
+// import itemRoutes from './routes/itemRoutes';
+// import transactionRoutes from './routes/transactionRoutes';
+// import transactionItemRoutes from './routes/transactionItemRoutes';
 import regionsRoutes from './routes/regionsRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import typeServOrdRoutes from './routes/typeServOrdRoutes';
 import typeAssistanceRoutes from './routes/typeAssistanceRoutes';
 import productRoutes from './routes/productRoutes';
-import citiesRoutes from './routes/citiesRoutes';
+import cityRoutes from './routes/cityRoutes';
 import streetTypeRoutes from './routes/streetTypeRoutes'
 
 const whiteList = [
@@ -65,7 +65,7 @@ class App {
     this.app.use('/types-serv-ord/', typeServOrdRoutes);
     this.app.use('/types-assistance/', typeAssistanceRoutes);
     this.app.use('/products/', productRoutes);
-    this.app.use('/cities/', citiesRoutes);
+    this.app.use('/cities/', cityRoutes);
     this.app.use('/street-types/', streetTypeRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);

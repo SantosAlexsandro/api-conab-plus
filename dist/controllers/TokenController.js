@@ -1,5 +1,5 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _jsonwebtoken = require('jsonwebtoken'); var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
-var _Entity = require('../models/Entity'); var _Entity2 = _interopRequireDefault(_Entity);
+// import Entity from '../models/Entity';
 
 class TokenController {
   async store(req, res) {
@@ -11,7 +11,7 @@ class TokenController {
       });
     }
 
-    const user = await _Entity2.default.findOne({ where: { entity_email: email } });
+    const user = await Entity.findOne({ where: { entity_email: email } });
     //console.log('log', user)
 
     if (!user) {

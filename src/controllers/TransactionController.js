@@ -1,7 +1,7 @@
-import Transaction from '../models/Transaction';
-import TransactionItem from '../models/TransactionItem';
+//import Transaction from '../models/Transaction';
+//import TransactionItem from '../models/TransactionItem';
 // import Item from '../models/Item';
-import Entity from '../models/Entity';
+// import Entity from '../models/Entity';
 
 class TransactionController {
   async index(req, res) {

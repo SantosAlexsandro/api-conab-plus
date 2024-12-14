@@ -1,4 +1,4 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _Entity = require('../models/Entity'); var _Entity2 = _interopRequireDefault(_Entity);
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// import Entity from '../models/Entity';
 var _EntityService = require('../services/EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
 
 class EntityController {

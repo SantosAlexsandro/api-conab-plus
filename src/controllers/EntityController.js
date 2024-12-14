@@ -1,4 +1,4 @@
-import Entity from '../models/Entity';
+// import Entity from '../models/Entity';
 import EntityService from '../services/EntityService';
 
 class EntityController {

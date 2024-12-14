@@ -12,15 +12,15 @@ var _homeRoutes = require('./routes/homeRoutes'); var _homeRoutes2 = _interopReq
 var _entityRoutes = require('./routes/entityRoutes'); var _entityRoutes2 = _interopRequireDefault(_entityRoutes);
 var _workOrderRoutes = require('./routes/workOrderRoutes'); var _workOrderRoutes2 = _interopRequireDefault(_workOrderRoutes);
 var _tokenRoutes = require('./routes/tokenRoutes'); var _tokenRoutes2 = _interopRequireDefault(_tokenRoutes);
-var _itemRoutes = require('./routes/itemRoutes'); var _itemRoutes2 = _interopRequireDefault(_itemRoutes);
-var _transactionRoutes = require('./routes/transactionRoutes'); var _transactionRoutes2 = _interopRequireDefault(_transactionRoutes);
-var _transactionItemRoutes = require('./routes/transactionItemRoutes'); var _transactionItemRoutes2 = _interopRequireDefault(_transactionItemRoutes);
+// import itemRoutes from './routes/itemRoutes';
+// import transactionRoutes from './routes/transactionRoutes';
+// import transactionItemRoutes from './routes/transactionItemRoutes';
 var _regionsRoutes = require('./routes/regionsRoutes'); var _regionsRoutes2 = _interopRequireDefault(_regionsRoutes);
 var _categoryRoutes = require('./routes/categoryRoutes'); var _categoryRoutes2 = _interopRequireDefault(_categoryRoutes);
 var _typeServOrdRoutes = require('./routes/typeServOrdRoutes'); var _typeServOrdRoutes2 = _interopRequireDefault(_typeServOrdRoutes);
 var _typeAssistanceRoutes = require('./routes/typeAssistanceRoutes'); var _typeAssistanceRoutes2 = _interopRequireDefault(_typeAssistanceRoutes);
 var _productRoutes = require('./routes/productRoutes'); var _productRoutes2 = _interopRequireDefault(_productRoutes);
-var _citiesRoutes = require('./routes/citiesRoutes'); var _citiesRoutes2 = _interopRequireDefault(_citiesRoutes);
+var _cityRoutes = require('./routes/cityRoutes'); var _cityRoutes2 = _interopRequireDefault(_cityRoutes);
 var _streetTypeRoutes = require('./routes/streetTypeRoutes'); var _streetTypeRoutes2 = _interopRequireDefault(_streetTypeRoutes);
 
 const whiteList = [
@@ -65,7 +65,7 @@ class App {
     this.app.use('/types-serv-ord/', _typeServOrdRoutes2.default);
     this.app.use('/types-assistance/', _typeAssistanceRoutes2.default);
     this.app.use('/products/', _productRoutes2.default);
-    this.app.use('/cities/', _citiesRoutes2.default);
+    this.app.use('/cities/', _cityRoutes2.default);
     this.app.use('/street-types/', _streetTypeRoutes2.default);
 
     //this.app.use('/transactions/', transactionRoutes);

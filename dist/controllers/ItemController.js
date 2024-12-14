@@ -1,9 +1,9 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _Item = require('../models/Item'); var _Item2 = _interopRequireDefault(_Item);
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _City = require('../models/City'); var _City2 = _interopRequireDefault(_City);
 // import Foto from '../models/Foto';
 
 class ItemController {
   async index(req, res) {
-    const itens = await _Item2.default.findAll({
+    const itens = await _City2.default.findAll({
       attributes: ['id', 'name_item', 'cod_product', 'brand', 'un', 'cod_ean', 'price_product', 'cost_product', 'gross_weight', 'light_weight', 'origin_product', 'classification_type', 'situation', 'type_product', 'vendor', 'observation'],
       order: [['id', 'DESC']], // [Foto, 'id', 'DESC']],
       /* include: {
@@ -16,7 +16,7 @@ class ItemController {
 
   async store(req, res) {
     try {
-      const item = await _Item2.default.create(req.body);
+      const item = await _City2.default.create(req.body);
       return res.json(item);
     } catch (e) {
       console.log(e);
@@ -34,7 +34,7 @@ class ItemController {
           errors: ['Faltando ID'],
         });
       }
-      const item = await _Item2.default.findByPk(id, {
+      const item = await _City2.default.findByPk(id, {
         attributes: ['id', 'name_item', 'cod_product', 'brand', 'un', 'cod_ean', 'price_product', 'cost_product', 'gross_weight', 'light_weight', 'origin_product', 'classification_type', 'situation', 'type_product', 'vendor', 'observation'],
         order: [['id', 'DESC']], // [Foto, 'id', 'DESC']],
         /* include: {
@@ -64,7 +64,7 @@ class ItemController {
           errors: ['Faltando ID'],
         });
       }
-      const item = await _Item2.default.findByPk(id);
+      const item = await _City2.default.findByPk(id);
       if (!item) {
         return res.status(400).json({
           errors: ['Item não existe.'],
@@ -89,7 +89,7 @@ class ItemController {
           errors: ['Faltando ID'],
         });
       }
-      const item = await _Item2.default.findByPk(id);
+      const item = await _City2.default.findByPk(id);
       if (!item) {
         return res.status(400).json({
           errors: ['Item não existe.'],

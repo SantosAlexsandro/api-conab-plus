@@ -1,31 +1,28 @@
-module.exports = {
+"use strict";module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('items', {
+    await queryInterface.createTable('cities', {
       id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
       },
-      name_item: {
+      city_cod: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      cod_product: {
+      full_name: {
         type: Sequelize.STRING,
         allowNull: false,
       },
-      brand: {
+      acronym_federal_unit: {
         type: Sequelize.STRING,
+        allowNull: false,
       },
-      un: {
+      ibge_city_cod: {
         type: Sequelize.STRING,
-      },
-      cod_ean: {
-        type: Sequelize.INTEGER,
-      },
-      price: {
-        type: Sequelize.FLOAT,
+        allowNull: false,
+        unique: true, // Garante unicidade no banco de dados
       },
       created_at: {
         type: Sequelize.DATE,
@@ -34,11 +31,11 @@ module.exports = {
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-      },
+      }
     });
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable('items');
+    await queryInterface.dropTable('cities');
   },
 };
