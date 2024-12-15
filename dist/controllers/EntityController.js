@@ -23,18 +23,18 @@ class EntityController {
     }
   }
 
-   /*
   // Show
   async show(req, res) {
     try {
-      const user = await Entity.findByPk(req.params.id);
-      const { id, nome, email } = user;
-      return res.json({ id, nome, email });
+      const entity = await _EntityService2.default.getById(req.params.id);
+      const { id, nome, email } = entity;
+      return res.json(entity);
     } catch (e) {
       return res.status(400).json({ errors: e.errors.map((err) => err.message) });
     }
   }
 
+  /*
   // Update
   async update(req, res) {
     try {

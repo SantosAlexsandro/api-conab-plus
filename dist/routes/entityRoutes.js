@@ -5,7 +5,7 @@ var _loginRequired = require('../middlewares/loginRequired'); var _loginRequired
 const router = new (0, _express.Router)();
 
 router.get('/', _EntityController2.default.getAll);
-// router.get('/:id', entityController.show); // Lista usuário - Não deveria existir
+router.get('/:id', _EntityController2.default.show);
 router.post('/', _EntityController2.default.create);
 //router.put('/', loginRequired, entityController.update);
 //router.delete('/', loginRequired, entityController.delete);

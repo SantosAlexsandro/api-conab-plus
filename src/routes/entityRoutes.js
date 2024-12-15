@@ -5,7 +5,7 @@ import loginRequired from '../middlewares/loginRequired';
 const router = new Router();
 
 router.get('/', entityController.getAll);
-// router.get('/:id', entityController.show); // Lista usuário - Não deveria existir
+router.get('/:id', entityController.show);
 router.post('/', entityController.create);
 //router.put('/', loginRequired, entityController.update);
 //router.delete('/', loginRequired, entityController.delete);

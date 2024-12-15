@@ -49,6 +49,18 @@ class EntityService {
     }
   }
 
+  async getById(Codigo) {
+    const url = `/api/Entidade/Load?codigo=${Codigo}`;
+    try {
+      const { data, headers } = await this.axiosInstance.get(url);
+      return {
+        data,
+      };
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
   // Método para lidar com erros de forma padronizada
   handleError(error) {
     if (error.response) {
