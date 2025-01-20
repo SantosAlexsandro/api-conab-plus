@@ -1,4 +1,4 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } }var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 var _https = require('https'); var _https2 = _interopRequireDefault(_https);
 
 class EntityService {
@@ -52,7 +52,7 @@ class EntityService {
 
   async getById(Codigo) {
     // const url = `/api/Entidade/Load?codigo=${Codigo}`;
-    const url = `/api/Entidade/Load?codigo=${Codigo}`;
+    const url = `/api/Entidade/Load?codigo=${Codigo}&loadChild=All&loadOneToOne=All`;
     try {
       const { data, headers } = await this.axiosInstance.get(url);
 
@@ -60,7 +60,10 @@ class EntityService {
       data.TipoFisicaJuridica = _nullishCoalesce(data.Tipo, () => ( data.TipoFisicaJuridica));
       delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
-      return { data };
+      data.CaracteristicaImovel = _optionalChain([data, 'access', _ => _.Entidade1Object, 'optionalAccess', _2 => _2.CaracteristicaImovel]);
+      data.CodigoStatus = Number(data.CodigoStatEnt)
+
+      return data ;
     } catch (error) {
       this.handleError(error);
     }

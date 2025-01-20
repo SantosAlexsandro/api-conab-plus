@@ -52,7 +52,7 @@ class EntityService {
 
   async getById(Codigo) {
     // const url = `/api/Entidade/Load?codigo=${Codigo}`;
-    const url = `/api/Entidade/Load?codigo=${Codigo}`;
+    const url = `/api/Entidade/Load?codigo=${Codigo}&loadChild=All&loadOneToOne=All`;
     try {
       const { data, headers } = await this.axiosInstance.get(url);
 
@@ -60,7 +60,10 @@ class EntityService {
       data.TipoFisicaJuridica = data.Tipo ?? data.TipoFisicaJuridica;
       delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
-      return { data };
+      data.CaracteristicaImovel = data.Entidade1Object?.CaracteristicaImovel;
+      data.CodigoStatus = Number(data.CodigoStatEnt)
+
+      return data ;
     } catch (error) {
       this.handleError(error);
     }
