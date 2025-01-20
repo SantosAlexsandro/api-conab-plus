@@ -1,4 +1,4 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } }var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 var _https = require('https'); var _https2 = _interopRequireDefault(_https);
 
 class EntityService {
@@ -53,9 +53,12 @@ class EntityService {
     const url = `/api/Entidade/Load?codigo=${Codigo}`;
     try {
       const { data, headers } = await this.axiosInstance.get(url);
-      return {
-        data,
-      };
+
+      // Sobrescreve a propriedade `Tipo` para garantir a consistência
+      data.TipoFisicaJuridica = _nullishCoalesce(data.Tipo, () => ( data.TipoFisicaJuridica));
+      delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
+
+      return data
     } catch (error) {
       this.handleError(error);
     }

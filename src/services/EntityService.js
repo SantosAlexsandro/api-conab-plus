@@ -53,9 +53,12 @@ class EntityService {
     const url = `/api/Entidade/Load?codigo=${Codigo}`;
     try {
       const { data, headers } = await this.axiosInstance.get(url);
-      return {
-        data,
-      };
+
+      // Sobrescreve a propriedade `Tipo` para garantir a consistência
+      data.TipoFisicaJuridica = data.Tipo ?? data.TipoFisicaJuridica;
+      delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
+
+      return data
     } catch (error) {
       this.handleError(error);
     }
