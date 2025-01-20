@@ -58,7 +58,7 @@ class EntityService {
       data.TipoFisicaJuridica = _nullishCoalesce(data.Tipo, () => ( data.TipoFisicaJuridica));
       delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
-      return data
+      return { data };
     } catch (error) {
       this.handleError(error);
     }
