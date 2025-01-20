@@ -49,14 +49,16 @@ class EntityService {
     }
   }
 
+
   async getById(Codigo) {
     // const url = `/api/Entidade/Load?codigo=${Codigo}`;
-    let filter = `Codigo = ${Codigo}`;
-    const pageSize = 10;
-    const url = `/api/Entidade/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
-
+    const url = `/api/Entidade/Load?codigo=${Codigo}`;
     try {
       const { data, headers } = await this.axiosInstance.get(url);
+
+      // Sobrescreve a propriedade `Tipo` para garantir a consistência
+      data.TipoFisicaJuridica = data.Tipo ?? data.TipoFisicaJuridica;
+      delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
       return { data };
     } catch (error) {
