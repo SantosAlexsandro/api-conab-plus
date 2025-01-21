@@ -32,10 +32,9 @@ class EntityService {
   }
 
   async getAll(page = 1, filter = "") {
-    filter =
-      "DataCadastro >= %232024-10-29T03:00:00.000Z%23 AND DataCadastro < %232024-11-30T03:00:00.000Z%23";
+    filter = ''
     const pageSize = 10;
-    const order = "Codigo desc";
+    const order = "DataCadastro desc";
     const url = `/api/Entidade/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=1`;
     try {
       // console.log("url", url);
