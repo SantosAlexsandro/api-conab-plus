@@ -49,7 +49,6 @@ class EntityService {
     }
   }
 
-
   async getById(Codigo) {
     // const url = `/api/Entidade/Load?codigo=${Codigo}`;
     const url = `/api/Entidade/Load?codigo=${Codigo}&loadChild=All&loadOneToOne=All`;
@@ -61,9 +60,20 @@ class EntityService {
       delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
       data.CaracteristicaImovel = _optionalChain([data, 'access', _ => _.Entidade1Object, 'optionalAccess', _2 => _2.CaracteristicaImovel]);
-      data.CodigoStatus = Number(data.CodigoStatEnt)
+      data.CodigoStatus = Number(data.CodigoStatEnt);
 
-      return data ;
+      console.log(data.Entidade1Object.EntCategChildList)
+
+      let categorias = data.Entidade1Object.EntCategChildList.map((categoria) => {
+        return {
+          Codigo: categoria.CodigoCategoria
+        };
+      });
+      //console.log("categorias", categorias)
+
+      data.Categorias = categorias
+
+      return data;
     } catch (error) {
       this.handleError(error);
     }
