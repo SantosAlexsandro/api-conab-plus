@@ -1,5 +1,6 @@
 import axios from "axios";
 import https from "https";
+import moment from 'moment';
 
 class EntityService {
   constructor() {
@@ -56,12 +57,13 @@ class EntityService {
 
       // Sobrescreve a propriedade `Tipo` para garantir a consistência
       data.TipoFisicaJuridica = data.Tipo ?? data.TipoFisicaJuridica;
-      delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
+      delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessárioos
 
       data.CaracteristicaImovel = data.Entidade1Object?.CaracteristicaImovel;
       data.CodigoStatus = Number(data.CodigoStatEnt);
+      data.DataCadastro = moment(data.DataCadastro).format('DD/MM/YYYY')
 
-      console.log(data.Entidade1Object.EntCategChildList)
+      // console.log(data.Entidade1Object.EntCategChildList)
 
       let categorias = data.Entidade1Object.EntCategChildList.map((categoria) => {
         return {

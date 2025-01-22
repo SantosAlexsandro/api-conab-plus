@@ -1,5 +1,6 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 var _https = require('https'); var _https2 = _interopRequireDefault(_https);
+var _moment = require('moment'); var _moment2 = _interopRequireDefault(_moment);
 
 class EntityService {
   constructor() {
@@ -56,12 +57,13 @@ class EntityService {
 
       // Sobrescreve a propriedade `Tipo` para garantir a consistência
       data.TipoFisicaJuridica = _nullishCoalesce(data.Tipo, () => ( data.TipoFisicaJuridica));
-      delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
+      delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessárioos
 
       data.CaracteristicaImovel = _optionalChain([data, 'access', _ => _.Entidade1Object, 'optionalAccess', _2 => _2.CaracteristicaImovel]);
       data.CodigoStatus = Number(data.CodigoStatEnt);
+      data.DataCadastro = _moment2.default.call(void 0, data.DataCadastro).format('DD/MM/YYYY')
 
-      console.log(data.Entidade1Object.EntCategChildList)
+      // console.log(data.Entidade1Object.EntCategChildList)
 
       let categorias = data.Entidade1Object.EntCategChildList.map((categoria) => {
         return {
