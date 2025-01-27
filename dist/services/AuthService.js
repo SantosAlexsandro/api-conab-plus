@@ -1,17 +1,17 @@
-// AuthService.js
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// AuthService.js
 
-import jwt from "jsonwebtoken";
-import axios from "axios";
-import UserSession from "../models/UserSession";
-import bcrypt from "bcrypt";
-import { encryptPassword } from "../utils/string/crypto";
+var _jsonwebtoken = require('jsonwebtoken'); var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
+var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+var _UserSession = require('../models/UserSession'); var _UserSession2 = _interopRequireDefault(_UserSession);
+var _bcrypt = require('bcrypt'); var _bcrypt2 = _interopRequireDefault(_bcrypt);
+var _crypto = require('../utils/string/crypto');
 
 class AuthService {
   constructor() {
     this.apiUrl = "https://erpteste.conab.com.br:7211";
 
     // Instância configurada do Axios
-    this.axiosInstance = axios.create({
+    this.axiosInstance = _axios2.default.create({
       baseURL: this.apiUrl,
     });
   }
@@ -31,7 +31,7 @@ class AuthService {
       console.log("END autenticação", payload);
 
       // Criptografa a senha
-      const encryptedPassword = encryptPassword(payload.Password);
+      const encryptedPassword = _crypto.encryptPassword.call(void 0, payload.Password);
       console.log("encrypted Password", encryptedPassword);
 
       // Gera o JWT válido até o final do dia
@@ -45,13 +45,13 @@ class AuthService {
         59
       );
 
-      const jwtToken = jwt.sign(
+      const jwtToken = _jsonwebtoken2.default.sign(
         { UserName: data.Nome }, // Payload do JWT
         process.env.JWT_TOKEN_SECRET, //TODO:
         { expiresIn: Math.floor((endOfDay.getTime() - now.getTime()) / 1000) } // Expiração até o fim do dia
       );
 
-      const session = await UserSession.findOne({
+      const session = await _UserSession2.default.findOne({
         where: { userName: data.Nome },
       });
       if (session) {
@@ -62,7 +62,7 @@ class AuthService {
         const expirationDate = new Date(now);
         expirationDate.setMinutes(now.getMinutes() + 20);
 
-        await UserSession.update(
+        await _UserSession2.default.update(
           {
             userName: data.Nome,
             sessionToken: erpToken,
@@ -83,9 +83,9 @@ class AuthService {
          expirationDate.setMinutes(now.getMinutes() + 20);
 
 
-        const passwordHash = await bcrypt.hash(payload.Password, 10);
+        const passwordHash = await _bcrypt2.default.hash(payload.Password, 10);
 
-        await UserSession.create({
+        await _UserSession2.default.create({
           userName: data.Nome,
           passwordHash: passwordHash,
           sessionToken: erpToken,
@@ -114,7 +114,7 @@ class AuthService {
 
       console.log("payload", payload);
 
-      const session = await UserSession.findOne({
+      const session = await _UserSession2.default.findOne({
         where: { userName: data.Nome },
       });
 
@@ -128,7 +128,7 @@ class AuthService {
 
       if (session) {
 
-        await UserSession.update(
+        await _UserSession2.default.update(
           {
             userName: data.Nome,
             sessionToken: erpToken,
@@ -169,4 +169,4 @@ class AuthService {
   }
 }
 
-export default new AuthService();
+exports. default = new AuthService();

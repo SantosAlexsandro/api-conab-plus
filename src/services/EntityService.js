@@ -1,24 +1,35 @@
+// EntityService
+
 import axios from "axios";
 import https from "https";
-import moment from 'moment';
+import moment from "moment";
+import TokenService from "./TokenService";
 
 class EntityService {
   constructor() {
-    //this.apiUrl = process.env.REACT_APP_API_URL;
-    //this.token = process.env.REACT_APP_API_TOKEN;
     this.apiUrl = "https://erpteste.conab.com.br:7211";
-    this.token =
-      "fwqSxis3uU79zWrAxDMAhvtLCMLlyrjQZ44veS2MoTSppX9k4xFJURiEt+UQwpEqFLV77fhb+35l0hVovHB/am51s0ieQvhGCh7FZ2IEnOpdQAHZlltOxVO19iawFO9r8s/3ynyM4BjsRhSq/gJF8mF1nszLuNMwuxKZ74T7eXlMLjpxjmkmX4SxdIa6PlMXgC/PwPRTisBm1Dz7/1KSVpmgokToGoVV/91pVS8DNAXTSI9eR91xccZkOqyVjzDUlO7sj9vRlz9owJ6JUULmt+utMcnDI/gM9PUyCPUSSFJn0sFLmTbenEQnLQJLNf53dxqE+NmuXlB9GDPbnkPeCAcsfBq2CXnqRvPfKy1zBR8HpTSD120NSS2R6ccQkT6kTya1DIzASi3D6/ZgE69cJyXNcwl1nJhhbbv1znxU22AnX4plGMi3kvbv7Ten+QsEKqNDvvqpYCtbsAdanIAMVkkGyQDscZ92TIIrpZ1KHSM=";
 
-    // Instância configurada do Axios
     this.axiosInstance = axios.create({
       baseURL: this.apiUrl,
-      timeout: 20000, // 10 segundos de timeout
+      timeout: 20000, // Timeout de 20 segundos
       headers: {
-        "Riosoft-Token": this.token,
         Accept: "application/json, text/plain, */*",
       },
     });
+
+    // Configura o interceptor para adicionar o token antes de cada requisição
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        const token = TokenService.getToken(); // Obtém o token de sessão global
+        if (token) {
+          config.headers["Riosoft-Token"] = token; // Adiciona o token nos cabeçalhos
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error); // Lida com erros na configuração da requisição
+      }
+    );
   }
 
   // Método para criar uma nova entidade
@@ -33,7 +44,7 @@ class EntityService {
   }
 
   async getAll(page = 1, filter = "") {
-    filter = ''
+    filter = "";
     const pageSize = 10;
     const order = "DataCadastro desc";
     const url = `/api/Entidade/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=1`;
@@ -61,18 +72,20 @@ class EntityService {
 
       data.CaracteristicaImovel = data.Entidade1Object?.CaracteristicaImovel;
       data.CodigoStatus = Number(data.CodigoStatEnt);
-      data.DataCadastro = moment(data.DataCadastro).format('DD/MM/YYYY')
+      data.DataCadastro = moment(data.DataCadastro).format("DD/MM/YYYY");
 
       // console.log(data.Entidade1Object.EntCategChildList)
 
-      let categorias = data.Entidade1Object.EntCategChildList.map((categoria) => {
-        return {
-          Codigo: categoria.CodigoCategoria
-        };
-      });
+      let categorias = data.Entidade1Object.EntCategChildList.map(
+        (categoria) => {
+          return {
+            Codigo: categoria.CodigoCategoria,
+          };
+        }
+      );
       //console.log("categorias", categorias)
 
-      data.Categorias = categorias
+      data.Categorias = categorias;
 
       return data;
     } catch (error) {
