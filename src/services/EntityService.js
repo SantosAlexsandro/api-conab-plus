@@ -1,12 +1,10 @@
-// EntityService
+// EntityService.js
 
 import axios from "axios";
-import https from "https";
 import moment from "moment";
-import TokenService from "./TokenService";
 
 class EntityService {
-  constructor() {
+  constructor(token) {
     this.apiUrl = "https://erpteste.conab.com.br:7211";
 
     this.axiosInstance = axios.create({
@@ -17,12 +15,14 @@ class EntityService {
       },
     });
 
+    // Armazena o token localmente no serviço
+    this.token = token;
+
     // Configura o interceptor para adicionar o token antes de cada requisição
     this.axiosInstance.interceptors.request.use(
       (config) => {
-        const token = TokenService.getToken(); // Obtém o token de sessão global
-        if (token) {
-          config.headers["Riosoft-Token"] = token; // Adiciona o token nos cabeçalhos
+        if (this.token) {
+          config.headers["Riosoft-Token"] = this.token; // Adiciona o token nos cabeçalhos
         }
         return config;
       },
@@ -30,6 +30,11 @@ class EntityService {
         return Promise.reject(error); // Lida com erros na configuração da requisição
       }
     );
+  }
+
+  // Método para atualizar dinamicamente o token
+  setToken(token) {
+    this.token = token;
   }
 
   // Método para criar uma nova entidade
@@ -43,13 +48,13 @@ class EntityService {
     }
   }
 
+  // Método para recuperar entidades paginadas
   async getAll(page = 1, filter = "") {
-    filter = "";
     const pageSize = 10;
     const order = "DataCadastro desc";
-    const url = `/api/Entidade/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=1`;
+    const url = `/api/Entidade/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=${page}`;
+
     try {
-      // console.log("url", url);
       const { data, headers } = await this.axiosInstance.get(url);
       return {
         data,
@@ -60,34 +65,14 @@ class EntityService {
     }
   }
 
+  // Método para recuperar entidade por ID
   async getById(Codigo) {
-    // const url = `/api/Entidade/Load?codigo=${Codigo}`;
     const url = `/api/Entidade/Load?codigo=${Codigo}&loadChild=All&loadOneToOne=All`;
     try {
-      const { data, headers } = await this.axiosInstance.get(url);
+      const { data } = await this.axiosInstance.get(url);
 
-      // Sobrescreve a propriedade `Tipo` para garantir a consistência
-      data.TipoFisicaJuridica = data.Tipo ?? data.TipoFisicaJuridica;
-      delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessárioos
-
-      data.CaracteristicaImovel = data.Entidade1Object?.CaracteristicaImovel;
-      data.CodigoStatus = Number(data.CodigoStatEnt);
-      data.DataCadastro = moment(data.DataCadastro).format("DD/MM/YYYY");
-
-      // console.log(data.Entidade1Object.EntCategChildList)
-
-      let categorias = data.Entidade1Object.EntCategChildList.map(
-        (categoria) => {
-          return {
-            Codigo: categoria.CodigoCategoria,
-          };
-        }
-      );
-      //console.log("categorias", categorias)
-
-      data.Categorias = categorias;
-
-      return data;
+      // Transforma os dados usando um método separado
+      return this.transformEntityData(data);
     } catch (error) {
       this.handleError(error);
     }
@@ -97,13 +82,37 @@ class EntityService {
   handleError(error) {
     if (error.response) {
       console.error("Erro na resposta da API:", error.response.data);
-      console.error("Status:", error.response.status);
-      console.error("Headers:", error.response.headers);
+      throw new Error(
+        `Erro na API: ${error.response.status} - ${error.response.data?.message || "Erro desconhecido"}`
+      );
     } else if (error.request) {
       console.error("Nenhuma resposta da API foi recebida:", error.request);
+      throw new Error("Nenhuma resposta foi recebida da API.");
     } else {
       console.error("Erro ao configurar a requisição:", error.message);
+      throw new Error(`Erro interno: ${error.message}`);
     }
+  }
+
+  // Método para transformar os dados da entidade
+  transformEntityData(data) {
+    // Sobrescreve a propriedade `Tipo` para garantir a consistência
+    data.TipoFisicaJuridica = data.Tipo ?? data.TipoFisicaJuridica;
+    delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
+
+    data.CaracteristicaImovel = data.Entidade1Object?.CaracteristicaImovel;
+    data.CodigoStatus = Number(data.CodigoStatEnt);
+    data.DataCadastro = moment(data.DataCadastro).format("DD/MM/YYYY");
+
+    let categorias = data.Entidade1Object?.EntCategChildList?.map((categoria) => {
+      return {
+        Codigo: categoria.CodigoCategoria,
+      };
+    }) || [];
+
+    data.Categorias = categorias;
+
+    return data;
   }
 }
 

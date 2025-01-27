@@ -14,11 +14,6 @@ export default class UserSession extends Model {
           allowNull: false,
           field: 'encrypted_password',
         },
-        passwordHash: {
-          type: Sequelize.TEXT,
-          allowNull: false,
-          field: 'password_hash',
-        },
         sessionToken: {
           type: Sequelize.TEXT,
           allowNull: false,

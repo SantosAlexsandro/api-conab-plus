@@ -14,11 +14,6 @@
           allowNull: false,
           field: 'encrypted_password',
         },
-        passwordHash: {
-          type: _sequelize2.default.TEXT,
-          allowNull: false,
-          field: 'password_hash',
-        },
         sessionToken: {
           type: _sequelize2.default.TEXT,
           allowNull: false,

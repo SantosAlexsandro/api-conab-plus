@@ -1,16 +1,20 @@
-// AuthService.js
+
+// AuthService
 
 import jwt from "jsonwebtoken";
 import axios from "axios";
-import UserSession from "../models/UserSession";
-import bcrypt from "bcrypt";
 import { encryptPassword } from "../utils/string/crypto";
+import { saveOrUpdateUserSession, calculateSessionExpiration } from "../utils/sessionUtils";
+import { decryptPassword } from "../utils/string/crypto";
 
 class AuthService {
   constructor() {
     this.apiUrl = "https://erpteste.conab.com.br:7211";
 
-    // Instância configurada do Axios
+    if (!process.env.JWT_TOKEN_SECRET) {
+      throw new Error("JWT_TOKEN_SECRET não está definido nas variáveis de ambiente.");
+    }
+
     this.axiosInstance = axios.create({
       baseURL: this.apiUrl,
     });
@@ -21,7 +25,6 @@ class AuthService {
     try {
       console.log("INIT Autenticação", payload);
       const { data, headers } = await this.axiosInstance.post(url, payload);
-      // Extraindo o erpToken diretamente dos headers
       const erpToken = headers["riosoft-token"];
 
       if (!erpToken) {
@@ -30,11 +33,8 @@ class AuthService {
 
       console.log("END autenticação", payload);
 
-      // Criptografa a senha
       const encryptedPassword = encryptPassword(payload.Password);
-      console.log("encrypted Password", encryptedPassword);
 
-      // Gera o JWT válido até o final do dia
       const now = new Date();
       const endOfDay = new Date(
         now.getFullYear(),
@@ -46,53 +46,16 @@ class AuthService {
       );
 
       const jwtToken = jwt.sign(
-        { UserName: data.Nome }, // Payload do JWT
-        process.env.JWT_TOKEN_SECRET, //TODO:
-        { expiresIn: Math.floor((endOfDay.getTime() - now.getTime()) / 1000) } // Expiração até o fim do dia
+        { UserName: data.Nome },
+        process.env.JWT_TOKEN_SECRET,
+        { expiresIn: Math.floor((endOfDay.getTime() - now.getTime()) / 1000) }
       );
 
-      const session = await UserSession.findOne({
-        where: { userName: data.Nome },
+      await saveOrUpdateUserSession({
+        userName: data.Nome,
+        sessionToken: erpToken,
+        encryptedPassword,
       });
-      if (session) {
-        // Obtém a data atual
-        const now = new Date();
-
-        // Adiciona 20 minutos à data atual
-        const expirationDate = new Date(now);
-        expirationDate.setMinutes(now.getMinutes() + 20);
-
-        await UserSession.update(
-          {
-            userName: data.Nome,
-            sessionToken: erpToken,
-            sessionExpiration: expirationDate,
-            encryptedPassword, // Armazena a senha criptografada
-          },
-          {
-            where: { userName: data.Nome }, // Atualiza registros onde o userName corresponde
-          }
-        );
-      } else {
-
-         // Obtém a data atual
-         const now = new Date();
-
-         // Adiciona 20 minutos à data atual
-         const expirationDate = new Date(now);
-         expirationDate.setMinutes(now.getMinutes() + 20);
-
-
-        const passwordHash = await bcrypt.hash(payload.Password, 10);
-
-        await UserSession.create({
-          userName: data.Nome,
-          passwordHash: passwordHash,
-          sessionToken: erpToken,
-          sessionExpiration: expirationDate,
-          encryptedPassword, // Armazena a senha criptografada
-        });
-      }
 
       return { token: jwtToken };
     } catch (error) {
@@ -100,72 +63,43 @@ class AuthService {
     }
   }
 
-  async refrashSessionToken(payload) {
-    const url = `/api/RsLogin/Login`;
-    try {
-      console.log("Iniciando refrash erpToken", payload);
-      const { data, headers } = await this.axiosInstance.post(url, payload);
-      // Extraindo o erpToken diretamente dos headers
-      const erpToken = headers["riosoft-token"];
+  async refreshSession(session) {
+    const password = decryptPassword(session.encryptedPassword);
 
-      if (!erpToken) {
-        throw new Error("erpToken não retornado no cabeçalho da API.");
-      }
+    const { data, headers } = await this.axiosInstance.post("/api/RsLogin/Login", {
+      UserName: session.userName,
+      Password: password,
+    });
 
-      console.log("payload", payload);
-
-      const session = await UserSession.findOne({
-        where: { userName: data.Nome },
-      });
-
-        // Obtém a data atual
-        const now = new Date();
-
-        // Adiciona 20 minutos à data atual
-        const expirationDate = new Date(now);
-        expirationDate.setMinutes(now.getMinutes() + 20);
-
-
-      if (session) {
-
-        await UserSession.update(
-          {
-            userName: data.Nome,
-            sessionToken: erpToken,
-            sessionExpiration: expirationDate,
-            //encryptedPassword, // Armazena a senha criptografada
-          },
-          {
-            where: { userName: data.Nome }, // Atualiza registros onde o userName corresponde
-          }
-        );
-      }
-
-      return {
-        sessionToken: erpToken,
-        sessionExpiration: expirationDate,
-      };
-    } catch (error) {
-      this.handleError(error);
+    const erpToken = headers["riosoft-token"];
+    if (!erpToken) {
+      throw new Error("erpToken não retornado no cabeçalho da API.");
     }
+
+    const expirationDate = calculateSessionExpiration(
+      parseInt(process.env.SESSION_DURATION_MINUTES || "20", 10)
+    );
+
+    session.sessionToken = erpToken;
+    session.sessionExpiration = expirationDate;
+    await session.save();
+
+    return { sessionToken: erpToken, sessionExpiration: expirationDate };
   }
 
-  // Método para lidar com erros de forma padronizada
   handleError(error) {
     if (error.response) {
-      // Erro de resposta da API
       console.error("Erro na resposta da API:", error.response.data);
-      console.error("Status:", error.response.status);
-      console.error("Headers:", error.response.headers);
+      throw new Error(
+        `Erro ${error.response.status}: ${error.response.data?.message || "Erro na API"}`
+      );
     } else if (error.request) {
-      // Nenhuma resposta foi recebida
-      console.error("Nenhuma resposta da API foi recebida:", error.request);
+      console.error("Nenhuma resposta foi recebida:", error.request);
+      throw new Error("Nenhuma resposta foi recebida da API.");
     } else {
-      // Erro ao configurar a requisição
       console.error("Erro ao configurar a requisição:", error.message);
+      throw new Error(`Erro interno: ${error.message}`);
     }
-
-    throw new Error("Erro ao processar a requisição.");
   }
 }
 
