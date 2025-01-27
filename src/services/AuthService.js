@@ -94,7 +94,7 @@ class AuthService {
         });
       }
 
-      return { jwtToken };
+      return { token: jwtToken };
     } catch (error) {
       this.handleError(error);
     }
