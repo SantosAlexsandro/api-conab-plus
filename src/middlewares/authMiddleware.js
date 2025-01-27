@@ -16,21 +16,10 @@ export default async (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET);
-      req.decoded = decoded; // Salve o token decodificado na requisição, se necessário
-    } catch (err) {
-      if (err.name === "TokenExpiredError") {
-        console.error("JWT expirado:", err.message);
-        return res.status(401).json({ message: "Token expirado. Faça login novamente." });
-      } else if (err.name === "JsonWebTokenError") {
-        console.error("JWT inválido:", err.message);
-        return res.status(401).json({ message: "Token inválido. Autenticação falhou." });
-      } else {
-        console.error("Erro desconhecido ao verificar o JWT:", err.message);
-        return res.status(500).json({ message: "Erro interno ao validar token." });
-      }
-    }
+    const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET); // Já verificar e não permite ir adiante.
+    // Se o jwt já não for válido, entendo que o usuário nesse momento precisa ser deslogado, correto?
+
+    console.log("decoded", decoded);
 
     const session = await UserSession.findOne({
       where: { userName: decoded.UserName },
@@ -40,6 +29,14 @@ export default async (req, res, next) => {
     if (!session.sessionToken || !session.sessionExpiration) {
       throw new Error("Token de sessão ou expiração não definido.");
     }
+
+
+    console.log("INIT COMPARE");
+    const password = await bcrypt.compareSync(
+      session.dataValues.passwordHash,
+      process.env.JWT_TOKEN_SECRET
+    ); // Obtenha dinamicamente o hash original
+    console.log("password", password);
 
     // Verifica se o token de sessão do ERP está próximo de expirar ou já expirou
     const expirationTimestamp = new Date(
