@@ -22,12 +22,12 @@ import typeAssistanceRoutes from './routes/typeAssistanceRoutes';
 import productRoutes from './routes/productRoutes';
 import cityRoutes from './routes/cityRoutes';
 import streetTypeRoutes from './routes/streetTypeRoutes'
+import authRoutes from './routes/authRoutes'
 
 const whiteList = [
   'http://localhost:8080',
   'https://app.conabplus.com.br',
-  'https://staging.conabplus.com.br',
-  'https://sb.conabbombas.com.br'
+  'https://staging.conabplus.com.br'
 ];
 
 const corsOptions = {
@@ -67,6 +67,7 @@ class App {
     this.app.use('/products/', productRoutes);
     this.app.use('/cities/', cityRoutes);
     this.app.use('/street-types/', streetTypeRoutes);
+    this.app.use('/auth/', authRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
