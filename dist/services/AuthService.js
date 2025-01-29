@@ -91,7 +91,8 @@ class AuthService {
     if (error.response) {
       console.error("Erro na resposta da API:", error.response.data);
       throw new Error(
-        `Erro ${error.response.status}: ${_optionalChain([error, 'access', _ => _.response, 'access', _2 => _2.data, 'optionalAccess', _3 => _3.message]) || "Erro na API"}`
+        `${_optionalChain([error, 'access', _ => _.response, 'access', _2 => _2.data, 'optionalAccess', _3 => _3.Message]) || "Erro na API"}`
+        //  `Erro ${error.response.status}: ${error.response.data?.Message || "Erro na API"}`
       );
     } else if (error.request) {
       console.error("Nenhuma resposta foi recebida:", error.request);
