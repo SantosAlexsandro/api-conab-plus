@@ -8,7 +8,8 @@ class EntityController {
       const { data } = newEntity;
       return res.json( data );
     } catch (e) {
-      return res.status(400).json({ errors: e.errors.map((err) => err.message) });
+      console.log(e)
+      return res.status(400).json({ errors: e.errors.map((err) => err.Message) });
     }
   }
 

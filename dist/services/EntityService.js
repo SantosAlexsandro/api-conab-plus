@@ -42,7 +42,19 @@ class EntityService {
     const url = "/api/Entidade/InserirAlterarEntidade";
     try {
       const response = await this.axiosInstance.post(url, data);
-      return response;
+
+      if (!_optionalChain([response, 'access', _ => _.data, 'optionalAccess', _2 => _2.Codigo])) {
+        throw new Error("Falha ao obter o código da entidade criada.");
+      }
+
+      // Segunda requisição: Atualização do status
+      const resAfterEdit = await this.axiosInstance.post(url, {
+        Codigo: response.data.Codigo,
+        CodigoStatus: '06',
+      });
+
+
+      return resAfterEdit; // Retorna o resultado final
     } catch (error) {
       this.handleError(error);
     }
@@ -60,6 +72,7 @@ class EntityService {
         data,
         totalCount: headers["x-total-count"] || 10, // Fallback para 10 se o cabeçalho não existir
       };
+
     } catch (error) {
       this.handleError(error);
     }
@@ -83,7 +96,7 @@ class EntityService {
     if (error.response) {
       console.error("Erro na resposta da API:", error.response.data);
       throw new Error(
-        `Erro na API: ${error.response.status} - ${_optionalChain([error, 'access', _ => _.response, 'access', _2 => _2.data, 'optionalAccess', _3 => _3.message]) || "Erro desconhecido"}`
+        `Erro na API: ${error.response.status} - ${_optionalChain([error, 'access', _3 => _3.response, 'access', _4 => _4.data, 'optionalAccess', _5 => _5.message]) || "Erro desconhecido"}`
       );
     } else if (error.request) {
       console.error("Nenhuma resposta da API foi recebida:", error.request);
@@ -94,17 +107,18 @@ class EntityService {
     }
   }
 
+
   // Método para transformar os dados da entidade
   transformEntityData(data) {
     // Sobrescreve a propriedade `Tipo` para garantir a consistência
     data.TipoFisicaJuridica = _nullishCoalesce(data.Tipo, () => ( data.TipoFisicaJuridica));
     delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
-    data.CaracteristicaImovel = _optionalChain([data, 'access', _4 => _4.Entidade1Object, 'optionalAccess', _5 => _5.CaracteristicaImovel]);
-    data.CodigoStatus = Number(data.CodigoStatEnt);
+    data.CaracteristicaImovel = _optionalChain([data, 'access', _6 => _6.Entidade1Object, 'optionalAccess', _7 => _7.CaracteristicaImovel]);
+    data.CodigoStatus = data.CodigoStatEnt;
     data.DataCadastro = _moment2.default.call(void 0, data.DataCadastro).format("DD/MM/YYYY");
 
-    let categorias = _optionalChain([data, 'access', _6 => _6.Entidade1Object, 'optionalAccess', _7 => _7.EntCategChildList, 'optionalAccess', _8 => _8.map, 'call', _9 => _9((categoria) => {
+    let categorias = _optionalChain([data, 'access', _8 => _8.Entidade1Object, 'optionalAccess', _9 => _9.EntCategChildList, 'optionalAccess', _10 => _10.map, 'call', _11 => _11((categoria) => {
       return {
         Codigo: categoria.CodigoCategoria,
       };

@@ -42,7 +42,19 @@ class EntityService {
     const url = "/api/Entidade/InserirAlterarEntidade";
     try {
       const response = await this.axiosInstance.post(url, data);
-      return response;
+
+      if (!response.data?.Codigo) {
+        throw new Error("Falha ao obter o código da entidade criada.");
+      }
+
+      // Segunda requisição: Atualização do status
+      const resAfterEdit = await this.axiosInstance.post(url, {
+        Codigo: response.data.Codigo,
+        CodigoStatus: '06',
+      });
+
+
+      return resAfterEdit; // Retorna o resultado final
     } catch (error) {
       this.handleError(error);
     }
@@ -60,6 +72,7 @@ class EntityService {
         data,
         totalCount: headers["x-total-count"] || 10, // Fallback para 10 se o cabeçalho não existir
       };
+
     } catch (error) {
       this.handleError(error);
     }
@@ -94,6 +107,7 @@ class EntityService {
     }
   }
 
+
   // Método para transformar os dados da entidade
   transformEntityData(data) {
     // Sobrescreve a propriedade `Tipo` para garantir a consistência
@@ -101,7 +115,7 @@ class EntityService {
     delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
     data.CaracteristicaImovel = data.Entidade1Object?.CaracteristicaImovel;
-    data.CodigoStatus = Number(data.CodigoStatEnt);
+    data.CodigoStatus = data.CodigoStatEnt;
     data.DataCadastro = moment(data.DataCadastro).format("DD/MM/YYYY");
 
     let categorias = data.Entidade1Object?.EntCategChildList?.map((categoria) => {
