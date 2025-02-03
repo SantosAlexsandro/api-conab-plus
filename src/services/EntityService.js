@@ -40,6 +40,18 @@ class EntityService {
   // Método para criar uma nova entidade
   async create(data) {
     const url = "/api/Entidade/InserirAlterarEntidade";
+
+    const sanitizeData = (data) => {
+      return Object.keys(data).reduce((acc, key) => {
+        acc[key] = data[key] === null ? "" : data[key];
+        return acc;
+      }, {});
+    };
+
+    const sanitizedData = sanitizeData(data);
+
+    console.log('sanitizedData', sanitizedData)
+
     try {
       const response = await this.axiosInstance.post(url, data);
 
@@ -47,12 +59,44 @@ class EntityService {
         throw new Error("Falha ao obter o código da entidade criada.");
       }
 
-      // Segunda requisição: Atualização do status
+      // Segunda requisição: Atualização do status.
       const resAfterEdit = await this.axiosInstance.post(url, {
-        Codigo: response.data.Codigo,
-        CodigoStatus: '06',
+        Codigo: response.data?.Codigo,
+        CodigoStatus: "06",
       });
 
+      return resAfterEdit; // Retorna o resultado final
+    } catch (error) {
+      this.handleError(error);
+
+    }
+  }
+
+  // Método para criar uma nova entidade
+  async update(data) {
+    const url = "/api/Entidade/InserirAlterarEntidade";
+
+    const sanitizeData = (data) => {
+      return Object.keys(data).reduce((acc, key) => {
+        acc[key] = data[key] === null ? "" : data[key];
+        return acc;
+      }, {});
+    };
+
+    const sanitizedData = sanitizeData(data);
+
+    try {
+      const response = await this.axiosInstance.post(url, sanitizedData);
+
+      if (!response.data?.Codigo) {
+        throw new Error("Falha ao obter o código da entidade criada.");
+      }
+
+      // Segunda requisição: Atualização do status
+      const resAfterEdit = await this.axiosInstance.post(url, {
+        Codigo: response.data?.Codigo,
+        CodigoStatus: "06",
+      });
 
       return resAfterEdit; // Retorna o resultado final
     } catch (error) {
@@ -72,7 +116,6 @@ class EntityService {
         data,
         totalCount: headers["x-total-count"] || 10, // Fallback para 10 se o cabeçalho não existir
       };
-
     } catch (error) {
       this.handleError(error);
     }
@@ -96,7 +139,9 @@ class EntityService {
     if (error.response) {
       console.error("Erro na resposta da API:", error.response.data);
       throw new Error(
-        `Erro na API: ${error.response.status} - ${error.response.data?.message || "Erro desconhecido"}`
+        `Erro na API: ${error.response.status} - ${
+          error.response.data?.message || "Erro desconhecido"
+        }`
       );
     } else if (error.request) {
       console.error("Nenhuma resposta da API foi recebida:", error.request);
@@ -106,7 +151,6 @@ class EntityService {
       throw new Error(`Erro interno: ${error.message}`);
     }
   }
-
 
   // Método para transformar os dados da entidade
   transformEntityData(data) {
@@ -118,13 +162,49 @@ class EntityService {
     data.CodigoStatus = data.CodigoStatEnt;
     data.DataCadastro = moment(data.DataCadastro).format("DD/MM/YYYY");
 
-    let categorias = data.Entidade1Object?.EntCategChildList?.map((categoria) => {
+    // Normalização categorias
+    let categorias =
+      data.Entidade1Object?.EntCategChildList?.map((categoria) => {
+        return {
+          Codigo: categoria.CodigoCategoria,
+        };
+
+
+      }) || [];
+
+    data.Categorias = categorias;
+
+    // Normalização telefones
+    let telefones =
+      data.Entidade1Object?.EntFoneChildList?.map((telefone) => {
+        return {
+          Sequencia: telefone.Sequencia,
+          Tipo: telefone.Tipo,
+          DDD: telefone.DDD,
+          Numero: telefone.Numero,
+          Principal: telefone.Principal,
+          NumeroRamal: telefone.NumeroRamal,
+          Descricao: telefone.Descricao,
+        };
+      }) || [];
+
+    data.Telefones = telefones;
+
+    // Normalização e-mails
+    let emails =
+    data.Entidade1Object?.EntWebChildList?.map((email) => {
       return {
-        Codigo: categoria.CodigoCategoria,
+        Sequencia: email.Sequencia,
+        Tipo: email.Tipo,
+        Email: email.Email,
+        Principal: email.Principal,
+        NFe: email.NFe,
+        NFSe: email.NFSe,
+        Descricao: email.Descricao
       };
     }) || [];
 
-    data.Categorias = categorias;
+  data.Emails = emails;
 
     return data;
   }

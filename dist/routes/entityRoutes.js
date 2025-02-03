@@ -6,8 +6,8 @@ var _authMiddleware = require('../middlewares/authMiddleware'); var _authMiddlew
 const router = new (0, _express.Router)();
 
 router.get('/', _authMiddleware2.default, _EntityController2.default.getAll);
-router.get('/:id', _EntityController2.default.show);
-router.post('/', _EntityController2.default.create);
+router.get('/:id', _authMiddleware2.default, _EntityController2.default.show);
+router.post('/', _authMiddleware2.default, _EntityController2.default.create);
 //router.put('/', loginRequired, entityController.update);
 //router.delete('/', loginRequired, entityController.delete);
 

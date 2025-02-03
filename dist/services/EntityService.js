@@ -40,6 +40,18 @@ class EntityService {
   // Método para criar uma nova entidade
   async create(data) {
     const url = "/api/Entidade/InserirAlterarEntidade";
+
+    const sanitizeData = (data) => {
+      return Object.keys(data).reduce((acc, key) => {
+        acc[key] = data[key] === null ? "" : data[key];
+        return acc;
+      }, {});
+    };
+
+    const sanitizedData = sanitizeData(data);
+
+    console.log('sanitizedData', sanitizedData)
+
     try {
       const response = await this.axiosInstance.post(url, data);
 
@@ -47,12 +59,44 @@ class EntityService {
         throw new Error("Falha ao obter o código da entidade criada.");
       }
 
-      // Segunda requisição: Atualização do status
+      // Segunda requisição: Atualização do status.
       const resAfterEdit = await this.axiosInstance.post(url, {
-        Codigo: response.data.Codigo,
-        CodigoStatus: '06',
+        Codigo: _optionalChain([response, 'access', _3 => _3.data, 'optionalAccess', _4 => _4.Codigo]),
+        CodigoStatus: "06",
       });
 
+      return resAfterEdit; // Retorna o resultado final
+    } catch (error) {
+      this.handleError(error);
+
+    }
+  }
+
+  // Método para criar uma nova entidade
+  async update(data) {
+    const url = "/api/Entidade/InserirAlterarEntidade";
+
+    const sanitizeData = (data) => {
+      return Object.keys(data).reduce((acc, key) => {
+        acc[key] = data[key] === null ? "" : data[key];
+        return acc;
+      }, {});
+    };
+
+    const sanitizedData = sanitizeData(data);
+
+    try {
+      const response = await this.axiosInstance.post(url, sanitizedData);
+
+      if (!_optionalChain([response, 'access', _5 => _5.data, 'optionalAccess', _6 => _6.Codigo])) {
+        throw new Error("Falha ao obter o código da entidade criada.");
+      }
+
+      // Segunda requisição: Atualização do status
+      const resAfterEdit = await this.axiosInstance.post(url, {
+        Codigo: _optionalChain([response, 'access', _7 => _7.data, 'optionalAccess', _8 => _8.Codigo]),
+        CodigoStatus: "06",
+      });
 
       return resAfterEdit; // Retorna o resultado final
     } catch (error) {
@@ -72,7 +116,6 @@ class EntityService {
         data,
         totalCount: headers["x-total-count"] || 10, // Fallback para 10 se o cabeçalho não existir
       };
-
     } catch (error) {
       this.handleError(error);
     }
@@ -96,7 +139,9 @@ class EntityService {
     if (error.response) {
       console.error("Erro na resposta da API:", error.response.data);
       throw new Error(
-        `Erro na API: ${error.response.status} - ${_optionalChain([error, 'access', _3 => _3.response, 'access', _4 => _4.data, 'optionalAccess', _5 => _5.message]) || "Erro desconhecido"}`
+        `Erro na API: ${error.response.status} - ${
+          _optionalChain([error, 'access', _9 => _9.response, 'access', _10 => _10.data, 'optionalAccess', _11 => _11.message]) || "Erro desconhecido"
+        }`
       );
     } else if (error.request) {
       console.error("Nenhuma resposta da API foi recebida:", error.request);
@@ -107,24 +152,59 @@ class EntityService {
     }
   }
 
-
   // Método para transformar os dados da entidade
   transformEntityData(data) {
     // Sobrescreve a propriedade `Tipo` para garantir a consistência
     data.TipoFisicaJuridica = _nullishCoalesce(data.Tipo, () => ( data.TipoFisicaJuridica));
     delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
-    data.CaracteristicaImovel = _optionalChain([data, 'access', _6 => _6.Entidade1Object, 'optionalAccess', _7 => _7.CaracteristicaImovel]);
+    data.CaracteristicaImovel = _optionalChain([data, 'access', _12 => _12.Entidade1Object, 'optionalAccess', _13 => _13.CaracteristicaImovel]);
     data.CodigoStatus = data.CodigoStatEnt;
     data.DataCadastro = _moment2.default.call(void 0, data.DataCadastro).format("DD/MM/YYYY");
 
-    let categorias = _optionalChain([data, 'access', _8 => _8.Entidade1Object, 'optionalAccess', _9 => _9.EntCategChildList, 'optionalAccess', _10 => _10.map, 'call', _11 => _11((categoria) => {
+    // Normalização categorias
+    let categorias =
+      _optionalChain([data, 'access', _14 => _14.Entidade1Object, 'optionalAccess', _15 => _15.EntCategChildList, 'optionalAccess', _16 => _16.map, 'call', _17 => _17((categoria) => {
+        return {
+          Codigo: categoria.CodigoCategoria,
+        };
+
+
+      })]) || [];
+
+    data.Categorias = categorias;
+
+    // Normalização telefones
+    let telefones =
+      _optionalChain([data, 'access', _18 => _18.Entidade1Object, 'optionalAccess', _19 => _19.EntFoneChildList, 'optionalAccess', _20 => _20.map, 'call', _21 => _21((telefone) => {
+        return {
+          Sequencia: telefone.Sequencia,
+          Tipo: telefone.Tipo,
+          DDD: telefone.DDD,
+          Numero: telefone.Numero,
+          Principal: telefone.Principal,
+          NumeroRamal: telefone.NumeroRamal,
+          Descricao: telefone.Descricao,
+        };
+      })]) || [];
+
+    data.Telefones = telefones;
+
+    // Normalização e-mails
+    let emails =
+    _optionalChain([data, 'access', _22 => _22.Entidade1Object, 'optionalAccess', _23 => _23.EntWebChildList, 'optionalAccess', _24 => _24.map, 'call', _25 => _25((email) => {
       return {
-        Codigo: categoria.CodigoCategoria,
+        Sequencia: email.Sequencia,
+        Tipo: email.Tipo,
+        Email: email.Email,
+        Principal: email.Principal,
+        NFe: email.NFe,
+        NFSe: email.NFSe,
+        Descricao: email.Descricao
       };
     })]) || [];
 
-    data.Categorias = categorias;
+  data.Emails = emails;
 
     return data;
   }

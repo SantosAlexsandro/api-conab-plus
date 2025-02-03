@@ -6,8 +6,8 @@ import authMiddleware from '../middlewares/authMiddleware'
 const router = new Router();
 
 router.get('/', authMiddleware, entityController.getAll);
-router.get('/:id', entityController.show);
-router.post('/', entityController.create);
+router.get('/:id', authMiddleware, entityController.show);
+router.post('/', authMiddleware, entityController.create);
 //router.put('/', loginRequired, entityController.update);
 //router.delete('/', loginRequired, entityController.delete);
 
