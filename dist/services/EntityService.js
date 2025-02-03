@@ -37,20 +37,21 @@ class EntityService {
     this.token = token;
   }
 
+
   // Método para criar uma nova entidade
   async create(data) {
     const url = "/api/Entidade/InserirAlterarEntidade";
 
+    /*
     const sanitizeData = (data) => {
       return Object.keys(data).reduce((acc, key) => {
         acc[key] = data[key] === null ? "" : data[key];
         return acc;
       }, {});
     };
-
     const sanitizedData = sanitizeData(data);
-
     console.log('sanitizedData', sanitizedData)
+  */
 
     try {
       const response = await this.axiosInstance.post(url, data);
@@ -76,29 +77,14 @@ class EntityService {
   async update(data) {
     const url = "/api/Entidade/InserirAlterarEntidade";
 
-    const sanitizeData = (data) => {
-      return Object.keys(data).reduce((acc, key) => {
-        acc[key] = data[key] === null ? "" : data[key];
-        return acc;
-      }, {});
-    };
-
-    const sanitizedData = sanitizeData(data);
-
     try {
-      const response = await this.axiosInstance.post(url, sanitizedData);
+      const response = await this.axiosInstance.post(url, data);
 
       if (!_optionalChain([response, 'access', _5 => _5.data, 'optionalAccess', _6 => _6.Codigo])) {
         throw new Error("Falha ao obter o código da entidade criada.");
       }
 
-      // Segunda requisição: Atualização do status
-      const resAfterEdit = await this.axiosInstance.post(url, {
-        Codigo: _optionalChain([response, 'access', _7 => _7.data, 'optionalAccess', _8 => _8.Codigo]),
-        CodigoStatus: "06",
-      });
-
-      return resAfterEdit; // Retorna o resultado final
+      return response; // Retorna o resultado final
     } catch (error) {
       this.handleError(error);
     }
@@ -139,8 +125,8 @@ class EntityService {
     if (error.response) {
       console.error("Erro na resposta da API:", error.response.data);
       throw new Error(
-        `Erro na API: ${error.response.status} - ${
-          _optionalChain([error, 'access', _9 => _9.response, 'access', _10 => _10.data, 'optionalAccess', _11 => _11.message]) || "Erro desconhecido"
+        `${
+          _optionalChain([error, 'access', _7 => _7.response, 'access', _8 => _8.data, 'optionalAccess', _9 => _9.Message]) || "Erro desconhecido"
         }`
       );
     } else if (error.request) {
@@ -158,13 +144,13 @@ class EntityService {
     data.TipoFisicaJuridica = _nullishCoalesce(data.Tipo, () => ( data.TipoFisicaJuridica));
     delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
-    data.CaracteristicaImovel = _optionalChain([data, 'access', _12 => _12.Entidade1Object, 'optionalAccess', _13 => _13.CaracteristicaImovel]);
+    data.CaracteristicaImovel = _optionalChain([data, 'access', _10 => _10.Entidade1Object, 'optionalAccess', _11 => _11.CaracteristicaImovel]);
     data.CodigoStatus = data.CodigoStatEnt;
     data.DataCadastro = _moment2.default.call(void 0, data.DataCadastro).format("DD/MM/YYYY");
 
     // Normalização categorias
     let categorias =
-      _optionalChain([data, 'access', _14 => _14.Entidade1Object, 'optionalAccess', _15 => _15.EntCategChildList, 'optionalAccess', _16 => _16.map, 'call', _17 => _17((categoria) => {
+      _optionalChain([data, 'access', _12 => _12.Entidade1Object, 'optionalAccess', _13 => _13.EntCategChildList, 'optionalAccess', _14 => _14.map, 'call', _15 => _15((categoria) => {
         return {
           Codigo: categoria.CodigoCategoria,
         };
@@ -176,7 +162,7 @@ class EntityService {
 
     // Normalização telefones
     let telefones =
-      _optionalChain([data, 'access', _18 => _18.Entidade1Object, 'optionalAccess', _19 => _19.EntFoneChildList, 'optionalAccess', _20 => _20.map, 'call', _21 => _21((telefone) => {
+      _optionalChain([data, 'access', _16 => _16.Entidade1Object, 'optionalAccess', _17 => _17.EntFoneChildList, 'optionalAccess', _18 => _18.map, 'call', _19 => _19((telefone) => {
         return {
           Sequencia: telefone.Sequencia,
           Tipo: telefone.Tipo,
@@ -192,7 +178,7 @@ class EntityService {
 
     // Normalização e-mails
     let emails =
-    _optionalChain([data, 'access', _22 => _22.Entidade1Object, 'optionalAccess', _23 => _23.EntWebChildList, 'optionalAccess', _24 => _24.map, 'call', _25 => _25((email) => {
+    _optionalChain([data, 'access', _20 => _20.Entidade1Object, 'optionalAccess', _21 => _21.EntWebChildList, 'optionalAccess', _22 => _22.map, 'call', _23 => _23((email) => {
       return {
         Sequencia: email.Sequencia,
         Tipo: email.Tipo,

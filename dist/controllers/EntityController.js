@@ -13,6 +13,18 @@ class EntityController {
     }
   }
 
+  // Update
+  async update(req, res) {
+      try {
+        const newEntity = await _EntityService2.default.update(req.body);
+        const { data } = newEntity;
+        return res.json( data );
+      } catch (e) {
+        console.log(e)
+        return res.status(400).json({ errors: e.errors.map((err) => err.Message) });
+      }
+  }
+
 
   async getAll(req, res) {
     try {
@@ -31,11 +43,13 @@ class EntityController {
       const { id, nome, email } = entity;
       return res.json(entity);
     } catch (e) {
-      return res.status(400).json({ errors: e.errors.map((err) => err.message) });
+      return res.status(400).json({ errors: e.errors.map((err) => err.Message) });
     }
   }
 
-  /*
+
+
+/*
   // Update
   async update(req, res) {
     try {

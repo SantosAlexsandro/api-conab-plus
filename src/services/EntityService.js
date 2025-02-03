@@ -37,20 +37,21 @@ class EntityService {
     this.token = token;
   }
 
+
   // Método para criar uma nova entidade
   async create(data) {
     const url = "/api/Entidade/InserirAlterarEntidade";
 
+    /*
     const sanitizeData = (data) => {
       return Object.keys(data).reduce((acc, key) => {
         acc[key] = data[key] === null ? "" : data[key];
         return acc;
       }, {});
     };
-
     const sanitizedData = sanitizeData(data);
-
     console.log('sanitizedData', sanitizedData)
+  */
 
     try {
       const response = await this.axiosInstance.post(url, data);
@@ -76,29 +77,14 @@ class EntityService {
   async update(data) {
     const url = "/api/Entidade/InserirAlterarEntidade";
 
-    const sanitizeData = (data) => {
-      return Object.keys(data).reduce((acc, key) => {
-        acc[key] = data[key] === null ? "" : data[key];
-        return acc;
-      }, {});
-    };
-
-    const sanitizedData = sanitizeData(data);
-
     try {
-      const response = await this.axiosInstance.post(url, sanitizedData);
+      const response = await this.axiosInstance.post(url, data);
 
       if (!response.data?.Codigo) {
         throw new Error("Falha ao obter o código da entidade criada.");
       }
 
-      // Segunda requisição: Atualização do status
-      const resAfterEdit = await this.axiosInstance.post(url, {
-        Codigo: response.data?.Codigo,
-        CodigoStatus: "06",
-      });
-
-      return resAfterEdit; // Retorna o resultado final
+      return response; // Retorna o resultado final
     } catch (error) {
       this.handleError(error);
     }
@@ -139,8 +125,8 @@ class EntityService {
     if (error.response) {
       console.error("Erro na resposta da API:", error.response.data);
       throw new Error(
-        `Erro na API: ${error.response.status} - ${
-          error.response.data?.message || "Erro desconhecido"
+        `${
+          error.response.data?.Message || "Erro desconhecido"
         }`
       );
     } else if (error.request) {
