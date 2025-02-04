@@ -16,9 +16,13 @@ export default async (req, res, next) => {
 
     // Extrai e verifica o token JWT
     const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET);
 
-    console.log("decoded", decoded);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET);
+    } catch (error) {
+      return res.status(401).json({ message: "Token inválido ou expirado." });
+    }
 
     // Verifica se há uma sessão válida no banco
     const session = await UserSession.findOne({
