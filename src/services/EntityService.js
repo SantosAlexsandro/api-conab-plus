@@ -37,7 +37,6 @@ class EntityService {
     this.token = token;
   }
 
-
   // Método para criar uma nova entidade
   async create(data) {
     const url = "/api/Entidade/InserirAlterarEntidade";
@@ -69,7 +68,6 @@ class EntityService {
       return resAfterEdit; // Retorna o resultado final
     } catch (error) {
       this.handleError(error);
-
     }
   }
 
@@ -87,6 +85,32 @@ class EntityService {
       return response; // Retorna o resultado final
     } catch (error) {
       this.handleError(error);
+    }
+  }
+
+  async savePartialData(data) {
+    // Validação antes de enviar a requisição
+    if (!data.Codigo) {
+      throw new Error("O campo 'Codigo' é obrigatório.");
+    }
+
+    const url = "/api/Entidade/SavePartial?action=Update";
+
+    try {
+      const response = await this.axiosInstance.post(url, data);
+
+      if (!response.data?.Codigo) {
+        throw new Error("Falha ao obter o código da entidade atualizada.");
+      }
+
+      return response; // Retorna o resultado final
+    } catch (error) {
+      console.error("Erro ao salvar dados parciais:", error);
+
+      // Relança o erro para ser tratado pelo controller
+      throw new Error(
+        error.response?.data?.message || "Erro ao salvar dados parciais."
+      );
     }
   }
 
@@ -124,11 +148,7 @@ class EntityService {
   handleError(error) {
     if (error.response) {
       console.error("Erro na resposta da API:", error.response.data);
-      throw new Error(
-        `${
-          error.response.data?.Message || "Erro desconhecido"
-        }`
-      );
+      throw new Error(`${error.response.data?.Message || "Erro desconhecido"}`);
     } else if (error.request) {
       console.error("Nenhuma resposta da API foi recebida:", error.request);
       throw new Error("Nenhuma resposta foi recebida da API.");
@@ -154,8 +174,6 @@ class EntityService {
         return {
           Codigo: categoria.CodigoCategoria,
         };
-
-
       }) || [];
 
     data.Categorias = categorias;
@@ -178,19 +196,19 @@ class EntityService {
 
     // Normalização e-mails
     let emails =
-    data.Entidade1Object?.EntWebChildList?.map((email) => {
-      return {
-        Sequencia: email.Sequencia,
-        Tipo: email.Tipo,
-        Email: email.Email,
-        Principal: email.Principal,
-        NFe: email.NFe,
-        NFSe: email.NFSe,
-        Descricao: email.Descricao
-      };
-    }) || [];
+      data.Entidade1Object?.EntWebChildList?.map((email) => {
+        return {
+          Sequencia: email.Sequencia,
+          Tipo: email.Tipo,
+          Email: email.Email,
+          Principal: email.Principal,
+          NFe: email.NFe,
+          NFSe: email.NFSe,
+          Descricao: email.Descricao,
+        };
+      }) || [];
 
-  data.Emails = emails;
+    data.Emails = emails;
 
     return data;
   }

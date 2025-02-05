@@ -18,12 +18,35 @@ class EntityController {
       try {
         const newEntity = await EntityService.update(req.body);
         const { data } = newEntity;
+
         return res.json( data );
       } catch (e) {
         console.log(e)
         return res.status(400).json({ errors: e.errors.map((err) => err.Message) });
       }
   }
+
+  async savePartialData(req, res) {
+    try {
+      console.log('req.body', req.body);
+      const savedPartialData = await EntityService.savePartialData(req.body);
+
+      if (!savedPartialData) {
+        return res.status(400).json({ error: "Erro ao salvar os dados parciais." });
+      }
+
+      const { data } = savedPartialData;
+      return res.json(data);
+    } catch (e) {
+      console.error("Erro no savePartialData:", e);
+
+      // Garante que o erro seja sempre um array para evitar erros no map()
+      const errorMessage = e.errors?.map((err) => err.message) || [e.message];
+
+      return res.status(400).json({ errors: errorMessage });
+    }
+  }
+
 
 
   async getAll(req, res) {

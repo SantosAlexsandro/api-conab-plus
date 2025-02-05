@@ -37,7 +37,6 @@ class EntityService {
     this.token = token;
   }
 
-
   // Método para criar uma nova entidade
   async create(data) {
     const url = "/api/Entidade/InserirAlterarEntidade";
@@ -69,7 +68,6 @@ class EntityService {
       return resAfterEdit; // Retorna o resultado final
     } catch (error) {
       this.handleError(error);
-
     }
   }
 
@@ -87,6 +85,32 @@ class EntityService {
       return response; // Retorna o resultado final
     } catch (error) {
       this.handleError(error);
+    }
+  }
+
+  async savePartialData(data) {
+    // Validação antes de enviar a requisição
+    if (!data.Codigo) {
+      throw new Error("O campo 'Codigo' é obrigatório.");
+    }
+
+    const url = "/api/Entidade/SavePartial?action=Update";
+
+    try {
+      const response = await this.axiosInstance.post(url, data);
+
+      if (!_optionalChain([response, 'access', _7 => _7.data, 'optionalAccess', _8 => _8.Codigo])) {
+        throw new Error("Falha ao obter o código da entidade atualizada.");
+      }
+
+      return response; // Retorna o resultado final
+    } catch (error) {
+      console.error("Erro ao salvar dados parciais:", error);
+
+      // Relança o erro para ser tratado pelo controller
+      throw new Error(
+        _optionalChain([error, 'access', _9 => _9.response, 'optionalAccess', _10 => _10.data, 'optionalAccess', _11 => _11.message]) || "Erro ao salvar dados parciais."
+      );
     }
   }
 
@@ -124,11 +148,7 @@ class EntityService {
   handleError(error) {
     if (error.response) {
       console.error("Erro na resposta da API:", error.response.data);
-      throw new Error(
-        `${
-          _optionalChain([error, 'access', _7 => _7.response, 'access', _8 => _8.data, 'optionalAccess', _9 => _9.Message]) || "Erro desconhecido"
-        }`
-      );
+      throw new Error(`${_optionalChain([error, 'access', _12 => _12.response, 'access', _13 => _13.data, 'optionalAccess', _14 => _14.Message]) || "Erro desconhecido"}`);
     } else if (error.request) {
       console.error("Nenhuma resposta da API foi recebida:", error.request);
       throw new Error("Nenhuma resposta foi recebida da API.");
@@ -144,25 +164,23 @@ class EntityService {
     data.TipoFisicaJuridica = _nullishCoalesce(data.Tipo, () => ( data.TipoFisicaJuridica));
     delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
 
-    data.CaracteristicaImovel = _optionalChain([data, 'access', _10 => _10.Entidade1Object, 'optionalAccess', _11 => _11.CaracteristicaImovel]);
+    data.CaracteristicaImovel = _optionalChain([data, 'access', _15 => _15.Entidade1Object, 'optionalAccess', _16 => _16.CaracteristicaImovel]);
     data.CodigoStatus = data.CodigoStatEnt;
     data.DataCadastro = _moment2.default.call(void 0, data.DataCadastro).format("DD/MM/YYYY");
 
     // Normalização categorias
     let categorias =
-      _optionalChain([data, 'access', _12 => _12.Entidade1Object, 'optionalAccess', _13 => _13.EntCategChildList, 'optionalAccess', _14 => _14.map, 'call', _15 => _15((categoria) => {
+      _optionalChain([data, 'access', _17 => _17.Entidade1Object, 'optionalAccess', _18 => _18.EntCategChildList, 'optionalAccess', _19 => _19.map, 'call', _20 => _20((categoria) => {
         return {
           Codigo: categoria.CodigoCategoria,
         };
-
-
       })]) || [];
 
     data.Categorias = categorias;
 
     // Normalização telefones
     let telefones =
-      _optionalChain([data, 'access', _16 => _16.Entidade1Object, 'optionalAccess', _17 => _17.EntFoneChildList, 'optionalAccess', _18 => _18.map, 'call', _19 => _19((telefone) => {
+      _optionalChain([data, 'access', _21 => _21.Entidade1Object, 'optionalAccess', _22 => _22.EntFoneChildList, 'optionalAccess', _23 => _23.map, 'call', _24 => _24((telefone) => {
         return {
           Sequencia: telefone.Sequencia,
           Tipo: telefone.Tipo,
@@ -178,19 +196,19 @@ class EntityService {
 
     // Normalização e-mails
     let emails =
-    _optionalChain([data, 'access', _20 => _20.Entidade1Object, 'optionalAccess', _21 => _21.EntWebChildList, 'optionalAccess', _22 => _22.map, 'call', _23 => _23((email) => {
-      return {
-        Sequencia: email.Sequencia,
-        Tipo: email.Tipo,
-        Email: email.Email,
-        Principal: email.Principal,
-        NFe: email.NFe,
-        NFSe: email.NFSe,
-        Descricao: email.Descricao
-      };
-    })]) || [];
+      _optionalChain([data, 'access', _25 => _25.Entidade1Object, 'optionalAccess', _26 => _26.EntWebChildList, 'optionalAccess', _27 => _27.map, 'call', _28 => _28((email) => {
+        return {
+          Sequencia: email.Sequencia,
+          Tipo: email.Tipo,
+          Email: email.Email,
+          Principal: email.Principal,
+          NFe: email.NFe,
+          NFSe: email.NFSe,
+          Descricao: email.Descricao,
+        };
+      })]) || [];
 
-  data.Emails = emails;
+    data.Emails = emails;
 
     return data;
   }

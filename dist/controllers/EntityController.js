@@ -1,4 +1,4 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// import Entity from '../models/Entity';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// import Entity from '../models/Entity';
 var _EntityService = require('../services/EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
 
 class EntityController {
@@ -18,12 +18,35 @@ class EntityController {
       try {
         const newEntity = await _EntityService2.default.update(req.body);
         const { data } = newEntity;
+
         return res.json( data );
       } catch (e) {
         console.log(e)
         return res.status(400).json({ errors: e.errors.map((err) => err.Message) });
       }
   }
+
+  async savePartialData(req, res) {
+    try {
+      console.log('req.body', req.body);
+      const savedPartialData = await _EntityService2.default.savePartialData(req.body);
+
+      if (!savedPartialData) {
+        return res.status(400).json({ error: "Erro ao salvar os dados parciais." });
+      }
+
+      const { data } = savedPartialData;
+      return res.json(data);
+    } catch (e) {
+      console.error("Erro no savePartialData:", e);
+
+      // Garante que o erro seja sempre um array para evitar erros no map()
+      const errorMessage = _optionalChain([e, 'access', _ => _.errors, 'optionalAccess', _2 => _2.map, 'call', _3 => _3((err) => err.message)]) || [e.message];
+
+      return res.status(400).json({ errors: errorMessage });
+    }
+  }
+
 
 
   async getAll(req, res) {
