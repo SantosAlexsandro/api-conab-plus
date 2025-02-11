@@ -23,6 +23,7 @@ var _productRoutes = require('./routes/productRoutes'); var _productRoutes2 = _i
 var _cityRoutes = require('./routes/cityRoutes'); var _cityRoutes2 = _interopRequireDefault(_cityRoutes);
 var _streetTypeRoutes = require('./routes/streetTypeRoutes'); var _streetTypeRoutes2 = _interopRequireDefault(_streetTypeRoutes);
 var _authRoutes = require('./routes/authRoutes'); var _authRoutes2 = _interopRequireDefault(_authRoutes);
+var _addressRoutes = require('./routes/addressRoutes'); var _addressRoutes2 = _interopRequireDefault(_addressRoutes);
 
 const whiteList = [
   'http://localhost:8080',
@@ -68,6 +69,7 @@ class App {
     this.app.use('/cities/', _cityRoutes2.default);
     this.app.use('/street-types/', _streetTypeRoutes2.default);
     this.app.use('/auth/', _authRoutes2.default);
+    this.app.use('/api/', _addressRoutes2.default);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
