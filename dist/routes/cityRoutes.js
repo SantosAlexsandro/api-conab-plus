@@ -5,5 +5,6 @@ const router = _express2.default.Router();
 
 router.post('/sync', _CityController2.default.syncCities); // Sincronizar cidades do ERP
 router.get('/', _CityController2.default.getAllCities); // Buscar todas as cidades
+router.get('/:ibgeCityCod', _CityController2.default.show);
 
 exports. default = router;
