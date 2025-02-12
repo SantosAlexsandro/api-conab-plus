@@ -158,60 +158,53 @@ class EntityService {
     }
   }
 
-  // Método para transformar os dados da entidade
   transformEntityData(data) {
-    // Sobrescreve a propriedade `Tipo` para garantir a consistência
-    data.TipoFisicaJuridica = data.Tipo ?? data.TipoFisicaJuridica;
-    delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
+    // Garantindo consistência no tipo de pessoa jurídica ou física
+    if (data.Tipo) {
+      data.TipoFisicaJuridica = data.Tipo;
+    }
 
     data.CaracteristicaImovel = data.Entidade1Object?.CaracteristicaImovel;
     data.CodigoStatus = data.CodigoStatEnt;
-    data.DataCadastro = moment(data.DataCadastro).format("DD/MM/YYYY");
+    data.Logradouro = data.CodigoTipoLograd;
 
-    // Normalização categorias
-    let categorias =
-      data.Entidade1Object?.EntCategChildList?.map((categoria) => {
-        return {
-          Codigo: categoria.CodigoCategoria,
-        };
-      }) || [];
+    // Reformatação de DataCadastro sem moment.js
+    if (data.DataCadastro) {
+      data.DataCadastro = new Date(data.DataCadastro).toLocaleDateString('pt-BR');
+    }
 
-    data.Categorias = categorias;
+    // Normalização de Categorias
+    data.Categorias = data.Entidade1Object?.EntCategChildList?.map(categoria => ({
+      Codigo: categoria.CodigoCategoria,
+    })) ?? [];
 
-    // Normalização telefones
-    let telefones =
-      data.Entidade1Object?.EntFoneChildList?.map((telefone) => {
-        return {
-          Sequencia: telefone.Sequencia,
-          Tipo: telefone.Tipo,
-          DDD: telefone.DDD,
-          Numero: telefone.Numero,
-          Principal: telefone.Principal,
-          NumeroRamal: telefone.NumeroRamal,
-          Descricao: telefone.Descricao,
-        };
-      }) || [];
+    // Normalização de Telefones
+    data.Telefones = data.Entidade1Object?.EntFoneChildList?.map(telefone => ({
+      Sequencia: telefone.Sequencia,
+      Tipo: telefone.Tipo,
+      DDD: telefone.DDD,
+      Numero: telefone.Numero,
+      Principal: telefone.Principal,
+      NumeroRamal: telefone.NumeroRamal,
+      Descricao: telefone.Descricao,
+    })) ?? [];
 
-    data.Telefones = telefones;
+    // Normalização de E-mails
+    data.Emails = data.Entidade1Object?.EntWebChildList?.map(email => ({
+      Sequencia: email.Sequencia,
+      Tipo: email.Tipo,
+      Email: email.Email,
+      Principal: email.Principal,
+      NFe: email.NFe,
+      NFSe: email.NFSe,
+      Descricao: email.Descricao,
+    })) ?? [];
 
-    // Normalização e-mails
-    let emails =
-      data.Entidade1Object?.EntWebChildList?.map((email) => {
-        return {
-          Sequencia: email.Sequencia,
-          Tipo: email.Tipo,
-          Email: email.Email,
-          Principal: email.Principal,
-          NFe: email.NFe,
-          NFSe: email.NFSe,
-          Descricao: email.Descricao,
-        };
-      }) || [];
-
-    data.Emails = emails;
+    console.debug('Dados transformados:', data); // Melhor para debugging em ambiente de desenvolvimento
 
     return data;
   }
+
 }
 
 export default new EntityService();

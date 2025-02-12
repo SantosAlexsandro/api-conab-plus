@@ -158,60 +158,53 @@ class EntityService {
     }
   }
 
-  // Método para transformar os dados da entidade
   transformEntityData(data) {
-    // Sobrescreve a propriedade `Tipo` para garantir a consistência
-    data.TipoFisicaJuridica = _nullishCoalesce(data.Tipo, () => ( data.TipoFisicaJuridica));
-    delete data.Tipo; // Remove explicitamente `Tipo` se não for mais necessário
+    // Garantindo consistência no tipo de pessoa jurídica ou física
+    if (data.Tipo) {
+      data.TipoFisicaJuridica = data.Tipo;
+    }
 
     data.CaracteristicaImovel = _optionalChain([data, 'access', _15 => _15.Entidade1Object, 'optionalAccess', _16 => _16.CaracteristicaImovel]);
     data.CodigoStatus = data.CodigoStatEnt;
-    data.DataCadastro = _moment2.default.call(void 0, data.DataCadastro).format("DD/MM/YYYY");
+    data.Logradouro = data.CodigoTipoLograd;
 
-    // Normalização categorias
-    let categorias =
-      _optionalChain([data, 'access', _17 => _17.Entidade1Object, 'optionalAccess', _18 => _18.EntCategChildList, 'optionalAccess', _19 => _19.map, 'call', _20 => _20((categoria) => {
-        return {
-          Codigo: categoria.CodigoCategoria,
-        };
-      })]) || [];
+    // Reformatação de DataCadastro sem moment.js
+    if (data.DataCadastro) {
+      data.DataCadastro = new Date(data.DataCadastro).toLocaleDateString('pt-BR');
+    }
 
-    data.Categorias = categorias;
+    // Normalização de Categorias
+    data.Categorias = _nullishCoalesce(_optionalChain([data, 'access', _17 => _17.Entidade1Object, 'optionalAccess', _18 => _18.EntCategChildList, 'optionalAccess', _19 => _19.map, 'call', _20 => _20(categoria => ({
+      Codigo: categoria.CodigoCategoria,
+    }))]), () => ( []));
 
-    // Normalização telefones
-    let telefones =
-      _optionalChain([data, 'access', _21 => _21.Entidade1Object, 'optionalAccess', _22 => _22.EntFoneChildList, 'optionalAccess', _23 => _23.map, 'call', _24 => _24((telefone) => {
-        return {
-          Sequencia: telefone.Sequencia,
-          Tipo: telefone.Tipo,
-          DDD: telefone.DDD,
-          Numero: telefone.Numero,
-          Principal: telefone.Principal,
-          NumeroRamal: telefone.NumeroRamal,
-          Descricao: telefone.Descricao,
-        };
-      })]) || [];
+    // Normalização de Telefones
+    data.Telefones = _nullishCoalesce(_optionalChain([data, 'access', _21 => _21.Entidade1Object, 'optionalAccess', _22 => _22.EntFoneChildList, 'optionalAccess', _23 => _23.map, 'call', _24 => _24(telefone => ({
+      Sequencia: telefone.Sequencia,
+      Tipo: telefone.Tipo,
+      DDD: telefone.DDD,
+      Numero: telefone.Numero,
+      Principal: telefone.Principal,
+      NumeroRamal: telefone.NumeroRamal,
+      Descricao: telefone.Descricao,
+    }))]), () => ( []));
 
-    data.Telefones = telefones;
+    // Normalização de E-mails
+    data.Emails = _nullishCoalesce(_optionalChain([data, 'access', _25 => _25.Entidade1Object, 'optionalAccess', _26 => _26.EntWebChildList, 'optionalAccess', _27 => _27.map, 'call', _28 => _28(email => ({
+      Sequencia: email.Sequencia,
+      Tipo: email.Tipo,
+      Email: email.Email,
+      Principal: email.Principal,
+      NFe: email.NFe,
+      NFSe: email.NFSe,
+      Descricao: email.Descricao,
+    }))]), () => ( []));
 
-    // Normalização e-mails
-    let emails =
-      _optionalChain([data, 'access', _25 => _25.Entidade1Object, 'optionalAccess', _26 => _26.EntWebChildList, 'optionalAccess', _27 => _27.map, 'call', _28 => _28((email) => {
-        return {
-          Sequencia: email.Sequencia,
-          Tipo: email.Tipo,
-          Email: email.Email,
-          Principal: email.Principal,
-          NFe: email.NFe,
-          NFSe: email.NFSe,
-          Descricao: email.Descricao,
-        };
-      })]) || [];
-
-    data.Emails = emails;
+    console.debug('Dados transformados:', data); // Melhor para debugging em ambiente de desenvolvimento
 
     return data;
   }
+
 }
 
 exports. default = new EntityService();
