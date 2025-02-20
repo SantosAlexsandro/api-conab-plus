@@ -24,6 +24,7 @@ var _cityRoutes = require('./routes/cityRoutes'); var _cityRoutes2 = _interopReq
 var _streetTypeRoutes = require('./routes/streetTypeRoutes'); var _streetTypeRoutes2 = _interopRequireDefault(_streetTypeRoutes);
 var _authRoutes = require('./routes/authRoutes'); var _authRoutes2 = _interopRequireDefault(_authRoutes);
 var _addressRoutes = require('./routes/addressRoutes'); var _addressRoutes2 = _interopRequireDefault(_addressRoutes);
+var _gupshupRoutes = require('./routes/gupshupRoutes'); var _gupshupRoutes2 = _interopRequireDefault(_gupshupRoutes);
 
 const whiteList = [
   'http://localhost:8080',
@@ -70,6 +71,7 @@ class App {
     this.app.use('/street-types/', _streetTypeRoutes2.default);
     this.app.use('/auth/', _authRoutes2.default);
     this.app.use('/api/', _addressRoutes2.default);
+    this.app.use('/gupshup/', _gupshupRoutes2.default);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
