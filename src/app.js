@@ -24,6 +24,7 @@ import cityRoutes from './routes/cityRoutes';
 import streetTypeRoutes from './routes/streetTypeRoutes'
 import authRoutes from './routes/authRoutes'
 import addressRoutes from './routes/addressRoutes'
+import gupshupRoutes from './routes/gupshupRoutes'
 
 const whiteList = [
   'http://localhost:8080',
@@ -70,6 +71,7 @@ class App {
     this.app.use('/street-types/', streetTypeRoutes);
     this.app.use('/auth/', authRoutes);
     this.app.use('/api/', addressRoutes);
+    this.app.use('/gupshup/', gupshupRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
