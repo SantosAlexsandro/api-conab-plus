@@ -59,6 +59,18 @@ class EntityController {
     }
   }
 
+    // Retorna entidade por filtro das propriedades
+    async getByFilter(req, res) {
+      try {
+        const { page = 1, filter = "" } = req.query;
+        const { data } = await EntityService.getByFilter(page, filter);
+        return res.json(data);
+      } catch (e) {
+        return res.status(400).json({ errors: e.errors.map((err) => err.Message) });
+      }
+    }
+
+
   // Show
   async show(req, res) {
     try {
@@ -69,8 +81,6 @@ class EntityController {
       return res.status(400).json({ errors: e.errors.map((err) => err.Message) });
     }
   }
-
-
 
 /*
   // Update
