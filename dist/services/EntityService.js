@@ -131,6 +131,24 @@ class EntityService {
     }
   }
 
+
+  async getByFilter(page = 1, filter = "") {
+    const pageSize = 10;
+    const order = "DataCadastro desc";
+    const url = `/api/Entidade/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=${page}`;
+
+    try {
+      const { data, headers } = await this.axiosInstance.get(url);
+      return {
+        data,
+        totalCount: headers["x-total-count"] || 10, // Fallback para 10 se o cabeçalho não existir
+      };
+    } catch (error) {
+      this.handleError(error);
+    }
+  }
+
+
   // Método para recuperar entidade por ID
   async getById(Codigo) {
     const url = `/api/Entidade/Load?codigo=${Codigo}&loadChild=All&loadOneToOne=All`;
@@ -143,6 +161,7 @@ class EntityService {
       this.handleError(error);
     }
   }
+
 
   // Método para lidar com erros de forma padronizada
   handleError(error) {
