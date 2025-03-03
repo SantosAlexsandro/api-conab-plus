@@ -22,6 +22,18 @@ class WorkOrderController {
     }
   }
 
+  async getAllbyTech(req, res) {
+    try {
+      console.log("getAll");
+      const response = await WorkOrderService.getAllbyTech();
+
+      return res.json(response);
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).json({ message: error.message });
+    }
+  }
+
    /*
   // Show
   async show(req, res) {
