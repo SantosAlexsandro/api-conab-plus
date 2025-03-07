@@ -49,6 +49,30 @@ class WorkOrderService {
     }
   }
 
+  async getAllbyTech() {
+    try {
+      const url = `/api/OrdServ/Lista?codigoUsuario=LEONARDO.LIMA&codigoEmpresa=1&dataAtualizacao=01/03/2025`;
+
+      const response = await this.axiosInstance.get(url);
+
+      // 🟢 **Corrige o problema de `multipart/form-data`**
+      // Usa Regex para encontrar o JSON dentro da resposta
+      const match = response.data.match(/\[.*\]/s);
+
+      if (match) {
+        const jsonData = JSON.parse(match[0]); // Converte para JSON real
+        console.log("Dados convertidos:", 'END');
+        return jsonData;
+      } else {
+        console.error("Nenhum JSON válido encontrado na resposta.");
+        throw new Error("Nenhum JSON válido encontrado na resposta da API.");
+      }
+    } catch (error) {
+      this.handleError(error);
+      return null;
+    }
+  }
+
   // Método para lidar com erros de forma padronizada
   handleError(error) {
     if (error.response) {
