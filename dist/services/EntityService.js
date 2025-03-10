@@ -132,11 +132,12 @@ class EntityService {
   }
 
 
+  // Método para recuperar entidade por filtros, exemplos: Por Endereço + Número
   async getByFilter(page = 1, filter = "") {
     const pageSize = 10;
     const order = "DataCadastro desc";
     const url = `/api/Entidade/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=${page}`;
-
+    console.log('url', url)
     try {
       const { data, headers } = await this.axiosInstance.get(url);
       return {
