@@ -5,8 +5,11 @@ var _loginRequired = require('../middlewares/loginRequired'); var _loginRequired
 const router = new (0, _express.Router)();
 
 router.get('/', _WorkOrderController2.default.getAll);
+router.get('/tech', _WorkOrderController2.default.getAllbyTech);
 // router.get('/:id', entityController.show); // Lista usuário - Não deveria existir
 router.post('/', _WorkOrderController2.default.create);
+router.post('/updateStage', _WorkOrderController2.default.updateOrderStage);
+router.get('/nextStages', _WorkOrderController2.default.getNextStages);
 //router.put('/', loginRequired, entityController.update);
 //router.delete('/', loginRequired, entityController.delete);
 

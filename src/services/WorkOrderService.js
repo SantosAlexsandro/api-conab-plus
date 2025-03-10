@@ -73,6 +73,41 @@ class WorkOrderService {
     }
   }
 
+  async updateOrderStage(data) {
+    const url = "/api/OrdServ/Inserir";
+    try {
+      const response = await this.axiosInstance.post(url, data);
+      // Retorna apenas os dados necessários da resposta
+      return {
+        status: response.status,
+        data: response.data,
+        success: true
+      };
+    } catch (error) {
+      this.handleError(error);
+      return {
+        status: error.response?.status || 500,
+        message: error.message,
+        success: false
+      };
+    }
+  }
+
+  async getNextStages() {
+    const url = "/api/TipoEtapa/ListaNew?dataAtualizacao=01/01/1970";
+    try {
+      const response = await this.axiosInstance.get(url);
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+      return {
+        status: error.response?.status || 500,
+        message: error.message,
+        success: false
+      };
+    }
+  }
+
   // Método para lidar com erros de forma padronizada
   handleError(error) {
     if (error.response) {

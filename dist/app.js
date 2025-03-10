@@ -52,8 +52,8 @@ class App {
   middlewares() {
     this.app.use(_cors2.default.call(void 0, corsOptions));
     // this.app.use(helmet());
-    this.app.use(_express2.default.urlencoded({ extended: true }));
-    this.app.use(_express2.default.json());
+    this.app.use(_express2.default.urlencoded({ extended: true, limit: '50mb' }));
+    this.app.use(_express2.default.json({ limit: '50mb' }));
     // this.app.use('/images/', express.static(resolve(__dirname, '..', 'uploads', 'images')));
   }
 //

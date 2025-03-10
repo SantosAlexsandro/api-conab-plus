@@ -22,6 +22,42 @@ class WorkOrderController {
     }
   }
 
+  async getAllbyTech(req, res) {
+    try {
+      console.log("getAll");
+      const response = await _WorkOrderService2.default.getAllbyTech();
+
+      return res.json(response);
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).json({ message: error.message });
+    }
+  }
+
+  // Atualiza a etapa da ordem de serviço
+  async updateOrderStage(req, res) {
+    try {
+      console.log("updateOrderStage");
+      const response = await _WorkOrderService2.default.updateOrderStage(req.body);
+      return res.json(response);
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).json({ message: error.message });
+    }
+  }
+
+  // Retorna as próximas etapas da ordem de serviço
+  async getNextStages(req, res) {
+    try {
+      console.log("getNextStages");
+      const response = await _WorkOrderService2.default.getNextStages();
+      return res.json(response);
+    } catch (error) {
+      console.log("error", error);
+      return res.status(500).json({ message: error.message });
+    }
+  }
+
    /*
   // Show
   async show(req, res) {
