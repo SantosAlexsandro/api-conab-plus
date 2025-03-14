@@ -11,6 +11,7 @@ import express from 'express';
 import homeRoutes from './routes/homeRoutes';
 import entityRoutes from './routes/entityRoutes';
 import workOrderRoutes from './routes/workOrderRoutes';
+import workOrderPhotoRoutes from './routes/workOrderPhotoRoutes';
 import tokenRoutes from './routes/tokenRoutes';
 // import itemRoutes from './routes/itemRoutes';
 // import transactionRoutes from './routes/transactionRoutes';
@@ -61,6 +62,7 @@ class App {
     this.app.use('/', homeRoutes);
     this.app.use('/entities/', entityRoutes);
     this.app.use('/work-orders/', workOrderRoutes);
+    this.app.use('/work-orders-photos/', workOrderPhotoRoutes);
     this.app.use('/tokens/', tokenRoutes);
     this.app.use('/api/', regionsRoutes);
     this.app.use('/api/', categoryRoutes);

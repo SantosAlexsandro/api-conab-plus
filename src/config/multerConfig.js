@@ -1,22 +1,30 @@
 import multer from 'multer';
 import { extname, resolve } from 'path';
 
-const aleatorio = () => Math.floor(Math.random() * 10000 + 10000);
+// Função para gerar um nome de arquivo único
+const generateRandomName = () => Math.floor(Math.random() * 10000 + 10000);
 
-export default {
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype !== 'img/png' && file.mimetype !== 'image/jpeg') {
-      return cb(new multer.MulterError('Arquivo precisa ser PNG ou JPG.'));
-    }
+// Configuração de armazenamento na memória (RAM)
+const memoryStorage = multer.memoryStorage();
 
-    return cb(null, true);
+// Configuração de armazenamento no disco
+const diskStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, resolve(__dirname, '..', '..', 'uploads', 'images'));
   },
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, resolve(__dirname, '..', '..', 'uploads', 'images'));
-    },
-    filename: (req, file, cb) => {
-      cb(null, `${Date.now()}_${aleatorio()}${extname(file.originalname)}`);
-    },
-  }),
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}_${generateRandomName()}${extname(file.originalname)}`);
+  },
+});
+
+// Validação de arquivos
+const fileFilter = (req, file, cb) => {
+  if (!['image/png', 'image/jpeg'].includes(file.mimetype)) {
+    return cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE'), false);
+  }
+  return cb(null, true);
 };
+
+// Criamos as duas instâncias de `multer`, uma para memória e outra para disco
+export const uploadToMemory = multer({ storage: memoryStorage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } });
+export const uploadToDisk = multer({ storage: diskStorage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
