@@ -17,14 +17,37 @@ const diskStorage = _multer2.default.diskStorage({
   },
 });
 
-// Validação de arquivos
-const fileFilter = (req, file, cb) => {
+// Validação de arquivos de imagem
+const imageFileFilter = (req, file, cb) => {
   if (!['image/png', 'image/jpeg'].includes(file.mimetype)) {
     return cb(new _multer2.default.MulterError('LIMIT_UNEXPECTED_FILE'), false);
   }
   return cb(null, true);
 };
 
-// Criamos as duas instâncias de `multer`, uma para memória e outra para disco
- const uploadToMemory = _multer2.default.call(void 0, { storage: memoryStorage, fileFilter, limits: { fileSize: 10 * 1024 * 1024 } }); exports.uploadToMemory = uploadToMemory;
- const uploadToDisk = _multer2.default.call(void 0, { storage: diskStorage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } }); exports.uploadToDisk = uploadToDisk;
+// Validação de arquivos de áudio
+const audioFileFilter = (req, file, cb) => {
+  if (!file.originalname.endsWith('.webm')) {
+    return cb(new _multer2.default.MulterError('LIMIT_UNEXPECTED_FILE'), false);
+  }
+  return cb(null, true);
+};
+
+// Criamos as instâncias de `multer` para diferentes tipos de arquivo
+ const uploadToMemory = _multer2.default.call(void 0, {
+  storage: memoryStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }
+}); exports.uploadToMemory = uploadToMemory;
+
+ const uploadToDisk = _multer2.default.call(void 0, {
+  storage: diskStorage,
+  fileFilter: imageFileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }
+}); exports.uploadToDisk = uploadToDisk;
+
+ const uploadAudioToMemory = _multer2.default.call(void 0, {
+  storage: memoryStorage,
+  fileFilter: audioFileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 }
+}); exports.uploadAudioToMemory = uploadAudioToMemory;
