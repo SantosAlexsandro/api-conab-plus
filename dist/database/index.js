@@ -2,10 +2,12 @@
 var _database = require('../config/database'); var _database2 = _interopRequireDefault(_database);
 var _City = require('../models/City'); var _City2 = _interopRequireDefault(_City);
 var _UserSession = require('../models/UserSession'); var _UserSession2 = _interopRequireDefault(_UserSession);
+var _WorkShift = require('../models/WorkShift'); var _WorkShift2 = _interopRequireDefault(_WorkShift);
 
 const models = [
   _City2.default,
-  _UserSession2.default
+  _UserSession2.default,
+  _WorkShift2.default,
 ];
 
 const connection = new (0, _sequelize2.default)(_database2.default);

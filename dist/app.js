@@ -13,6 +13,8 @@ var _entityRoutes = require('./routes/entityRoutes'); var _entityRoutes2 = _inte
 var _workOrderRoutes = require('./routes/workOrderRoutes'); var _workOrderRoutes2 = _interopRequireDefault(_workOrderRoutes);
 var _workOrderPhotoRoutes = require('./routes/workOrderPhotoRoutes'); var _workOrderPhotoRoutes2 = _interopRequireDefault(_workOrderPhotoRoutes);
 var _workOrderAudioRoutes = require('./routes/workOrderAudioRoutes'); var _workOrderAudioRoutes2 = _interopRequireDefault(_workOrderAudioRoutes);
+var _workShiftRoutes = require('./routes/workShiftRoutes'); var _workShiftRoutes2 = _interopRequireDefault(_workShiftRoutes);
+var _erpUserGroupRoutes = require('./routes/erpUserGroupRoutes'); var _erpUserGroupRoutes2 = _interopRequireDefault(_erpUserGroupRoutes);
 var _tokenRoutes = require('./routes/tokenRoutes'); var _tokenRoutes2 = _interopRequireDefault(_tokenRoutes);
 // import itemRoutes from './routes/itemRoutes';
 // import transactionRoutes from './routes/transactionRoutes';
@@ -65,6 +67,8 @@ class App {
     this.app.use('/work-orders/', _workOrderRoutes2.default);
     this.app.use('/work-orders-photos/', _workOrderPhotoRoutes2.default);
     this.app.use('/work-orders-audios/', _workOrderAudioRoutes2.default);
+    this.app.use('/work-shifts/', _workShiftRoutes2.default);
+    this.app.use('/erp-user-groups/', _erpUserGroupRoutes2.default);
     this.app.use('/tokens/', _tokenRoutes2.default);
     this.app.use('/api/', _regionsRoutes2.default);
     this.app.use('/api/', _categoryRoutes2.default);

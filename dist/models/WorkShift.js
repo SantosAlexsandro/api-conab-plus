@@ -1,18 +1,18 @@
-import Sequelize, { Model } from 'sequelize';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _sequelize = require('sequelize'); var _sequelize2 = _interopRequireDefault(_sequelize);
 
-export default class WorkShift extends Model {
+ class WorkShift extends _sequelize.Model {
   static init(sequelize) {
     super.init(
       {
         status: {
-          type: Sequelize.ENUM('Ativo', 'Inativo'),
+          type: _sequelize2.default.ENUM('Ativo', 'Inativo'),
           defaultValue: 'Ativo',
           validate: {
             isIn: [['Ativo', 'Inativo']],
           },
         },
         start_time: {
-          type: Sequelize.DATE,
+          type: _sequelize2.default.DATE,
           validate: {
             isDate: {
               msg: 'Data de início inválida',
@@ -20,7 +20,7 @@ export default class WorkShift extends Model {
           },
         },
         end_time: {
-          type: Sequelize.DATE,
+          type: _sequelize2.default.DATE,
           validate: {
             isDate: {
               msg: 'Data de término inválida',
@@ -28,7 +28,7 @@ export default class WorkShift extends Model {
           },
         },
         technician_id: {
-          type: Sequelize.STRING,
+          type: _sequelize2.default.STRING,
           allowNull: false,
           validate: {
             notEmpty: {
@@ -45,4 +45,4 @@ export default class WorkShift extends Model {
 
     return this;
   }
-}
+} exports.default = WorkShift;

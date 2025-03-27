@@ -14,6 +14,7 @@ import workOrderRoutes from './routes/workOrderRoutes';
 import workOrderPhotoRoutes from './routes/workOrderPhotoRoutes';
 import workOrderAudioRoutes from './routes/workOrderAudioRoutes';
 import workShiftRoutes from './routes/workShiftRoutes';
+import erpUserGroupRoutes from './routes/erpUserGroupRoutes';
 import tokenRoutes from './routes/tokenRoutes';
 // import itemRoutes from './routes/itemRoutes';
 // import transactionRoutes from './routes/transactionRoutes';
@@ -67,6 +68,7 @@ class App {
     this.app.use('/work-orders-photos/', workOrderPhotoRoutes);
     this.app.use('/work-orders-audios/', workOrderAudioRoutes);
     this.app.use('/work-shifts/', workShiftRoutes);
+    this.app.use('/erp-user-groups/', erpUserGroupRoutes);
     this.app.use('/tokens/', tokenRoutes);
     this.app.use('/api/', regionsRoutes);
     this.app.use('/api/', categoryRoutes);
