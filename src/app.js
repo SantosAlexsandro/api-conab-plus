@@ -32,6 +32,7 @@ import gupshupRoutes from './routes/gupshupRoutes'
 
 // G4Flex
 import contratoRoutes from './routes/g4flex/contratoRoutes'
+import workOrderRoutes from './routes/g4flex/workOrderRoutes'
 
 const whiteList = [
   'http://localhost:8080',
@@ -63,7 +64,7 @@ class App {
     this.app.use(express.json({ limit: '50mb' }));
     // this.app.use('/images/', express.static(resolve(__dirname, '..', 'uploads', 'images')));
   }
-//
+
   routes() {
     this.app.use('/', homeRoutes);
     this.app.use('/entities/', entityRoutes);
@@ -86,6 +87,7 @@ class App {
 
     // G4Flex
     this.app.use('/g4flex/contrato/', contratoRoutes);
+    this.app.use('/g4flex/ordem-servico/', workOrderRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
