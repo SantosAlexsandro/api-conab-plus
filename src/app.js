@@ -30,6 +30,9 @@ import authRoutes from './routes/authRoutes'
 import addressRoutes from './routes/addressRoutes'
 import gupshupRoutes from './routes/gupshupRoutes'
 
+// G4Flex
+import contratoRoutes from './routes/g4flex/contratoRoutes'
+
 const whiteList = [
   'http://localhost:8080',
   'https://app.conabplus.com.br',
@@ -80,6 +83,9 @@ class App {
     this.app.use('/auth/', authRoutes);
     this.app.use('/api/', addressRoutes);
     this.app.use('/gupshup/', gupshupRoutes);
+
+    // G4Flex
+    this.app.use('/g4flex/contrato/', contratoRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
