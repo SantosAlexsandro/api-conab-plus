@@ -31,8 +31,8 @@ import addressRoutes from './routes/addressRoutes'
 import gupshupRoutes from './routes/gupshupRoutes'
 
 // G4Flex
-import contratoRoutes from './routes/g4flex/contratoRoutes'
-import workOrderRoutes from './routes/g4flex/workOrderRoutes'
+import g4flexContratoRoutes from './routes/g4flex/contratoRoutes'
+import g4flexWorkOrderRoutes from './routes/g4flex/workOrderRoutes'
 
 const whiteList = [
   'http://localhost:8080',
@@ -86,8 +86,8 @@ class App {
     this.app.use('/gupshup/', gupshupRoutes);
 
     // G4Flex
-    this.app.use('/g4flex/contrato/', contratoRoutes);
-    this.app.use('/g4flex/ordem-servico/', workOrderRoutes);
+    this.app.use('/g4flex/contrato/', g4flexContratoRoutes);
+    this.app.use('/g4flex/ordem-servico/', g4flexWorkOrderRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
