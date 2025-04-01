@@ -16,44 +16,44 @@ class BaseG4FlexService {
   }
 
   /**
-   * Busca o código do cliente usando CPF ou CNPJ
-   * @param {string} documento - CPF ou CNPJ do cliente
-   * @returns {Promise<string>} Código do cliente
+   * Gets customer code using CPF or CNPJ
+   * @param {string} document - Customer CPF or CNPJ
+   * @returns {Promise<string>} Customer code
    */
-  async buscarCodigoCliente(documento) {
+  async getCustomerCode(document) {
     try {
-      if (!documento) {
-        throw new Error('Documento (CPF/CNPJ) não fornecido');
+      if (!document) {
+        throw new Error('Document (CPF/CNPJ) not provided');
       }
 
       const response = await this.axiosInstance.get(
-        `/api/Entidade/RetrievePage?filter=CPFCNPJ=${documento}&order=&pageSize=10&pageIndex=1`
+        `/api/Entidade/RetrievePage?filter=CPFCNPJ=${document}&order=&pageSize=10&pageIndex=1`
       );
 
       if (!response.data || response.data.length === 0) {
-        throw new Error('Cliente não encontrado');
+        throw new Error('Customer not found');
       }
 
       return response.data[0].Codigo;
     } catch (error) {
       this.handleError(error);
-      throw new Error(`Erro ao buscar código do cliente: ${error.message}`);
+      throw new Error(`Error getting customer code: ${error.message}`);
     }
   }
 
   /**
-   * Trata erros da API
-   * @param {Error} error - Erro ocorrido
+   * Handles API errors
+   * @param {Error} error - Error occurred
    */
   handleError(error) {
     if (error.response) {
-      console.error("Erro na resposta da API:", error.response.data);
+      console.error("API Response Error:", error.response.data);
       console.error("Status:", error.response.status);
       console.error("Headers:", error.response.headers);
     } else if (error.request) {
-      console.error("Nenhuma resposta da API foi recebida:", error.request);
+      console.error("No API response received:", error.request);
     } else {
-      console.error("Erro ao configurar a requisição:", error.message);
+      console.error("Error setting up request:", error.message);
     }
   }
 }
