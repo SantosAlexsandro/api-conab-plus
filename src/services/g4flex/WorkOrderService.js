@@ -116,6 +116,40 @@ class WorkOrderService extends BaseG4FlexService {
       throw new Error(`Error checking work orders status: ${error.message}`);
     }
   }
+
+  async closeWorkOrderByCustomerId({ cpf, cnpj, customerId }) {
+
+    try {
+      const orders = await this.findOrdersByCustomer({ cpf, cnpj, codigoCliente: customerId });
+      console.log(`[G4Flex] Found ${orders.length} orders for customer ${customerId}`);
+      if (!orders || orders.length === 0) {
+        throw new Error('No orders found for customer');
+      }
+
+      orders.map(async order => {
+        await this.axiosInstance.post(
+          `/api/OrdServ/InserirAlterarOrdServ`,
+          {
+            CodigoEmpresaFilial: '1',
+            Numero: order.Numero,
+            codigoEntidade: customerId,
+            Contato: "ORDEM CANCELADA X2"
+          }
+        );
+
+        console.log(`[G4Flex] Closed work order ${order.Numero}`);
+      });
+
+      return {
+        success: true,
+        message: 'Work orders closed successfully',
+        orders: orders.map(order => order.Numero)
+      };
+    } catch (error) {
+      this.handleError(error);
+      throw new Error(`Error closing work order: ${error.message}`);
+    }
+  }
 }
 
 export default new WorkOrderService();

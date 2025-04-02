@@ -12,5 +12,6 @@ const router = new Router();
  * @returns {Object} Information about customer's open work orders
  */
 router.get('/check-open', workOrderController.checkWorkOrder);
+router.post('/close', workOrderController.closeWorkOrder);
 
 export default router;

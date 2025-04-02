@@ -48,6 +48,21 @@ class WorkOrderController {
       });
     }
   }
+
+  async closeWorkOrder(req, res) {
+    try {
+      const { cpf, cnpj, customerId } = req.query;
+
+      const result = await WorkOrderService.closeWorkOrderByCustomerId({ cpf, cnpj, customerId });
+
+      return res.json(result);
+    } catch (error) {
+      console.error('Error closing work order:', error);
+      return res.status(500).json({
+        error: error.message || 'Error closing work order'
+      });
+    }
+  }
 }
 
 export default new WorkOrderController();
