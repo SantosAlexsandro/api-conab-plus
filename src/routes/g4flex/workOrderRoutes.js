@@ -3,7 +3,7 @@ import workOrderController from '../../controllers/g4flex/WorkOrderController';
 
 const router = new Router();
 
-// Rota para verificar ordens de serviço imediata
-router.get('/verificar', workOrderController.verificarOrdem);
+// Route to check immediate work orders
+router.get('/check', workOrderController.checkWorkOrder);
 
 export default router;
