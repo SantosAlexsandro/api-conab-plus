@@ -41,8 +41,7 @@ class WorkOrderService extends BaseG4FlexService {
 
       const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
 
-      console.log(`[G4Flex] Searching work orders for customer ${finalCustomerCode}. Endpoint: /api/OrdServ/RetrievePage?${queryParams}`);
-
+      console.log(`[G4Flex] Found ${response.data.length} work orders for customer ${finalCustomerCode}`);
       return response.data;
     } catch (error) {
       this.handleError(error);
@@ -50,19 +49,73 @@ class WorkOrderService extends BaseG4FlexService {
     }
   }
 
-  async findFinishedStageByOrder(orderNumber) {
+  /**
+   * Check if a work order is finished by checking its stages
+   * @param {string} orderNumber - Work order number
+   * @returns {Promise<boolean>} True if the order is finished, false otherwise
+   */
+  async isOrderFinished(orderNumber) {
     try {
-      const response = await this.axiosInstance.get(`/api/OrdServ/Load?codigoEmpresaFilial=1&numero=${orderNumber}&loadChild=EtapaOrdServChildList`);
+      const response = await this.axiosInstance.get(
+        `/api/OrdServ/Load?codigoEmpresaFilial=1&numero=${orderNumber}&loadChild=EtapaOrdServChildList`
+      );
 
-      const finishedStage = response.data.EtapaOrdServChildList.find(stage => stage.CodigoTipoEtapa === '007.007');
-      console.log(`[G4Flex] Finished stage by order ${orderNumber}: ${finishedStage}`);
-      return finishedStage;
+      const finishedStage = response.data.EtapaOrdServChildList.find(
+        stage => stage.CodigoTipoEtapa === '007.007'
+      );
+
+      console.log(`[G4Flex] Order ${orderNumber} finished stage: ${finishedStage ? 'Yes' : 'No'}`);
+      return !!finishedStage;
     } catch (error) {
       this.handleError(error);
-      throw new Error(`Error finding finished stage by order: ${error.message}`);
+      throw new Error(`Error checking if order is finished: ${error.message}`);
     }
   }
 
+  /**
+   * Check work orders status for a customer
+   * @param {Object} params - Search parameters
+   * @returns {Promise<Object>} Work orders status information
+   */
+  async checkWorkOrdersStatus({ cpf, cnpj, codigoCliente }) {
+    try {
+      // 1. Buscar todas as ordens do cliente
+      const orders = await this.findOrdersByCustomer({ cpf, cnpj, codigoCliente });
+
+      if (!orders || orders.length === 0) {
+        return {
+          customerHasOpenOrders: false,
+          quantityOrders: 0,
+          orders: []
+        };
+      }
+
+      // 2. Verificar o status de cada ordem
+      const orderStatuses = await Promise.all(
+        orders.map(async order => ({
+          order,
+          isFinished: await this.isOrderFinished(order.Numero)
+        }))
+      );
+
+      // 3. Filtrar apenas ordens não finalizadas
+      const openOrders = orderStatuses
+        .filter(status => !status.isFinished)
+        .map(status => status.order);
+
+      return {
+        customerHasOpenOrders: openOrders.length > 0,
+        quantityOrders: openOrders.length,
+        orders: openOrders.map(order => ({
+          number: order.Numero,
+          registrationDate: order.DataCadastro
+        }))
+      };
+    } catch (error) {
+      this.handleError(error);
+      throw new Error(`Error checking work orders status: ${error.message}`);
+    }
+  }
 }
 
 export default new WorkOrderService();
