@@ -63,6 +63,77 @@ class WorkOrderController {
       });
     }
   }
+
+  /**
+   * Create a new work order request
+   * @param {Object} req - Request object
+   * @param {Object} req.body - Request body
+   * @param {string} req.body.productId - Product identification code
+   * @param {string} req.body.requesterName - Name of the person requesting
+   * @param {string} req.body.requesterPosition - Position/role of the requester
+   * @param {string} req.body.incidentDescription - Description of the reported problem
+   * @param {string} req.body.siteContactPerson - Person responsible for the site
+   * @param {Object} res - Response object
+   * @returns {Promise<Object>} Request acknowledgment
+   */
+  async createWorkOrder(req, res) {
+    try {
+      const {
+        productId,
+        requesterName,
+        requesterPosition,
+        incidentDescription,
+        siteContactPerson
+      } = req.body;
+
+      // Validate required fields
+      const requiredFields = {
+        productId,
+        requesterName,
+        requesterPosition,
+        incidentDescription,
+        siteContactPerson
+      };
+
+      const missingFields = Object.entries(requiredFields)
+        .filter(([_, value]) => !value)
+        .map(([key]) => key);
+
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          error: `Missing required fields: ${missingFields.join(', ')}`
+        });
+      }
+
+      // Return immediate acknowledgment
+      res.status(202).json({
+        message: 'Work order request received successfully',
+        requestData: {
+          productId,
+          requesterName,
+          requesterPosition,
+          incidentDescription,
+          siteContactPerson
+        }
+      });
+
+      // Process the work order asynchronously
+      WorkOrderService.createWorkOrder({
+        productId,
+        requesterName,
+        requesterPosition,
+        incidentDescription,
+        siteContactPerson
+      }).catch(error => {
+        console.error('Error processing work order:', error);
+      });
+    } catch (error) {
+      console.error('Error handling work order request:', error);
+      return res.status(500).json({
+        error: error.message || 'Error handling work order request'
+      });
+    }
+  }
 }
 
 export default new WorkOrderController();

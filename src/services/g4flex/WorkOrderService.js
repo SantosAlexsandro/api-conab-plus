@@ -1,4 +1,5 @@
 import BaseG4FlexService from './BaseG4FlexService';
+import webhookService from './WebhookService';
 
 class WorkOrderService extends BaseG4FlexService {
   constructor() {
@@ -148,6 +149,81 @@ class WorkOrderService extends BaseG4FlexService {
     } catch (error) {
       this.handleError(error);
       throw new Error(`Error closing work order: ${error.message}`);
+    }
+  }
+
+  /**
+   * Process work order creation asynchronously
+   * @param {Object} params - Work order parameters
+   * @param {string} params.productId - Product identification code
+   * @param {string} params.requesterName - Name of the person requesting
+   * @param {string} params.requesterPosition - Position/role of the requester
+   * @param {string} params.incidentDescription - Description of the reported problem
+   * @param {string} params.siteContactPerson - Person responsible for the site
+   * @returns {Promise<Object>} Created work order information
+   */
+  async createWorkOrder({
+    productId,
+    requesterName,
+    requesterPosition,
+    incidentDescription,
+    siteContactPerson
+  }) {
+    try {
+      console.log('[WorkOrderService] Starting work order creation process');
+
+      const workOrderData = {
+        CodigoEmpresaFilial: '1',
+        CodigoProduto: productId,
+        NomeSolicitante: requesterName,
+        CargoSolicitante: requesterPosition,
+        DescricaoProblema: incidentDescription,
+        NomeResponsavelLocal: siteContactPerson,
+        Status: 'Aberta'
+      };
+
+      // 1. Create work order
+      console.log('[WorkOrderService] Creating work order in G4Flex');
+      const response = await this.axiosInstance.post(
+        '/api/OrdServ/InserirAlterarOrdServ',
+        workOrderData
+      );
+
+      if (!response.data || response.data.error) {
+        throw new Error(response.data?.error || 'Failed to create work order');
+      }
+
+      const workOrder = {
+        number: response.data.Numero,
+        status: response.data.Status,
+        createdAt: response.data.DataCadastro,
+        technician: response.data.NomeTecnico || null
+      };
+
+      console.log(`[WorkOrderService] Work order ${workOrder.number} created successfully`);
+
+      // 2. Notify webhook
+      console.log('[WorkOrderService] Notifying webhook');
+      try {
+        await webhookService.notifyWorkOrderCreated({
+          workOrderId: workOrder.number,
+          technicianName: workOrder.technician
+        });
+        console.log('[WorkOrderService] Webhook notification sent successfully');
+      } catch (webhookError) {
+        console.error('[WorkOrderService] Webhook notification failed:', webhookError);
+        // Continue processing as the work order was created successfully
+      }
+
+      return {
+        success: true,
+        workOrder,
+        webhookNotified: true
+      };
+    } catch (error) {
+      console.error('[WorkOrderService] Error in work order creation process:', error);
+      this.handleError(error);
+      throw new Error(`Error creating work order: ${error.message}`);
     }
   }
 }
