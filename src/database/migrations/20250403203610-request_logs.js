@@ -1,32 +1,46 @@
 'use strict';
 
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('request_logs', {
       id: {
         type: Sequelize.UUID,
-        defaultValue: Sequelize.literal('uuid_generate_v4()'),
-        primaryKey: true
+        primaryKey: true,
+        allowNull: false
       },
       ura_request_id: {
         type: Sequelize.UUID,
-        allowNull: false,
-        references: { model: 'ura_requests', key: 'id' },
-        onDelete: 'CASCADE'
+        allowNull: false
       },
-      source: Sequelize.STRING,
-      action: Sequelize.STRING,
-      payload_snapshot: Sequelize.JSON,
-      status_code: Sequelize.INTEGER,
-      error: Sequelize.TEXT,
+      source: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      action: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      payload_snapshot: {
+        type: Sequelize.JSON,
+        allowNull: true
+      },
+      status_code: {
+        type: Sequelize.INTEGER,
+        allowNull: true
+      },
+      error: {
+        type: Sequelize.TEXT,
+        allowNull: true
+      },
       timestamp: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.fn('NOW')
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
   },
 
-  async down(queryInterface) {
+  down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('request_logs');
   }
 };

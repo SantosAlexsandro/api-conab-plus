@@ -1,4 +1,5 @@
 import BaseG4FlexService from './BaseG4FlexService';
+import logEvent from '../../utils/logEvent';
 
 class ContractService extends BaseG4FlexService {
   constructor() {
@@ -10,9 +11,10 @@ class ContractService extends BaseG4FlexService {
    * @param {string} cpf - Customer CPF
    * @param {string} cnpj - Customer CNPJ
    * @param {string} customerId - Customer ID
+   * @param {string} uraRequestId - URA request ID for logging
    * @returns {Promise<Object>} Contract status information
    */
-  async checkActiveContract(cpf, cnpj, customerId) {
+  async checkActiveContract(cpf, cnpj, customerId, uraRequestId) {
     console.log('INIT checkActiveContract', cpf, cnpj, customerId);
     //TODO: retirar pontos e hifens do cpf e cnpj
     try {
@@ -26,6 +28,15 @@ class ContractService extends BaseG4FlexService {
         `/api/Contrato/RetrievePage?filter=Status='Ativo' and ContratoPagRec='REC' and CodigoEntidade=${finalCustomerId}&order&pageSize=200&pageIndex=1`
       );
 
+      // Log successful request
+      await logEvent({
+        uraRequestId,
+        source: 'g4flex',
+        action: 'contract_check_requested',
+        payload: { cpf, cnpj, customerId: finalCustomerId },
+        statusCode: contractResponse.status
+      });
+
       // TODO: Include Billing Suspended Status
 
       return {
@@ -33,6 +44,16 @@ class ContractService extends BaseG4FlexService {
         hasActiveContract: this.validateActiveContract(contractResponse.data),
       };
     } catch (error) {
+      // Log error
+      await logEvent({
+        uraRequestId,
+        source: 'g4flex',
+        action: 'contract_check_error',
+        payload: { cpf, cnpj, customerId },
+        statusCode: error.response?.status || 500,
+        error: error.message
+      });
+
       this.handleError(error);
       throw new Error(`Error checking contract: ${error.message}`);
     }

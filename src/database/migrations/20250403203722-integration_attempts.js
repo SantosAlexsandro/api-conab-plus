@@ -1,12 +1,12 @@
 'use strict';
 
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('integration_attempts', {
       id: {
         type: Sequelize.UUID,
-        defaultValue: Sequelize.literal('uuid_generate_v4()'),
-        primaryKey: true
+        primaryKey: true,
+        allowNull: false
       },
       ura_request_id: {
         type: Sequelize.UUID,
@@ -14,32 +14,23 @@ module.exports = {
         references: { model: 'ura_requests', key: 'id' },
         onDelete: 'CASCADE'
       },
-      type: {
-        type: Sequelize.ENUM('create_os', 'cancel_os'),
+      status: {
+        type: Sequelize.ENUM('success', 'error'),
         allowNull: false
       },
-      status: {
-        type: Sequelize.ENUM('pending', 'success', 'failed'),
-        defaultValue: 'pending'
+      error_message: {
+        type: Sequelize.TEXT,
+        allowNull: true
       },
-      attempts: {
-        type: Sequelize.INTEGER,
-        defaultValue: 1
-      },
-      last_attempt_at: Sequelize.DATE,
-      error_message: Sequelize.TEXT,
       created_at: {
         type: Sequelize.DATE,
-        defaultValue: Sequelize.fn('NOW')
-      },
-      updated_at: {
-        type: Sequelize.DATE,
-        defaultValue: Sequelize.fn('NOW')
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
   },
 
-  async down(queryInterface) {
+  down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('integration_attempts');
   }
 };
