@@ -20,14 +20,16 @@ class ContractService extends BaseG4FlexService {
     try {
       let finalCustomerId = customerId;
       if (!finalCustomerId) {
+        console.log('INIT checkActiveContract', cpf, cnpj, customerId);
         const document = cpf || cnpj;
         finalCustomerId = await this.getCustomerCode(document);
+        console.log('finalCustomerId', finalCustomerId);
       }
 
       const contractResponse = await this.axiosInstance.get(
-        `/api/Contrato/RetrievePage?filter=Status='Ativo' and ContratoPagRec='REC' and CodigoEntidade=${finalCustomerId}&order&pageSize=200&pageIndex=1`
+        `/api/Contrato/RetrievePage?filter=Status='Ativo' and ContratoPagRec='REC' and CodigoEntidade='${finalCustomerId}'&order&pageSize=200&pageIndex=1`
       );
-
+      console.log('contractResponse', contractResponse);
       // Log successful request
       await logEvent({
         uraRequestId,

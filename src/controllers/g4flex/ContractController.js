@@ -1,5 +1,5 @@
 import contractService from '../../services/g4flex/ContractService';
-import logEvent from '../../utils/logEvent';
+import { formatCustomerId, formatCPF, formatCNPJ } from '../../utils/string/formatUtils';
 
 class ContractController {
   /**
@@ -15,10 +15,31 @@ class ContractController {
    */
   async checkContract(req, res) {
     try {
-      const { cpf, cnpj, customerId, uraRequestId } = req.query;
+      let { cpf, cnpj, customerId, uraRequestId } = req.query;
 
       if (!customerId && !cpf && !cnpj) {
         return res.status(400).json({ error: 'Customer identification is required' });
+      }
+      if (!uraRequestId) {
+        return res.status(400).json({ error: 'URA request ID is required' });
+      }
+
+      if (customerId && (cpf || cnpj)) {
+        return res.status(400).json({ error: 'Customer ID, CPF, or CNPJ cannot be provided simultaneously' });
+      }
+
+      if (customerId) {
+        console.log('customerId', customerId);
+        customerId = formatCustomerId(customerId);
+        console.log('formatted customerId', customerId);
+      }
+      if (cpf) {
+        cpf = formatCPF(cpf);
+        console.log('formatted cpf', cpf);
+      }
+      if (cnpj) {
+        cnpj = formatCNPJ(cnpj);
+        console.log('formatted cnpj', cnpj);
       }
 
       const contract = await contractService.checkActiveContract(cpf, cnpj, customerId, uraRequestId);
