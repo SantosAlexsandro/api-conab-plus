@@ -49,7 +49,7 @@ class ContractService extends BaseG4FlexService {
       // Log error
       await logEvent({
         uraRequestId,
-        source: 'g4flex',
+        source: 'service_4gflex',
         action: 'contract_check_error',
         payload: { cpf, cnpj, customerId },
         statusCode: error.response?.status || 500,
