@@ -130,7 +130,7 @@ class WorkOrderController {
         await logEvent({
           uraRequestId,
           source: 'controller_g4flex',
-          action: 'work_order_check_validation_error',
+          action: 'work_order_close_check_validation_error',
           payload: req.query,
           response: { error: validationError },
           statusCode: 400,
@@ -162,7 +162,7 @@ class WorkOrderController {
           await logEvent({
             uraRequestId,
             source: 'controller_g4flex',
-            action: 'work_order_check_validation_error',
+            action: 'work_order_close_check_validation_error',
             payload: req.query,
             response: { error: 'Invalid CPF' },
             statusCode: 400,
@@ -179,7 +179,7 @@ class WorkOrderController {
           await logEvent({
             uraRequestId,
             source: 'controller_g4flex',
-            action: 'work_order_check_validation_error',
+            action: 'work_order_close_check_validation_error',
             payload: req.query,
             response: { error: 'Invalid CNPJ' },
             statusCode: 400,
@@ -191,8 +191,29 @@ class WorkOrderController {
       }
       const result = await WorkOrderService.closeWorkOrderByCustomerId({ cpf, cnpj, customerId });
 
+      await logEvent({
+        uraRequestId,
+        source: 'controller_g4flex',
+        action: 'work_order_close_success',
+        payload: { cpf, cnpj, customerId },
+        response: result,
+        statusCode: 200,
+        error: null
+      });
+
       return res.json(result);
     } catch (error) {
+
+      await logEvent({
+        uraRequestId,
+        source: 'controller_g4flex',
+        action: 'work_order_close_controller_error',
+        payload: req.query,
+        response: { error: error.message },
+        statusCode: 500,
+        error: error.message
+      });
+
       console.error('Error closing work order:', error);
       return res.status(500).json({
         error: error.message || 'Error closing work order'
