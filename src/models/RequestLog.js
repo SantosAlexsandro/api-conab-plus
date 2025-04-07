@@ -19,7 +19,7 @@ export default class RequestLog extends Model {
           type: Sequelize.STRING,
           allowNull: false,
           validate: {
-            isIn: [['ura', 'g4flex', 'conab', 'system']]
+            isIn: [['ura', 'g4flex', 'conab', 'system', 'controller_g4flex', 'service_g4flex']]
           }
         },
         action: {
@@ -30,6 +30,11 @@ export default class RequestLog extends Model {
           type: Sequelize.JSON,
           allowNull: true,
           field: 'payload_snapshot'
+        },
+        responseSnapshot: {
+          type: Sequelize.JSON,
+          allowNull: true,
+          field: 'response_snapshot'
         },
         statusCode: {
           type: Sequelize.INTEGER,

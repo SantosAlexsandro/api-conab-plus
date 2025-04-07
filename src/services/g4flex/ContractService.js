@@ -1,3 +1,4 @@
+// src/services/g4flex/ContractService.js
 import BaseG4FlexService from './BaseG4FlexService';
 import logEvent from '../../utils/logEvent';
 
@@ -6,58 +7,37 @@ class ContractService extends BaseG4FlexService {
     super();
   }
 
-  /**
-   * Checks if the customer has an active contract
-   * @param {string} cpf - Customer CPF
-   * @param {string} cnpj - Customer CNPJ
-   * @param {string} customerId - Customer ID
-   * @param {string} uraRequestId - URA request ID for logging
-   * @returns {Promise<Object>} Contract status information
-   */
   async checkActiveContract(cpf, cnpj, customerId, uraRequestId) {
-    console.log('INIT checkActiveContract', cpf, cnpj, customerId);
-    //TODO: retirar pontos e hifens do cpf e cnpj
     try {
       let finalCustomerId = customerId;
+      let customerName = null;
+
       if (!finalCustomerId) {
-        console.log('INIT checkActiveContract', cpf, cnpj, customerId);
         const document = cpf || cnpj;
-        finalCustomerId = await this.getCustomerCode(document);
-        console.log('finalCustomerId', finalCustomerId);
+        const customerData = await this.getCustomerData(document);
+        finalCustomerId = customerData.codigo;
+        customerName = customerData.nome;
+      } else {
+        // Se já temos o customerId, buscamos o nome
+        const customerData = await this.getCustomerDataById(finalCustomerId);
+        customerName = customerData.nome;
       }
 
       const contractResponse = await this.axiosInstance.get(
         `/api/Contrato/RetrievePage?filter=Status='Ativo' and ContratoPagRec='REC' and CodigoEntidade='${finalCustomerId}'&order&pageSize=200&pageIndex=1`
       );
-      console.log('contractResponse', contractResponse);
-      // Log successful request
-      await logEvent({
-        uraRequestId,
-        source: 'g4flex',
-        action: 'contract_check_requested',
-        payload: { cpf, cnpj, customerId: finalCustomerId },
-        statusCode: contractResponse.status
-      });
 
-      // TODO: Include Billing Suspended Status
-
-      return {
+      const responseData = {
         customerId: finalCustomerId,
-        hasActiveContract: this.validateActiveContract(contractResponse.data),
+        customerName,
+        hasActiveContract: this.validateActiveContract(contractResponse.data)
       };
-    } catch (error) {
-      // Log error
-      await logEvent({
-        uraRequestId,
-        source: 'service_4gflex',
-        action: 'contract_check_error',
-        payload: { cpf, cnpj, customerId },
-        statusCode: error.response?.status || 500,
-        error: error.message
-      });
 
-      this.handleError(error);
-      throw new Error(`Error checking contract: ${error.message}`);
+      return responseData;
+    } catch (error) {
+
+      // Propaga o erro original com status code
+      throw error;
     }
   }
 
