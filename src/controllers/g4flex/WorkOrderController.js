@@ -117,9 +117,78 @@ class WorkOrderController {
   }
 
   async closeWorkOrder(req, res) {
-    try {
-      const { cpf, cnpj, customerId } = req.query;
+    let { cpf, cnpj, customerId, uraRequestId } = req.query;
 
+    try {
+      // Validação inicial do uraRequestId
+      if (!uraRequestId) {
+        return res.status(400).json({ error: 'URA request ID is required' });
+      }
+
+      const validationError = validateURAQuery(req.query);
+      if (validationError) {
+        await logEvent({
+          uraRequestId,
+          source: 'controller_g4flex',
+          action: 'work_order_check_validation_error',
+          payload: req.query,
+          response: { error: validationError },
+          statusCode: 400,
+          error: validationError
+        });
+        return res.status(400).json({ error: validationError });
+      }
+
+      if (customerId) {
+        const formatted = formatCustomerId(customerId);
+        if (!formatted) {
+          await logEvent({
+            uraRequestId,
+            source: 'controller_g4flex',
+            action: 'contract_check_validation_error',
+            payload: req.query,
+            response: { error: 'Invalid Customer ID' },
+            statusCode: 400,
+            error: 'Invalid Customer ID'
+          });
+          return res.status(400).json({ error: 'Invalid Customer ID' });
+        }
+        customerId = formatted;
+      }
+
+      if (cpf) {
+        const formatted = formatCPF(cpf);
+        if (!formatted) {
+          await logEvent({
+            uraRequestId,
+            source: 'controller_g4flex',
+            action: 'work_order_check_validation_error',
+            payload: req.query,
+            response: { error: 'Invalid CPF' },
+            statusCode: 400,
+            error: 'Invalid CPF'
+          });
+          return res.status(400).json({ error: 'Invalid CPF' });
+        }
+        cpf = formatted;
+      }
+
+      if (cnpj) {
+        const formatted = formatCNPJ(cnpj);
+        if (!formatted) {
+          await logEvent({
+            uraRequestId,
+            source: 'controller_g4flex',
+            action: 'work_order_check_validation_error',
+            payload: req.query,
+            response: { error: 'Invalid CNPJ' },
+            statusCode: 400,
+            error: 'Invalid CNPJ'
+          });
+          return res.status(400).json({ error: 'Invalid CNPJ' });
+        }
+        cnpj = formatted;
+      }
       const result = await WorkOrderService.closeWorkOrderByCustomerId({ cpf, cnpj, customerId });
 
       return res.json(result);
