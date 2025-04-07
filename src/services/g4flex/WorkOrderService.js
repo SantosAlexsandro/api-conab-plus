@@ -13,48 +13,6 @@ class WorkOrderService extends BaseG4FlexService {
     };
   }
 
-  /**
-   * Search work orders by customer
-   * @param {Object} params - Search parameters
-   * @param {string} [params.cpf] - Customer CPF (11 digits)
-   * @param {string} [params.cnpj] - Customer CNPJ (14 digits)
-   * @param {string} [params.codigoCliente] - Customer code in G4Flex
-   * @returns {Promise<Array<Object>>} List of work orders with their details
-   * @throws {Error} When customer code cannot be found or API request fails
-   */
-  async findOrdersByCustomer({ cpf, cnpj, codigoCliente }) {
-    try {
-      let finalCustomerCode = codigoCliente;
-
-      if (!finalCustomerCode) {
-        const document = cpf || cnpj;
-        if (!document) {
-          throw new Error('CPF or CNPJ not provided');
-        }
-        finalCustomerCode = await this.getCustomerCode(document);
-      }
-
-      const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
-      const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
-
-      const filter = `ISNULL(DataEncerramento) AND CodigoEntidade=${finalCustomerCode} AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
-      const queryParams = `filter=${filter}&order=&pageSize=${this.DATE_RANGE.PAGE_SIZE}&pageIndex=${this.DATE_RANGE.PAGE_INDEX}`;
-
-      const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
-
-      console.log(`[G4Flex] Found ${response.data.length} work orders for customer ${finalCustomerCode}`);
-      return response.data;
-    } catch (error) {
-      this.handleError(error);
-      throw new Error(`Error searching work orders: ${error.message}`);
-    }
-  }
-
-  /**
-   * Check if a work order is finished by checking its stages
-   * @param {string} orderNumber - Work order number
-   * @returns {Promise<boolean>} True if the order is finished, false otherwise
-   */
   async isOrderFinished(orderNumber) {
     try {
       const response = await this.axiosInstance.get(
@@ -73,15 +31,31 @@ class WorkOrderService extends BaseG4FlexService {
     }
   }
 
-  /**
-   * Check work orders status for a customer
-   * @param {Object} params - Search parameters
-   * @returns {Promise<Object>} Work orders status information
-   */
-  async checkWorkOrdersStatus({ cpf, cnpj, codigoCliente }) {
+  async checkWorkOrdersByCustomerId({ cpf, cnpj, customerId }) {
     try {
-      // 1. Buscar todas as ordens do cliente
-      const orders = await this.findOrdersByCustomer({ cpf, cnpj, codigoCliente });
+
+      let finalCustomerCode = customerId;
+
+      if (!finalCustomerCode) {
+        const document = cpf || cnpj;
+        if (!document) {
+          throw new Error('CPF or CNPJ not provided');
+        }
+        const customerData = await this.getCustomerData(document);
+        finalCustomerCode = customerData.codigo;
+        console.log('[G4Flex] Customer code:', finalCustomerCode);
+      }
+
+      const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
+      const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
+
+      const filter = `ISNULL(DataEncerramento) AND CodigoEntidade=${finalCustomerCode} AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
+      const queryParams = `filter=${filter}&order=&pageSize=${this.DATE_RANGE.PAGE_SIZE}&pageIndex=${this.DATE_RANGE.PAGE_INDEX}`;
+
+      const orders = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
+      console.log(orders.data);
+
+      console.log('[G4Flex] Found', orders.data.length, 'orders for customer', customerId);
 
       if (!orders || orders.length === 0) {
         return {
@@ -91,9 +65,10 @@ class WorkOrderService extends BaseG4FlexService {
         };
       }
 
+
       // 2. Verificar o status de cada ordem
       const orderStatuses = await Promise.all(
-        orders.map(async order => ({
+        orders?.data?.map(async order => ({
           order,
           isFinished: await this.isOrderFinished(order.Numero)
         }))
@@ -152,16 +127,6 @@ class WorkOrderService extends BaseG4FlexService {
     }
   }
 
-  /**
-   * Process work order creation asynchronously
-   * @param {Object} params - Work order parameters
-   * @param {string} params.productId - Product identification code
-   * @param {string} params.requesterName - Name of the person requesting
-   * @param {string} params.requesterPosition - Position/role of the requester
-   * @param {string} params.incidentDescription - Description of the reported problem
-   * @param {string} params.siteContactPerson - Person responsible for the site
-   * @returns {Promise<Object>} Created work order information
-   */
   async createWorkOrder({
     productId,
     requesterName,
