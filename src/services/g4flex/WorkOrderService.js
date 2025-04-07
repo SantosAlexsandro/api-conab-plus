@@ -33,7 +33,6 @@ class WorkOrderService extends BaseG4FlexService {
 
   async checkWorkOrdersByCustomerId({ cpf, cnpj, customerId }) {
     try {
-
       let finalCustomerCode = customerId;
 
       if (!finalCustomerCode) {
@@ -52,10 +51,10 @@ class WorkOrderService extends BaseG4FlexService {
       const filter = `ISNULL(DataEncerramento) AND CodigoEntidade=${finalCustomerCode} AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
       const queryParams = `filter=${filter}&order=&pageSize=${this.DATE_RANGE.PAGE_SIZE}&pageIndex=${this.DATE_RANGE.PAGE_INDEX}`;
 
-      const orders = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
-      console.log(orders.data);
+      const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
+      const orders = response.data;
 
-      console.log('[G4Flex] Found', orders.data.length, 'orders for customer', customerId);
+      console.log('[G4Flex] Found', orders.length, 'orders for customer', finalCustomerCode);
 
       if (!orders || orders.length === 0) {
         return {
@@ -65,10 +64,9 @@ class WorkOrderService extends BaseG4FlexService {
         };
       }
 
-
       // 2. Verificar o status de cada ordem
       const orderStatuses = await Promise.all(
-        orders?.data?.map(async order => ({
+        orders.map(async order => ({
           order,
           isFinished: await this.isOrderFinished(order.Numero)
         }))
@@ -94,27 +92,46 @@ class WorkOrderService extends BaseG4FlexService {
   }
 
   async closeWorkOrderByCustomerId({ cpf, cnpj, customerId }) {
-
     try {
-      const orders = await this.findOrdersByCustomer({ cpf, cnpj, codigoCliente: customerId });
-      console.log(`[G4Flex] Found ${orders.length} orders for customer ${customerId}`);
+      let finalCustomerCode = customerId;
+
+      if (!finalCustomerCode) {
+        const document = cpf || cnpj;
+        if (!document) {
+          throw new Error('CPF or CNPJ not provided');
+        }
+        const customerData = await this.getCustomerData(document);
+        finalCustomerCode = customerData.codigo;
+        console.log('[G4Flex] Customer code:', finalCustomerCode);
+      }
+
+      const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
+      const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
+
+      const filter = `ISNULL(DataEncerramento) AND CodigoEntidade=${finalCustomerCode} AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
+      const queryParams = `filter=${filter}&order=&pageSize=${this.DATE_RANGE.PAGE_SIZE}&pageIndex=${this.DATE_RANGE.PAGE_INDEX}`;
+
+      const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
+      const orders = response.data;
+
+      console.log(`[G4Flex] Found ${orders.length} orders for customer ${finalCustomerCode}`);
       if (!orders || orders.length === 0) {
         throw new Error('No orders found for customer');
       }
 
-      orders.map(async order => {
+      await Promise.all(orders.map(async order => {
         await this.axiosInstance.post(
           `/api/OrdServ/InserirAlterarOrdServ`,
           {
             CodigoEmpresaFilial: '1',
             Numero: order.Numero,
-            codigoEntidade: customerId,
+            codigoEntidade: finalCustomerCode,
             Contato: "ORDEM CANCELADA X2"
           }
         );
 
         console.log(`[G4Flex] Closed work order ${order.Numero}`);
-      });
+      }));
 
       return {
         success: true,
