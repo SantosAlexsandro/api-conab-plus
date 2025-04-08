@@ -14,7 +14,7 @@ import workOrderRoutes from './routes/workOrderRoutes';
 import workOrderPhotoRoutes from './routes/workOrderPhotoRoutes';
 import workOrderAudioRoutes from './routes/workOrderAudioRoutes';
 import workShiftRoutes from './routes/workShiftRoutes';
-import erpUserGroupRoutes from './routes/erpUserGroupRoutes';
+import erpUserGroupRoutes from './routes/userGroupRoutes';
 import tokenRoutes from './routes/tokenRoutes';
 // import itemRoutes from './routes/itemRoutes';
 // import transactionRoutes from './routes/transactionRoutes';
@@ -28,11 +28,13 @@ import cityRoutes from './routes/cityRoutes';
 import streetTypeRoutes from './routes/streetTypeRoutes'
 import authRoutes from './routes/authRoutes'
 import addressRoutes from './routes/addressRoutes'
+import userGroupRoutes from './routes/userGroupRoutes'
 import gupshupRoutes from './routes/gupshupRoutes'
 
 // G4Flex
 import g4flexContractRoutes from './routes/g4flex/contractRoutes'
 import g4flexWorkOrderRoutes from './routes/g4flex/workOrderRoutes'
+
 
 const whiteList = [
   'http://localhost:8080',
@@ -83,7 +85,8 @@ class App {
     this.app.use('/street-types/', streetTypeRoutes);
     this.app.use('/auth/', authRoutes);
     this.app.use('/api/', addressRoutes);
-    this.app.use('/gupshup/', gupshupRoutes);
+    this.app.use('/user-groups/', userGroupRoutes);
+    //this.app.use('/gupshup/', gupshupRoutes);
 
     // G4Flex
     this.app.use('/g4flex/contracts/', g4flexContractRoutes);
