@@ -1,12 +1,12 @@
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'API G4Flex - Conab Plus',
+    title: 'API Conab+ - Integração G4Flex',
     version: '1.0.0',
-    description: 'Documentação da API de integração com G4Flex',
+    description: 'Documentação da API de integração entre a URA G4Flex e a Conab+',
     contact: {
       name: 'Equipe de Desenvolvimento',
-      email: 'dev@conabplus.com.br'
+      email: 'alexsandro.santos@conab.com.br'
     }
   },
   servers: [
@@ -19,18 +19,18 @@ const swaggerDefinition = {
       description: 'Servidor de Produção'
     },
     {
-      url: 'https://staging-api.conabplus.com.br',
+      url: 'https://staging.conabplus.com.br',
       description: 'Servidor de Homologação'
     }
   ],
   tags: [
     {
-      name: 'G4Flex - Contratos',
-      description: 'Endpoints para gerenciamento de contratos no G4Flex'
+      name: 'Contratos - Integração da URA G4Flex com a Conab+',
+      description: 'Endpoints para gerenciamento de contratos da Conab+ via URA G4Flex'
     },
     {
-      name: 'G4Flex - Ordens de Serviço',
-      description: 'Endpoints para gerenciamento de Ordens de Serviço no G4Flex'
+      name: 'Ordens de Serviço - Integração da URA G4Flex com a Conab+',
+      description: 'Endpoints para gerenciamento de Ordens de Serviço da Conab+ via URA G4Flex'
     }
   ]
 };

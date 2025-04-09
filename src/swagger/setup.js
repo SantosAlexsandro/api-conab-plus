@@ -29,7 +29,7 @@ export const setupSwagger = (app) => {
   const g4flexOptions = {
     explorer: true,
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'API G4Flex - Conab Plus',
+    customSiteTitle: 'Integração URA G4Flex com Conab+',
     swaggerOptions: {
       url: '/api-docs/g4flex.json',
       persistAuthorization: true
@@ -39,7 +39,7 @@ export const setupSwagger = (app) => {
   const erpOptions = {
     explorer: true,
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'API ERP - Conab Plus',
+    customSiteTitle: 'API ERP - Conab+',
     swaggerOptions: {
       url: '/api-docs/erp.json',
       persistAuthorization: true

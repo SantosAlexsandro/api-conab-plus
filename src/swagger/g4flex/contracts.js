@@ -78,9 +78,9 @@
  * /g4flex/contracts/check-active:
  *  get:
  *    tags:
- *      - G4Flex - Contratos
+ *      - Contratos - Integração da URA G4Flex com a Conab+
  *    summary: Verifica se o cliente possui contratos ativos
- *    description: Verifica no G4Flex se o cliente possui contratos ativos baseado no CPF, CNPJ ou ID do cliente
+ *    description: Verifica na Conab+ se o cliente possui contratos ativos baseado no CPF, CNPJ ou ID do cliente
  *    parameters:
  *      - $ref: '#/components/parameters/cpfParam'
  *      - $ref: '#/components/parameters/cnpjParam'

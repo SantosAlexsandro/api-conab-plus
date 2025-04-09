@@ -88,9 +88,9 @@
  * /g4flex/work-orders/check-open:
  *  get:
  *    tags:
- *      - G4Flex - Ordens de Serviço
+ *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
  *    summary: Verifica se o cliente possui ordens de serviço abertas
- *    description: Verifica no G4Flex se o cliente possui ordens de serviço abertas baseado no CPF, CNPJ ou ID do cliente
+ *    description: Verifica na Conab+ se o cliente possui ordens de serviço abertas baseado no CPF, CNPJ ou ID do cliente
  *    parameters:
  *      - $ref: '#/components/parameters/cpfParam'
  *      - $ref: '#/components/parameters/cnpjParam'
@@ -125,9 +125,9 @@
  * /g4flex/work-orders/requests:
  *  post:
  *    tags:
- *      - G4Flex - Ordens de Serviço
+ *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
  *    summary: Cria uma nova ordem de serviço
- *    description: Cria uma nova ordem de serviço no G4Flex para o cliente especificado
+ *    description: Cria uma nova ordem de serviço na Conab+ para o cliente especificado
  *    requestBody:
  *      required: true
  *      content:
@@ -163,9 +163,9 @@
  * /g4flex/work-orders/close:
  *  post:
  *    tags:
- *      - G4Flex - Ordens de Serviço
+ *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
  *    summary: Fecha uma ordem de serviço aberta
- *    description: Fecha uma ordem de serviço aberta no G4Flex para o cliente especificado
+ *    description: Fecha uma ordem de serviço aberta na Conab+ para o cliente especificado
  *    parameters:
  *      - $ref: '#/components/parameters/cpfParam'
  *      - $ref: '#/components/parameters/cnpjParam'

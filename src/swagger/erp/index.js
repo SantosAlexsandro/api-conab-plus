@@ -1,12 +1,12 @@
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'API ERP - Conab Plus',
+    title: 'API ERP - Conab+',
     version: '1.0.0',
     description: 'Documentação da API de integração com ERP',
     contact: {
       name: 'Equipe de Desenvolvimento',
-      email: 'dev@conabplus.com.br'
+      email: 'alexsandro.santos@conab.com.br'
     }
   },
   servers: [
