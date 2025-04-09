@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Documentation - Conab Plus</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      background-color: #1976d2;
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.5em;
+    }
+    h2 {
+      color: #1976d2;
+      margin-top: 30px;
+    }
+    .api-section {
+      background-color: white;
+      border-radius: 8px;
+      padding: 25px;
+      margin: 20px 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+    .api-section:hover {
+      transform: translateY(-5px);
+    }
+    .api-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #1976d2;
+      color: white;
+      text-decoration: none;
+      padding: 0 20px;
+      border-radius: 4px;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+      height: 40px;
+    }
+    .api-link:hover {
+      background-color: #1565c0;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      padding: 20px;
+      font-size: 0.9em;
+      color: #666;
+      border-top: 1px solid #ddd;
+    }
+    .buttons-container {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      align-items: center;
+    }
+    .json-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: white;
+      color: #1976d2;
+      border: 1px solid #1976d2;
+      text-decoration: none;
+      padding: 0 12px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      transition: all 0.3s ease;
+      height: 32px;
+    }
+    .json-link:hover {
+      background-color: #e3f2fd;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>API Documentation</h1>
+      <p>Conab Plus - Documentação de Integrações</p>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="api-section">
+      <h2>G4Flex API</h2>
+      <p>
+        Documentação completa da API de integração com o sistema G4Flex.
+        Esta API inclui recursos para gerenciamento de contratos e ordens de serviço.
+      </p>
+      <div class="buttons-container">
+        <a href="/api-docs/g4flex" class="api-link" onclick="localStorage.setItem('lastVisited', 'g4flex')">Acessar Documentação G4Flex</a>
+        <a href="/api-docs/g4flex.json" class="json-link" target="_blank">Visualizar JSON</a>
+      </div>
+    </div>
+
+    <div class="api-section">
+      <h2>ERP API</h2>
+      <p>
+        Documentação da API de integração com o sistema ERP.
+        Esta API inclui recursos para gerenciamento de usuários, produtos e pedidos.
+      </p>
+      <div class="buttons-container">
+        <a href="/api-docs/erp" class="api-link" onclick="localStorage.setItem('lastVisited', 'erp')">Acessar Documentação ERP</a>
+        <a href="/api-docs/erp.json" class="json-link" target="_blank">Visualizar JSON</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>&copy; 2023 Conab Plus - Todos os direitos reservados</p>
+    </div>
+  </div>
+
+  <script>
+    // Este script ajuda a prevenir confusão entre as diferentes documentações
+    document.addEventListener('DOMContentLoaded', function() {
+      // Limpar o cache do navegador para evitar conflitos
+      if (window.location.pathname === '/api-docs/' || window.location.pathname === '/api-docs/index.html') {
+        localStorage.removeItem('swagger-ui-presets');
+        localStorage.removeItem('swagger-ui:oas3');
+        localStorage.removeItem('swagger-ui');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -8,6 +8,7 @@ dotenv.config();
 import './database';
 
 import express from 'express';
+import setupSwagger from './swagger/setup';
 import homeRoutes from './routes/homeRoutes';
 import entityRoutes from './routes/entityRoutes';
 import workOrderRoutes from './routes/workOrderRoutes';
@@ -57,6 +58,7 @@ class App {
     this.app = express();
     this.middlewares();
     this.routes();
+    this.swagger();
   }
 
   middlewares() {
@@ -95,6 +97,10 @@ class App {
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
     //this.app.use('/transactions/items/', transactionItemRoutes);
+  }
+
+  swagger() {
+    setupSwagger(this.app);
   }
 }
 
