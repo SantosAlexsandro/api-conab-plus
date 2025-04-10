@@ -5,21 +5,15 @@
  *    ContractResponse:
  *      type: object
  *      properties:
+ *        customerId:
+ *          type: string
+ *          description: ID do cliente na Conab+
  *        hasActiveContract:
  *          type: boolean
  *          description: Indica se o cliente possui contratos ativos
- *        customerInfo:
- *          type: object
- *          properties:
- *            id:
- *              type: string
- *              description: ID do cliente no G4Flex
- *            name:
- *              type: string
- *              description: Nome do cliente
- *            document:
- *              type: string
- *              description: Documento do cliente (CPF/CNPJ)
+ *        customerName:
+ *          type: string
+ *          description: Nome do cliente
  *    Error:
  *      type: object
  *      properties:

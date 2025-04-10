@@ -5,82 +5,91 @@
  *    WorkOrderCheckResponse:
  *      type: object
  *      properties:
- *        hasOpenWorkOrders:
+ *        customerHasOpenOrders:
  *          type: boolean
  *          description: Indica se o cliente possui ordens de serviço abertas
- *        customerInfo:
- *          type: object
- *          properties:
- *            id:
- *              type: string
- *              description: ID do cliente no G4Flex
- *            name:
- *              type: string
- *              description: Nome do cliente
- *            document:
- *              type: string
- *              description: Documento do cliente (CPF/CNPJ)
- *        workOrders:
+ *        quantityOrders:
+ *          type: integer
+ *          description: Quantidade de ordens de serviço abertas
+ *          default: 1
+ *        orders:
  *          type: array
  *          items:
  *            type: object
  *            properties:
- *              id:
+ *              number:
  *                type: string
- *                description: ID da ordem de serviço
- *              status:
- *                type: string
- *                description: Status da ordem de serviço
- *              openDate:
+ *                description: Número da ordem de serviço
+ *              registrationDate:
  *                type: string
  *                format: date-time
- *                description: Data de abertura da ordem de serviço
- *              description:
- *                type: string
- *                description: Descrição da ordem de serviço
+ *                description: Data de registro da ordem de serviço
  *    WorkOrderCreateRequest:
  *      type: object
  *      required:
- *        - customerId
- *        - uraRequestId
- *        - description
+ *        - requesterName
+ *        - requesterPosition
+ *        - incidentDescription
+ *        - siteContactPerson
+ *        - productId
  *      properties:
- *        customerId:
+ *        requesterWhatsApp:
  *          type: string
- *          description: ID do cliente no G4Flex
- *        uraRequestId:
+ *          description: Número do WhatsApp do cliente
+ *        productId:
  *          type: string
- *          description: ID da requisição da URA
- *        description:
+ *          description: Código de identificação do produto
+ *        requesterName:
  *          type: string
- *          description: Descrição da ordem de serviço
- *        type:
+ *          description: Nome do solicitante
+ *        requesterPosition:
  *          type: string
- *          description: Tipo da ordem de serviço
+ *          description: Cargo/função do solicitante
+ *        incidentDescription:
+ *          type: string
+ *          description: Descrição do problema relatado
+ *        siteContactPerson:
+ *          type: string
+ *          description: Responsável que estará no local (zelador/acompanhante)
  *    WorkOrderCreateResponse:
  *      type: object
  *      properties:
  *        success:
  *          type: boolean
- *          description: Indica se a ordem de serviço foi criada com sucesso
- *        workOrderId:
- *          type: string
- *          description: ID da ordem de serviço criada
+ *          description: Indica se a solicitação foi processada com sucesso
  *        message:
  *          type: string
- *          description: Mensagem de sucesso
+ *          description: Mensagem descritiva do resultado da operação
  *    WorkOrderCloseResponse:
  *      type: object
  *      properties:
  *        success:
  *          type: boolean
  *          description: Indica se a ordem de serviço foi fechada com sucesso
- *        workOrderId:
- *          type: string
- *          description: ID da ordem de serviço fechada
  *        message:
  *          type: string
  *          description: Mensagem de sucesso
+ *        orders:
+ *          type: array
+ *          items:
+ *            type: string
+ *          description: Lista de números das ordens de serviço fechadas
+ *    WorkOrderCloseRequest:
+ *      type: object
+ *      required:
+ *        - requesterName
+ *        - requesterPosition
+ *        - cancellationReason
+ *      properties:
+ *        requesterName:
+ *          type: string
+ *          description: Nome do solicitante
+ *        requesterPosition:
+ *          type: string
+ *          description: Cargo/função do solicitante
+ *        cancellationReason:
+ *          type: string
+ *          description: Motivo do cancelamento
  */
 
 /**
@@ -128,6 +137,11 @@
  *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
  *    summary: Solicita uma nova ordem de serviço
  *    description: Solicita uma nova ordem de serviço na Conab+ para o cliente especificado
+ *    parameters:
+ *      - $ref: '#/components/parameters/cpfParam'
+ *      - $ref: '#/components/parameters/cnpjParam'
+ *      - $ref: '#/components/parameters/customerIdParam'
+ *      - $ref: '#/components/parameters/uraRequestIdParam'
  *    requestBody:
  *      required: true
  *      content:
@@ -136,7 +150,7 @@
  *            $ref: '#/components/schemas/WorkOrderCreateRequest'
  *    responses:
  *      '200':
- *        description: Ordem de serviço criada com sucesso
+ *        description: Solicitação de criação de Ordem de Serviço realizada com sucesso.
  *        content:
  *          application/json:
  *            schema:
@@ -164,16 +178,22 @@
  *  post:
  *    tags:
  *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
- *    summary: Fecha uma ordem de serviço aberta
- *    description: Fecha uma ordem de serviço aberta na Conab+ para o cliente especificado
+ *    summary: Fecha ordens de serviço abertas
+ *    description: Fecha ordens de serviço abertas na Conab+ para o cliente especificado
  *    parameters:
  *      - $ref: '#/components/parameters/cpfParam'
  *      - $ref: '#/components/parameters/cnpjParam'
  *      - $ref: '#/components/parameters/customerIdParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/WorkOrderCloseRequest'
  *    responses:
  *      '200':
- *        description: Ordem de serviço fechada com sucesso
+ *        description: Ordens de serviço fechadas com sucesso
  *        content:
  *          application/json:
  *            schema:
