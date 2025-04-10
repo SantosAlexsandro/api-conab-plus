@@ -126,8 +126,8 @@
  *  post:
  *    tags:
  *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
- *    summary: Cria uma nova ordem de serviço
- *    description: Cria uma nova ordem de serviço na Conab+ para o cliente especificado
+ *    summary: Solicita uma nova ordem de serviço
+ *    description: Solicita uma nova ordem de serviço na Conab+ para o cliente especificado
  *    requestBody:
  *      required: true
  *      content:
