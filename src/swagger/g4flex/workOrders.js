@@ -5,39 +5,25 @@
  *    WorkOrderCheckResponse:
  *      type: object
  *      properties:
- *        hasOpenWorkOrders:
+ *        customerHasOpenOrders:
  *          type: boolean
  *          description: Indica se o cliente possui ordens de serviço abertas
- *        customerInfo:
- *          type: object
- *          properties:
- *            id:
- *              type: string
- *              description: ID do cliente no G4Flex
- *            name:
- *              type: string
- *              description: Nome do cliente
- *            document:
- *              type: string
- *              description: Documento do cliente (CPF/CNPJ)
- *        workOrders:
+ *        quantityOrders:
+ *          type: integer
+ *          description: Quantidade de ordens de serviço abertas
+ *          default: 1
+ *        orders:
  *          type: array
  *          items:
  *            type: object
  *            properties:
- *              id:
+ *              number:
  *                type: string
- *                description: ID da ordem de serviço
- *              status:
- *                type: string
- *                description: Status da ordem de serviço
- *              openDate:
+ *                description: Número da ordem de serviço
+ *              registrationDate:
  *                type: string
  *                format: date-time
- *                description: Data de abertura da ordem de serviço
- *              description:
- *                type: string
- *                description: Descrição da ordem de serviço
+ *                description: Data de registro da ordem de serviço
  *    WorkOrderCreateRequest:
  *      type: object
  *      required:
