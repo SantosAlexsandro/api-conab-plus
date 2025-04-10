@@ -5,40 +5,15 @@
  *    ContractResponse:
  *      type: object
  *      properties:
+ *        customerId:
+ *          type: string
+ *          description: ID do cliente na Conab+
  *        hasActiveContract:
  *          type: boolean
  *          description: Indica se o cliente possui contratos ativos
- *        customerInfo:
- *          type: object
- *          properties:
- *            id:
- *              type: string
- *              description: ID do cliente no G4Flex
- *            name:
- *              type: string
- *              description: Nome do cliente
- *            document:
- *              type: string
- *              description: Documento do cliente (CPF/CNPJ)
- *        contracts:
- *          type: array
- *          items:
- *            type: object
- *            properties:
- *              id:
- *                type: string
- *                description: ID do contrato
- *              status:
- *                type: string
- *                description: Status do contrato
- *              startDate:
- *                type: string
- *                format: date
- *                description: Data de início do contrato
- *              endDate:
- *                type: string
- *                format: date
- *                description: Data de término do contrato
+ *        customerName:
+ *          type: string
+ *          description: Nome do cliente
  *    Error:
  *      type: object
  *      properties:

@@ -20,25 +20,6 @@
  *            document:
  *              type: string
  *              description: Documento do cliente (CPF/CNPJ)
- *        contracts:
- *          type: array
- *          items:
- *            type: object
- *            properties:
- *              id:
- *                type: string
- *                description: ID do contrato
- *              status:
- *                type: string
- *                description: Status do contrato
- *              startDate:
- *                type: string
- *                format: date
- *                description: Data de início do contrato
- *              endDate:
- *                type: string
- *                format: date
- *                description: Data de término do contrato
  *    Error:
  *      type: object
  *      properties:

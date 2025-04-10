@@ -29,8 +29,8 @@ class ContractService extends BaseG4FlexService {
 
       const responseData = {
         customerId: finalCustomerId,
-        customerName,
-        hasActiveContract: this.validateActiveContract(contractResponse.data)
+        hasActiveContract: this.validateActiveContract(contractResponse.data),
+        customerName
       };
 
       return responseData;
