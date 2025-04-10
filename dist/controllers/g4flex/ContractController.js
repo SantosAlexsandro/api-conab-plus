@@ -6,14 +6,12 @@ var _logEvent = require('../../utils/logEvent'); var _logEvent2 = _interopRequir
 
 class ContractController {
   async checkContract(req, res) {
-    let { cpf, cnpj, customerId, uraRequestId } = req.query;
+    let { customerIdentifier, uraRequestId } = req.query;
+    let cpf = null;
+    let cnpj = null;
+    let customerId = null;
 
     try {
-      // Validação inicial do uraRequestId
-      if (!uraRequestId) {
-        return res.status(400).json({ error: 'URA request ID is required' });
-      }
-
       const validationError = _uraValidator.validateURAQuery.call(void 0, req.query);
       if (validationError) {
         await _logEvent2.default.call(void 0, {
@@ -28,55 +26,69 @@ class ContractController {
         return res.status(400).json({ error: validationError });
       }
 
-      if (customerId) {
-        const formatted = _formatUtils.formatCustomerId.call(void 0, customerId);
-        if (!formatted) {
-          await _logEvent2.default.call(void 0, {
-            uraRequestId,
-            source: 'controller_g4flex',
-            action: 'contract_check_validation_error',
-            payload: req.query,
-            response: { error: 'Invalid Customer ID' },
-            statusCode: 400,
-            error: 'Invalid Customer ID'
-          });
-          return res.status(400).json({ error: 'Invalid Customer ID' });
-        }
-        customerId = formatted;
-      }
+      // Determina o tipo de identificador e formata adequadamente
+      if (customerIdentifier) {
+        const identifierType = _uraValidator.determineIdentifierType.call(void 0, customerIdentifier);
 
-      if (cpf) {
-        const formatted = _formatUtils.formatCPF.call(void 0, cpf);
-        if (!formatted) {
+        if (!identifierType) {
           await _logEvent2.default.call(void 0, {
             uraRequestId,
             source: 'controller_g4flex',
             action: 'contract_check_validation_error',
             payload: req.query,
-            response: { error: 'Invalid CPF' },
+            response: { error: 'Invalid customer identifier format' },
             statusCode: 400,
-            error: 'Invalid CPF'
+            error: 'Invalid customer identifier format'
           });
-          return res.status(400).json({ error: 'Invalid CPF' });
+          return res.status(400).json({ error: 'Invalid customer identifier format' });
         }
-        cpf = formatted;
-      }
 
-      if (cnpj) {
-        const formatted = _formatUtils.formatCNPJ.call(void 0, cnpj);
-        if (!formatted) {
-          await _logEvent2.default.call(void 0, {
-            uraRequestId,
-            source: 'controller_g4flex',
-            action: 'contract_check_validation_error',
-            payload: req.query,
-            response: { error: 'Invalid CNPJ' },
-            statusCode: 400,
-            error: 'Invalid CNPJ'
-          });
-          return res.status(400).json({ error: 'Invalid CNPJ' });
+        if (identifierType === 'CPF') {
+          const formatted = _formatUtils.formatCPF.call(void 0, customerIdentifier);
+          if (!formatted) {
+            await _logEvent2.default.call(void 0, {
+              uraRequestId,
+              source: 'controller_g4flex',
+              action: 'contract_check_validation_error',
+              payload: req.query,
+              response: { error: 'Invalid CPF' },
+              statusCode: 400,
+              error: 'Invalid CPF'
+            });
+            return res.status(400).json({ error: 'Invalid CPF' });
+          }
+          cpf = formatted;
+        } else if (identifierType === 'CNPJ') {
+          const formatted = _formatUtils.formatCNPJ.call(void 0, customerIdentifier);
+          if (!formatted) {
+            await _logEvent2.default.call(void 0, {
+              uraRequestId,
+              source: 'controller_g4flex',
+              action: 'contract_check_validation_error',
+              payload: req.query,
+              response: { error: 'Invalid CNPJ' },
+              statusCode: 400,
+              error: 'Invalid CNPJ'
+            });
+            return res.status(400).json({ error: 'Invalid CNPJ' });
+          }
+          cnpj = formatted;
+        } else if (identifierType === 'CUSTOMER_ID') {
+          const formatted = _formatUtils.formatCustomerId.call(void 0, customerIdentifier);
+          if (!formatted) {
+            await _logEvent2.default.call(void 0, {
+              uraRequestId,
+              source: 'controller_g4flex',
+              action: 'contract_check_validation_error',
+              payload: req.query,
+              response: { error: 'Invalid Customer ID' },
+              statusCode: 400,
+              error: 'Invalid Customer ID'
+            });
+            return res.status(400).json({ error: 'Invalid Customer ID' });
+          }
+          customerId = formatted;
         }
-        cnpj = formatted;
       }
 
       const contract = await _ContractService2.default.checkActiveContract(
@@ -90,7 +102,7 @@ class ContractController {
         uraRequestId,
         source: 'controller_g4flex',
         action: 'contract_check_success',
-        payload: { cpf, cnpj, customerId },
+        payload: { customerIdentifier, identifierType: _uraValidator.determineIdentifierType.call(void 0, customerIdentifier) },
         response: contract,
         statusCode: 200,
         error: null

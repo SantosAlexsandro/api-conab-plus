@@ -90,6 +90,21 @@
  *        cancellationReason:
  *          type: string
  *          description: Motivo do cancelamento
+ *  parameters:
+ *    customerIdentifierParam:
+ *      in: query
+ *      name: customerIdentifier
+ *      required: true
+ *      schema:
+ *        type: string
+ *      description: Identificador do cliente (pode ser CPF, CNPJ ou ID do cliente da Conab)
+ *    uraRequestIdParam:
+ *      in: query
+ *      name: uraRequestId
+ *      required: true
+ *      schema:
+ *        type: string
+ *      description: ID da requisição da URA (obrigatório)
  */
 
 /**
@@ -101,9 +116,7 @@
  *    summary: Verifica se o cliente possui ordens de serviço abertas
  *    description: Verifica na Conab+ se o cliente possui ordens de serviço abertas baseado no CPF, CNPJ ou ID do cliente
  *    parameters:
- *      - $ref: '#/components/parameters/cpfParam'
- *      - $ref: '#/components/parameters/cnpjParam'
- *      - $ref: '#/components/parameters/customerIdParam'
+ *      - $ref: '#/components/parameters/customerIdentifierParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
  *    responses:
  *      '200':
@@ -138,9 +151,7 @@
  *    summary: Solicita uma nova ordem de serviço
  *    description: Solicita uma nova ordem de serviço na Conab+ para o cliente especificado
  *    parameters:
- *      - $ref: '#/components/parameters/cpfParam'
- *      - $ref: '#/components/parameters/cnpjParam'
- *      - $ref: '#/components/parameters/customerIdParam'
+ *      - $ref: '#/components/parameters/customerIdentifierParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
  *    requestBody:
  *      required: true
@@ -181,9 +192,7 @@
  *    summary: Fecha ordens de serviço abertas
  *    description: Fecha ordens de serviço abertas na Conab+ para o cliente especificado
  *    parameters:
- *      - $ref: '#/components/parameters/cpfParam'
- *      - $ref: '#/components/parameters/cnpjParam'
- *      - $ref: '#/components/parameters/customerIdParam'
+ *      - $ref: '#/components/parameters/customerIdentifierParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
  *    requestBody:
  *      required: true

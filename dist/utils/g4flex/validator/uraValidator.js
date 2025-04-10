@@ -1,10 +1,33 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true});// utils/validators/contractValidator.js
 
- function validateURAQuery({ cpf, cnpj, customerId, uraRequestId }) {
+ function validateURAQuery({ customerIdentifier, uraRequestId}) {
   if (!uraRequestId) return 'URA request ID is required';
-  if (!customerId && !cpf && !cnpj) return 'Customer identification is required';
-  if (customerId && (cpf || cnpj)) return 'Customer ID, CPF, or CNPJ cannot be provided simultaneously';
-  if (cpf && cnpj) return 'CPF and CNPJ cannot be provided simultaneously';
-  if (customerId && customerId.length >= 8) return 'Customer ID must be equal or less than 7 characters';
+  if (!customerIdentifier) return 'Customer identification is required';
   return null;
 } exports.validateURAQuery = validateURAQuery;
+
+// Função para determinar o tipo de identificador do cliente
+ function determineIdentifierType(identifier) {
+  if (!identifier) return null;
+
+  // Remove caracteres não numéricos para verificação
+  const numericIdentifier = identifier.replace(/\D/g, '');
+
+  // CPF tem 11 dígitos
+  if (numericIdentifier.length === 11) {
+    return 'CPF';
+  }
+  console.log('numericIdentifier', numericIdentifier);
+
+  // CNPJ tem 14 dígitos
+  if (numericIdentifier.length === 14) {
+    return 'CNPJ';
+  }
+
+  // ID do cliente normalmente tem menos de 8 caracteres
+  if (identifier.length < 8) {
+    return 'CUSTOMER_ID';
+  }
+
+  return null;
+} exports.determineIdentifierType = determineIdentifierType;
