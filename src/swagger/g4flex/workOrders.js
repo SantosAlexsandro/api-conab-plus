@@ -27,34 +27,39 @@
  *    WorkOrderCreateRequest:
  *      type: object
  *      required:
- *        - customerId
- *        - uraRequestId
- *        - description
+ *        - requesterName
+ *        - requesterPosition
+ *        - incidentDescription
+ *        - siteContactPerson
+ *        - productId
  *      properties:
- *        customerId:
+ *        requesterWhatsApp:
  *          type: string
- *          description: ID do cliente no G4Flex
- *        uraRequestId:
+ *          description: Número do WhatsApp do cliente
+ *        productId:
  *          type: string
- *          description: ID da requisição da URA
- *        description:
+ *          description: Código de identificação do produto
+ *        requesterName:
  *          type: string
- *          description: Descrição da ordem de serviço
- *        type:
+ *          description: Nome do solicitante
+ *        requesterPosition:
  *          type: string
- *          description: Tipo da ordem de serviço
+ *          description: Cargo/função do solicitante
+ *        incidentDescription:
+ *          type: string
+ *          description: Descrição do problema relatado
+ *        siteContactPerson:
+ *          type: string
+ *          description: Responsável que estará no local (zelador/acompanhante)
  *    WorkOrderCreateResponse:
  *      type: object
  *      properties:
  *        success:
  *          type: boolean
- *          description: Indica se a ordem de serviço foi criada com sucesso
- *        workOrderId:
- *          type: string
- *          description: ID da ordem de serviço criada
+ *          description: Indica se a solicitação foi processada com sucesso
  *        message:
  *          type: string
- *          description: Mensagem de sucesso
+ *          description: Mensagem descritiva do resultado da operação
  *    WorkOrderCloseResponse:
  *      type: object
  *      properties:
@@ -132,6 +137,11 @@
  *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
  *    summary: Solicita uma nova ordem de serviço
  *    description: Solicita uma nova ordem de serviço na Conab+ para o cliente especificado
+ *    parameters:
+ *      - $ref: '#/components/parameters/cpfParam'
+ *      - $ref: '#/components/parameters/cnpjParam'
+ *      - $ref: '#/components/parameters/customerIdParam'
+ *      - $ref: '#/components/parameters/uraRequestIdParam'
  *    requestBody:
  *      required: true
  *      content:
@@ -140,7 +150,7 @@
  *            $ref: '#/components/schemas/WorkOrderCreateRequest'
  *    responses:
  *      '200':
- *        description: Ordem de serviço criada com sucesso
+ *        description: Solicitação de criação de Ordem de Serviço realizada com sucesso.
  *        content:
  *          application/json:
  *            schema:
