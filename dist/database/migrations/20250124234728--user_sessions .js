@@ -15,10 +15,6 @@
         type: Sequelize.TEXT,
         allowNull: false,
       },
-      password_hash: {
-        type: Sequelize.TEXT,
-        allowNull: false,
-      },
       session_token: {
         type: Sequelize.TEXT,
         allowNull: false,

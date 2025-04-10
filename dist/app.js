@@ -8,13 +8,14 @@ _dotenv2.default.config();
 require('./database');
 
 var _express = require('express'); var _express2 = _interopRequireDefault(_express);
+var _setup = require('./swagger/setup'); var _setup2 = _interopRequireDefault(_setup);
 var _homeRoutes = require('./routes/homeRoutes'); var _homeRoutes2 = _interopRequireDefault(_homeRoutes);
 var _entityRoutes = require('./routes/entityRoutes'); var _entityRoutes2 = _interopRequireDefault(_entityRoutes);
 var _workOrderRoutes = require('./routes/workOrderRoutes'); var _workOrderRoutes2 = _interopRequireDefault(_workOrderRoutes);
 var _workOrderPhotoRoutes = require('./routes/workOrderPhotoRoutes'); var _workOrderPhotoRoutes2 = _interopRequireDefault(_workOrderPhotoRoutes);
 var _workOrderAudioRoutes = require('./routes/workOrderAudioRoutes'); var _workOrderAudioRoutes2 = _interopRequireDefault(_workOrderAudioRoutes);
 var _workShiftRoutes = require('./routes/workShiftRoutes'); var _workShiftRoutes2 = _interopRequireDefault(_workShiftRoutes);
-var _erpUserGroupRoutes = require('./routes/erpUserGroupRoutes'); var _erpUserGroupRoutes2 = _interopRequireDefault(_erpUserGroupRoutes);
+var _userGroupRoutes = require('./routes/userGroupRoutes'); var _userGroupRoutes2 = _interopRequireDefault(_userGroupRoutes);
 var _tokenRoutes = require('./routes/tokenRoutes'); var _tokenRoutes2 = _interopRequireDefault(_tokenRoutes);
 // import itemRoutes from './routes/itemRoutes';
 // import transactionRoutes from './routes/transactionRoutes';
@@ -28,7 +29,13 @@ var _cityRoutes = require('./routes/cityRoutes'); var _cityRoutes2 = _interopReq
 var _streetTypeRoutes = require('./routes/streetTypeRoutes'); var _streetTypeRoutes2 = _interopRequireDefault(_streetTypeRoutes);
 var _authRoutes = require('./routes/authRoutes'); var _authRoutes2 = _interopRequireDefault(_authRoutes);
 var _addressRoutes = require('./routes/addressRoutes'); var _addressRoutes2 = _interopRequireDefault(_addressRoutes);
+
 var _gupshupRoutes = require('./routes/gupshupRoutes'); var _gupshupRoutes2 = _interopRequireDefault(_gupshupRoutes);
+
+// G4Flex
+var _contractRoutes = require('./routes/g4flex/contractRoutes'); var _contractRoutes2 = _interopRequireDefault(_contractRoutes);
+var _workOrderRoutes3 = require('./routes/g4flex/workOrderRoutes'); var _workOrderRoutes4 = _interopRequireDefault(_workOrderRoutes3);
+
 
 const whiteList = [
   'http://localhost:8080',
@@ -51,6 +58,7 @@ class App {
     this.app = _express2.default.call(void 0, );
     this.middlewares();
     this.routes();
+    this.swagger();
   }
 
   middlewares() {
@@ -60,7 +68,7 @@ class App {
     this.app.use(_express2.default.json({ limit: '50mb' }));
     // this.app.use('/images/', express.static(resolve(__dirname, '..', 'uploads', 'images')));
   }
-//
+
   routes() {
     this.app.use('/', _homeRoutes2.default);
     this.app.use('/entities/', _entityRoutes2.default);
@@ -68,7 +76,7 @@ class App {
     this.app.use('/work-orders-photos/', _workOrderPhotoRoutes2.default);
     this.app.use('/work-orders-audios/', _workOrderAudioRoutes2.default);
     this.app.use('/work-shifts/', _workShiftRoutes2.default);
-    this.app.use('/erp-user-groups/', _erpUserGroupRoutes2.default);
+    this.app.use('/erp-user-groups/', _userGroupRoutes2.default);
     this.app.use('/tokens/', _tokenRoutes2.default);
     this.app.use('/api/', _regionsRoutes2.default);
     this.app.use('/api/', _categoryRoutes2.default);
@@ -79,11 +87,20 @@ class App {
     this.app.use('/street-types/', _streetTypeRoutes2.default);
     this.app.use('/auth/', _authRoutes2.default);
     this.app.use('/api/', _addressRoutes2.default);
-    this.app.use('/gupshup/', _gupshupRoutes2.default);
+    this.app.use('/user-groups/', _userGroupRoutes2.default);
+    //this.app.use('/gupshup/', gupshupRoutes);
+
+    // G4Flex
+    this.app.use('/g4flex/contracts/', _contractRoutes2.default);
+    this.app.use('/g4flex/work-orders/', _workOrderRoutes4.default);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
     //this.app.use('/transactions/items/', transactionItemRoutes);
+  }
+
+  swagger() {
+    _setup2.default.call(void 0, this.app);
   }
 }
 
