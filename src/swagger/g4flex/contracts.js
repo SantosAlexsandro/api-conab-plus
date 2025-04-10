@@ -21,24 +21,13 @@
  *          type: string
  *          description: Mensagem de erro
  *  parameters:
- *    cpfParam:
+ *    customerIdentifierParam:
  *      in: query
- *      name: cpf
+ *      name: customerIdentifier
+ *      required: true
  *      schema:
  *        type: string
- *      description: CPF do cliente (11 dígitos)
- *    cnpjParam:
- *      in: query
- *      name: cnpj
- *      schema:
- *        type: string
- *      description: CNPJ do cliente (14 dígitos)
- *    customerIdParam:
- *      in: query
- *      name: customerId
- *      schema:
- *        type: string
- *      description: ID do cliente no G4Flex
+ *      description: Identificador do cliente (pode ser CPF, CNPJ ou ID do cliente da Conab)
  *    uraRequestIdParam:
  *      in: query
  *      name: uraRequestId
@@ -57,9 +46,7 @@
  *    summary: Verifica se o cliente possui contratos ativos
  *    description: Verifica na Conab+ se o cliente possui contratos ativos baseado no CPF, CNPJ ou ID do cliente
  *    parameters:
- *      - $ref: '#/components/parameters/cpfParam'
- *      - $ref: '#/components/parameters/cnpjParam'
- *      - $ref: '#/components/parameters/customerIdParam'
+ *      - $ref: '#/components/parameters/customerIdentifierParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
  *    responses:
  *      '200':
