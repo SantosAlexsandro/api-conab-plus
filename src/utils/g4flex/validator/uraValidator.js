@@ -1,6 +1,6 @@
 // utils/validators/contractValidator.js
 
-export function validateURAQuery({ customerIdentifier, uraRequestId}) {
+export function validateURAQuery({ customerIdentifier, uraRequestId }) {
   if (!uraRequestId) return 'URA request ID is required';
   if (!customerIdentifier) return 'Customer identification is required';
   return null;

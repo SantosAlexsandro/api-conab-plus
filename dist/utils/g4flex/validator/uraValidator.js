@@ -1,6 +1,6 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true});// utils/validators/contractValidator.js
 
- function validateURAQuery({ customerIdentifier, uraRequestId}) {
+ function validateURAQuery({ customerIdentifier, uraRequestId }) {
   if (!uraRequestId) return 'URA request ID is required';
   if (!customerIdentifier) return 'Customer identification is required';
   return null;

@@ -6,15 +6,10 @@ import logEvent from '../../utils/logEvent';
 class WorkOrderController {
 
   async checkWorkOrder(req, res) {
-    if (!req.query.uraRequestId) {
-      return res.status(400).json({ error: 'URA request ID is required' });
-    }
-    if (!req.query.customerIdentifier) {
-      return res.status(400).json({ error: 'Customer identifier is required' });
-    }
+    console.log('req.query', req.query);
     const validationError = validateURAQuery(req.query);
 
-    let { customerIdentifier, uraRequestId } = req.query;
+    let { customerIdentifier = '', uraRequestId = '' } = req.query;
     let cpf = null;
     let cnpj = null;
     let customerId = null;
@@ -137,7 +132,7 @@ class WorkOrderController {
   }
 
   async closeWorkOrder(req, res) {
-    let { customerIdentifier, uraRequestId } = req.query;
+    let { customerIdentifier = '', uraRequestId = '' } = req.query;
     let cpf = null;
     let cnpj = null;
     let customerId = null;
@@ -260,7 +255,7 @@ class WorkOrderController {
   }
 
   async createWorkOrder(req, res) {
-    let { customerIdentifier, uraRequestId } = req.query;
+    let { customerIdentifier = '', uraRequestId = '' } = req.query;
     let cpf = null;
     let cnpj = null;
     let customerId = null;

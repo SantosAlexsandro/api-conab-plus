@@ -6,7 +6,7 @@ import logEvent from '../../utils/logEvent';
 
 class ContractController {
   async checkContract(req, res) {
-    let { customerIdentifier, uraRequestId } = req.query;
+    let { customerIdentifier = '', uraRequestId = '' } = req.query;
     let cpf = null;
     let cnpj = null;
     let customerId = null;

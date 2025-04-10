@@ -6,7 +6,7 @@ var _logEvent = require('../../utils/logEvent'); var _logEvent2 = _interopRequir
 
 class ContractController {
   async checkContract(req, res) {
-    let { customerIdentifier, uraRequestId } = req.query;
+    let { customerIdentifier = '', uraRequestId = '' } = req.query;
     let cpf = null;
     let cnpj = null;
     let customerId = null;
