@@ -61,12 +61,30 @@
  *        success:
  *          type: boolean
  *          description: Indica se a ordem de serviço foi fechada com sucesso
- *        workOrderId:
- *          type: string
- *          description: ID da ordem de serviço fechada
  *        message:
  *          type: string
  *          description: Mensagem de sucesso
+ *        orders:
+ *          type: array
+ *          items:
+ *            type: string
+ *          description: Lista de números das ordens de serviço fechadas
+ *    WorkOrderCloseRequest:
+ *      type: object
+ *      required:
+ *        - requesterName
+ *        - requesterPosition
+ *        - cancellationReason
+ *      properties:
+ *        requesterName:
+ *          type: string
+ *          description: Nome do solicitante
+ *        requesterPosition:
+ *          type: string
+ *          description: Cargo/função do solicitante
+ *        cancellationReason:
+ *          type: string
+ *          description: Motivo do cancelamento
  */
 
 /**
@@ -150,16 +168,22 @@
  *  post:
  *    tags:
  *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
- *    summary: Fecha uma ordem de serviço aberta
- *    description: Fecha uma ordem de serviço aberta na Conab+ para o cliente especificado
+ *    summary: Fecha ordens de serviço abertas
+ *    description: Fecha ordens de serviço abertas na Conab+ para o cliente especificado
  *    parameters:
  *      - $ref: '#/components/parameters/cpfParam'
  *      - $ref: '#/components/parameters/cnpjParam'
  *      - $ref: '#/components/parameters/customerIdParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/WorkOrderCloseRequest'
  *    responses:
  *      '200':
- *        description: Ordem de serviço fechada com sucesso
+ *        description: Ordens de serviço fechadas com sucesso
  *        content:
  *          application/json:
  *            schema:
