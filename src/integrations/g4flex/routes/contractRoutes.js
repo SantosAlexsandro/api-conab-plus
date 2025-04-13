@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import contractController from '../../controllers/g4flex/ContractController';
+import contractController from '../controllers/ContractController';
 
 const router = Router();
 
@@ -11,6 +11,8 @@ const router = Router();
  * @query {string} [customerId] - Customer ID in G4Flex
  * @returns {Object} Information about customer's active contracts
  */
+
+
 router.get('/check-active', contractController.checkContract);
 
 export default router;

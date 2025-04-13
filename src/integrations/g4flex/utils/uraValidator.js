@@ -1,5 +1,5 @@
 // utils/validators/contractValidator.js
-import { formatCPF, formatCNPJ, formatCustomerId } from '../../string/formatUtils';
+import { formatCPF, formatCNPJ, formatCustomerId } from '../../../utils/string/formatUtils';
 
 export function validateURAQuery({ customerIdentifier, uraRequestId }) {
   if (!uraRequestId) return 'URA request ID is required';

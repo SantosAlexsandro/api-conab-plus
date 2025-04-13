@@ -1,10 +1,11 @@
-// src/services/g4flex/WorkOrderService.js
+// src/integrations/g4flex/services/WorkOrderService.js
 
 import BaseG4FlexService from './BaseG4FlexService';
 import webhookService from './WebhookService';
-import { determineIdentifierType } from '../../utils/g4flex/validator/uraValidator';
-import { formatCustomerId } from '../../utils/string/formatUtils';
-import logEvent from '../../utils/logEvent';
+import { determineIdentifierType } from '../utils/uraValidator';
+import { formatCustomerId } from '../../../utils/string/formatUtils';
+import logEvent from '../../../utils/logEvent';
+
 class WorkOrderService extends BaseG4FlexService {
   constructor() {
     super();

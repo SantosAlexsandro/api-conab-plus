@@ -1,6 +1,6 @@
-// src/services/g4flex/ContractService.js
+// src/integrations/g4flex/services/ContractService.js
 import BaseG4FlexService from './BaseG4FlexService';
-import logEvent from '../../utils/logEvent';
+import logEvent from '../../../utils/logEvent';
 
 class ContractService extends BaseG4FlexService {
   constructor() {

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import workOrderController from '../../controllers/g4flex/WorkOrderController';
+import workOrderController from '../controllers/WorkOrderController';
 
 const router = new Router();
 

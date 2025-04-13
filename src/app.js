@@ -33,8 +33,8 @@ import userGroupRoutes from './routes/userGroupRoutes'
 import gupshupRoutes from './routes/gupshupRoutes'
 
 // G4Flex
-import g4flexContractRoutes from './routes/g4flex/contractRoutes'
-import g4flexWorkOrderRoutes from './routes/g4flex/workOrderRoutes'
+import g4flexContractRoutes from './integrations/g4flex/routes/contractRoutes'
+import g4flexWorkOrderRoutes from './integrations/g4flex/routes/workOrderRoutes'
 
 
 const whiteList = [

@@ -1,5 +1,5 @@
 // utils/g4flex/resolveNumericIdentifier.ts
-import { determineIdentifierType } from './validator/uraValidator';
+import { determineIdentifierType } from './uraValidator';
 
 export function resolveNumericIdentifier(identifier) {
   const type = determineIdentifierType(identifier);

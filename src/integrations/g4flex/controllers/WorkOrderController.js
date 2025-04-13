@@ -1,12 +1,12 @@
-// src/controllers/g4flex/WorkOrderController.js
+// src/integrations/g4flex/controllers/WorkOrderController.js
 
-import WorkOrderService from "../../services/g4flex/WorkOrderService";
+import WorkOrderService from "../services/WorkOrderService";
 import {
   validateURAQuery,
   determineIdentifierType,
-} from "../../utils/g4flex/validator/uraValidator";
-import { resolveNumericIdentifier } from "../../utils/g4flex/resolveNumericIdentifier";
-import logEvent from "../../utils/logEvent";
+} from "../utils/uraValidator";
+import { resolveNumericIdentifier } from "../utils/resolveNumericIdentifier";
+import logEvent from "../../../utils/logEvent";
 
 class WorkOrderController {
   async checkWorkOrder(req, res) {

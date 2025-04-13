@@ -1,8 +1,8 @@
-// src/controllers/g4flex/ContractController.js
-import contractService from '../../services/g4flex/ContractService';
-import { formatCustomerId, formatCPF, formatCNPJ } from '../../utils/string/formatUtils';
-import { validateURAQuery, determineIdentifierType } from '../../utils/g4flex/validator/uraValidator';
-import logEvent from '../../utils/logEvent';
+// src/integrations/g4flex/controllers/ContractController.js
+import contractService from '../services/ContractService';
+import { formatCustomerId, formatCPF, formatCNPJ } from '../../../utils/string/formatUtils';
+import { validateURAQuery, determineIdentifierType } from '../utils/uraValidator';
+import logEvent from '../../../utils/logEvent';
 
 class ContractController {
   async checkContract(req, res) {
