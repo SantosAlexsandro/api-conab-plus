@@ -1,6 +1,10 @@
+// src/services/g4flex/WorkOrderService.js
+
 import BaseG4FlexService from './BaseG4FlexService';
 import webhookService from './WebhookService';
-
+import { determineIdentifierType } from '../../utils/g4flex/validator/uraValidator';
+import { formatCustomerId } from '../../utils/string/formatUtils';
+import logEvent from '../../utils/logEvent';
 class WorkOrderService extends BaseG4FlexService {
   constructor() {
     super();
@@ -144,24 +148,36 @@ class WorkOrderService extends BaseG4FlexService {
     }
   }
 
+
+  // Criar Ordem de Serviço
   async createWorkOrder({
+    uraRequestId,
+    cpf,
+    cnpj,
+    customerId,
     productId,
-    requesterName,
-    requesterPosition,
-    incidentDescription,
-    siteContactPerson
+    requesterNameAndPosition,
+    IncidentAndReceiverName,
+    requesterWhatsApp
   }) {
     try {
       console.log('[WorkOrderService] Starting work order creation process');
 
+      let finalCustomerId = customerId;
+
+      if (!finalCustomerId) {
+        const document = cpf || cnpj;
+        const customerData = await this.getCustomerData(document);
+        finalCustomerId = customerData.codigo;
+      }
+
       const workOrderData = {
-        CodigoEmpresaFilial: '1',
+        CodigoEntidade: finalCustomerId,
+        CodigoEntidadeAtendida: finalCustomerId,
+        CodigoTipoOrdServ: '007',
+        CodigoTipoAtendContrato: '0000002',
         CodigoProduto: productId,
-        NomeSolicitante: requesterName,
-        CargoSolicitante: requesterPosition,
-        DescricaoProblema: incidentDescription,
-        NomeResponsavelLocal: siteContactPerson,
-        Status: 'Aberta'
+        //NumeroContrato: '0017693'
       };
 
       // 1. Create work order
@@ -175,34 +191,63 @@ class WorkOrderService extends BaseG4FlexService {
         throw new Error(response.data?.error || 'Failed to create work order');
       }
 
-      const workOrder = {
-        number: response.data.Numero,
-        status: response.data.Status,
-        createdAt: response.data.DataCadastro,
-        technician: response.data.NomeTecnico || null
-      };
+      await logEvent({
+        uraRequestId,
+        source: 'service_g4flex',
+        action: 'work_order_create_success',
+        payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+        response: { workOrder: response?.data?.Numero }
+      });
 
-      console.log(`[WorkOrderService] Work order ${workOrder.number} created successfully`);
+      console.log(`[WorkOrderService] Work order ${response?.data?.Numero} created successfully`);
 
       // 2. Notify webhook
       console.log('[WorkOrderService] Notifying webhook');
       try {
         await webhookService.notifyWorkOrderCreated({
-          workOrderId: workOrder.number,
-          technicianName: workOrder.technician
+          workOrderId: response?.data?.Numero
+        });
+
+        await logEvent({
+          uraRequestId,
+          source: 'service_g4flex',
+          action: 'work_order_create_webhook_success',
+          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+          response: { workOrder: response?.data?.Numero }
         });
         console.log('[WorkOrderService] Webhook notification sent successfully');
       } catch (webhookError) {
+        await logEvent({
+          uraRequestId,
+          source: 'service_g4flex',
+          action: 'work_order_create_webhook_error',
+          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+          response: { error: webhookError.message },
+          statusCode: 500,
+          error: webhookError.message
+        });
+
         console.error('[WorkOrderService] Webhook notification failed:', webhookError);
         // Continue processing as the work order was created successfully
       }
 
       return {
         success: true,
-        workOrder,
+        workOrder: response?.data?.Numero,
         webhookNotified: true
       };
+
     } catch (error) {
+      await logEvent({
+        uraRequestId,
+        source: 'service_g4flex',
+        action: 'work_order_create_error',
+        payload: { cpf, cnpj, customerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+        response: { error: error.message },
+        statusCode: 500,
+        error: error.message
+      });
+
       console.error('[WorkOrderService] Error in work order creation process:', error);
       this.handleError(error);
       throw new Error(`Error creating work order: ${error.message}`);

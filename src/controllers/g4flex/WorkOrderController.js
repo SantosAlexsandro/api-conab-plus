@@ -1,366 +1,168 @@
-import WorkOrderService from '../../services/g4flex/WorkOrderService';
-import { validateURAQuery, determineIdentifierType } from '../../utils/g4flex/validator/uraValidator';
-import { formatCustomerId, formatCPF, formatCNPJ } from '../../utils/string/formatUtils';
-import logEvent from '../../utils/logEvent';
+// src/controllers/g4flex/WorkOrderController.js
+
+import WorkOrderService from "../../services/g4flex/WorkOrderService";
+import {
+  validateURAQuery,
+  determineIdentifierType,
+} from "../../utils/g4flex/validator/uraValidator";
+import { resolveNumericIdentifier } from "../../utils/g4flex/resolveNumericIdentifier";
+import logEvent from "../../utils/logEvent";
 
 class WorkOrderController {
-
   async checkWorkOrder(req, res) {
-    console.log('req.query', req.query);
+    console.log("req.query", req.query);
     const validationError = validateURAQuery(req.query);
 
-    let { customerIdentifier = '', uraRequestId = '' } = req.query;
-    let cpf = null;
-    let cnpj = null;
-    let customerId = null;
+    let { customerIdentifier = "", uraRequestId = "" } = req.query;
 
     try {
-
       if (validationError) {
         await logEvent({
           uraRequestId,
-          source: 'controller_g4flex',
-          action: 'work_order_check_validation_error',
+          source: "controller_g4flex",
+          action: "work_order_check_validation_error",
           payload: req.query,
           response: { error: validationError },
           statusCode: 400,
-          error: validationError
+          error: validationError,
         });
         return res.status(400).json({ error: validationError });
       }
 
-      // Determina o tipo de identificador e formata adequadamente
-      if (customerIdentifier) {
-        const identifierType = determineIdentifierType(customerIdentifier);
-
-        if (!identifierType) {
-          await logEvent({
-            uraRequestId,
-            source: 'controller_g4flex',
-            action: 'work_order_check_validation_error',
-            payload: req.query,
-            response: { error: 'Invalid customer identifier format' },
-            statusCode: 400,
-            error: 'Invalid customer identifier format'
-          });
-          return res.status(400).json({ error: 'Invalid customer identifier format' });
-        }
-
-        if (identifierType === 'CPF') {
-          const formatted = formatCPF(customerIdentifier);
-          if (!formatted) {
-            await logEvent({
-              uraRequestId,
-              source: 'controller_g4flex',
-              action: 'work_order_check_validation_error',
-              payload: req.query,
-              response: { error: 'Invalid CPF' },
-              statusCode: 400,
-              error: 'Invalid CPF'
-            });
-            return res.status(400).json({ error: 'Invalid CPF' });
-          }
-          cpf = formatted;
-        } else if (identifierType === 'CNPJ') {
-          const formatted = formatCNPJ(customerIdentifier);
-          if (!formatted) {
-            await logEvent({
-              uraRequestId,
-              source: 'controller_g4flex',
-              action: 'work_order_check_validation_error',
-              payload: req.query,
-              response: { error: 'Invalid CNPJ' },
-              statusCode: 400,
-              error: 'Invalid CNPJ'
-            });
-            return res.status(400).json({ error: 'Invalid CNPJ' });
-          }
-          cnpj = formatted;
-        } else if (identifierType === 'CUSTOMER_ID') {
-          const formatted = formatCustomerId(customerIdentifier);
-          if (!formatted) {
-            await logEvent({
-              uraRequestId,
-              source: 'controller_g4flex',
-              action: 'work_order_check_validation_error',
-              payload: req.query,
-              response: { error: 'Invalid Customer ID' },
-              statusCode: 400,
-              error: 'Invalid Customer ID'
-            });
-            return res.status(400).json({ error: 'Invalid Customer ID' });
-          }
-          customerId = formatted;
-        }
-      }
+      const { cpf, cnpj, customerId } = resolveNumericIdentifier(customerIdentifier);
 
       const result = await WorkOrderService.checkWorkOrdersByCustomerId({
         cpf,
         cnpj,
         customerId,
-        uraRequestId
+        uraRequestId,
       });
 
       await logEvent({
         uraRequestId,
-        source: 'controller_g4flex',
-        action: 'work_order_check_success',
-        payload: { customerIdentifier, identifierType: determineIdentifierType(customerIdentifier) },
+        source: "controller_g4flex",
+        action: "work_order_check_success",
+        payload: {
+          customerIdentifier,
+          identifierType: determineIdentifierType(customerIdentifier),
+        },
         response: result,
         statusCode: 200,
-        error: null
+        error: null,
       });
 
       return res.json(result);
     } catch (error) {
-
       await logEvent({
         uraRequestId,
-        source: 'controller_g4flex',
-        action: 'work_order_check_error',
+        source: "controller_g4flex",
+        action: "work_order_check_error",
         payload: req.query,
         response: { error: error.message },
         statusCode: 500,
-        error: error.message
+        error: error.message,
       });
 
-      console.error('Error checking work orders:', error);
+      console.error("Error checking work orders:", error);
       return res.status(500).json({
-        error: error.message || 'Error checking work orders'
+        error: error.message || "Error checking work orders",
       });
     }
   }
 
+  // Fechar Ordem de Serviço
   async closeWorkOrder(req, res) {
-    let { customerIdentifier = '', uraRequestId = '' } = req.query;
-    let cpf = null;
-    let cnpj = null;
-    let customerId = null;
+    let { customerIdentifier = "", uraRequestId = "" } = req.query;
 
     try {
-      // Validação inicial do uraRequestId
-      if (!uraRequestId) {
-        return res.status(400).json({ error: 'URA request ID is required' });
-      }
-
       const validationError = validateURAQuery(req.query);
       if (validationError) {
         await logEvent({
           uraRequestId,
-          source: 'controller_g4flex',
-          action: 'work_order_close_validation_error',
+          source: "controller_g4flex",
+          action: "work_order_close_validation_error",
           payload: req.query,
           response: { error: validationError },
           statusCode: 400,
-          error: validationError
+          error: validationError,
         });
         return res.status(400).json({ error: validationError });
       }
 
-      // Determina o tipo de identificador e formata adequadamente
-      if (customerIdentifier) {
-        const identifierType = determineIdentifierType(customerIdentifier);
+      const { cpf, cnpj, customerId } = resolveNumericIdentifier(customerIdentifier);
 
-        if (!identifierType) {
-          await logEvent({
-            uraRequestId,
-            source: 'controller_g4flex',
-            action: 'work_order_close_validation_error',
-            payload: req.query,
-            response: { error: 'Invalid customer identifier format' },
-            statusCode: 400,
-            error: 'Invalid customer identifier format'
-          });
-          return res.status(400).json({ error: 'Invalid customer identifier format' });
-        }
-
-        if (identifierType === 'CPF') {
-          const formatted = formatCPF(customerIdentifier);
-          if (!formatted) {
-            await logEvent({
-              uraRequestId,
-              source: 'controller_g4flex',
-              action: 'work_order_close_validation_error',
-              payload: req.query,
-              response: { error: 'Invalid CPF' },
-              statusCode: 400,
-              error: 'Invalid CPF'
-            });
-            return res.status(400).json({ error: 'Invalid CPF' });
-          }
-          cpf = formatted;
-        } else if (identifierType === 'CNPJ') {
-          const formatted = formatCNPJ(customerIdentifier);
-          if (!formatted) {
-            await logEvent({
-              uraRequestId,
-              source: 'controller_g4flex',
-              action: 'work_order_close_validation_error',
-              payload: req.query,
-              response: { error: 'Invalid CNPJ' },
-              statusCode: 400,
-              error: 'Invalid CNPJ'
-            });
-            return res.status(400).json({ error: 'Invalid CNPJ' });
-          }
-          cnpj = formatted;
-        } else if (identifierType === 'CUSTOMER_ID') {
-          const formatted = formatCustomerId(customerIdentifier);
-          if (!formatted) {
-            await logEvent({
-              uraRequestId,
-              source: 'controller_g4flex',
-              action: 'work_order_close_validation_error',
-              payload: req.query,
-              response: { error: 'Invalid Customer ID' },
-              statusCode: 400,
-              error: 'Invalid Customer ID'
-            });
-            return res.status(400).json({ error: 'Invalid Customer ID' });
-          }
-          customerId = formatted;
-        }
-      }
-
-      const result = await WorkOrderService.closeWorkOrderByCustomerId({ cpf, cnpj, customerId });
+      const result = await WorkOrderService.closeWorkOrderByCustomerId({
+        cpf,
+        cnpj,
+        customerId,
+      });
 
       await logEvent({
         uraRequestId,
-        source: 'controller_g4flex',
-        action: 'work_order_close_success',
-        payload: { customerIdentifier, identifierType: determineIdentifierType(customerIdentifier) },
+        source: "controller_g4flex",
+        action: "work_order_close_success",
+        payload: {
+          customerIdentifier,
+          identifierType: determineIdentifierType(customerIdentifier),
+        },
         response: result,
         statusCode: 200,
-        error: null
+        error: null,
       });
 
       return res.json(result);
     } catch (error) {
-
       await logEvent({
         uraRequestId,
-        source: 'controller_g4flex',
-        action: 'work_order_close_controller_error',
+        source: "controller_g4flex",
+        action: "work_order_close_controller_error",
         payload: req.query,
         response: { error: error.message },
         statusCode: 500,
-        error: error.message
+        error: error.message,
       });
 
-      console.error('Error closing work order:', error);
+      console.error("Error closing work order:", error);
       return res.status(500).json({
-        error: error.message || 'Error closing work order'
+        error: error.message || "Error closing work order",
       });
     }
   }
 
+  // Criar Ordem de Serviço
   async createWorkOrder(req, res) {
-    let { customerIdentifier = '', uraRequestId = '' } = req.query;
-    let cpf = null;
-    let cnpj = null;
-    let customerId = null;
+    let { customerIdentifier = "", uraRequestId = "" } = req.query;
 
     try {
       const {
         productId,
-        requesterName,
-        requesterPosition,
-        incidentDescription,
-        siteContactPerson,
-        requesterWhatsApp
+        requesterNameAndPosition,
+        IncidentAndReceiverName,
+        requesterWhatsApp,
       } = req.body;
-
-      // Validação inicial do uraRequestId
-      if (!uraRequestId) {
-        return res.status(400).json({ error: 'URA request ID is required' });
-      }
 
       const validationError = validateURAQuery(req.query);
       if (validationError) {
         await logEvent({
           uraRequestId,
-          source: 'controller_g4flex',
-          action: 'work_order_create_validation_error',
+          source: "controller_g4flex",
+          action: "work_order_create_validation_error",
           payload: req.query,
           response: { error: validationError },
           statusCode: 400,
-          error: validationError
+          error: validationError,
         });
         return res.status(400).json({ error: validationError });
       }
 
-      // Determina o tipo de identificador e formata adequadamente
-      if (customerIdentifier) {
-        const identifierType = determineIdentifierType(customerIdentifier);
-
-        if (!identifierType) {
-          await logEvent({
-            uraRequestId,
-            source: 'controller_g4flex',
-            action: 'work_order_create_validation_error',
-            payload: req.query,
-            response: { error: 'Invalid customer identifier format' },
-            statusCode: 400,
-            error: 'Invalid customer identifier format'
-          });
-          return res.status(400).json({ error: 'Invalid customer identifier format' });
-        }
-
-        if (identifierType === 'CPF') {
-          const formatted = formatCPF(customerIdentifier);
-          if (!formatted) {
-            await logEvent({
-              uraRequestId,
-              source: 'controller_g4flex',
-              action: 'work_order_create_validation_error',
-              payload: req.query,
-              response: { error: 'Invalid CPF' },
-              statusCode: 400,
-              error: 'Invalid CPF'
-            });
-            return res.status(400).json({ error: 'Invalid CPF' });
-          }
-          cpf = formatted;
-        } else if (identifierType === 'CNPJ') {
-          const formatted = formatCNPJ(customerIdentifier);
-          if (!formatted) {
-            await logEvent({
-              uraRequestId,
-              source: 'controller_g4flex',
-              action: 'work_order_create_validation_error',
-              payload: req.query,
-              response: { error: 'Invalid CNPJ' },
-              statusCode: 400,
-              error: 'Invalid CNPJ'
-            });
-            return res.status(400).json({ error: 'Invalid CNPJ' });
-          }
-          cnpj = formatted;
-        } else if (identifierType === 'CUSTOMER_ID') {
-          const formatted = formatCustomerId(customerIdentifier);
-          if (!formatted) {
-            await logEvent({
-              uraRequestId,
-              source: 'controller_g4flex',
-              action: 'work_order_create_validation_error',
-              payload: req.query,
-              response: { error: 'Invalid Customer ID' },
-              statusCode: 400,
-              error: 'Invalid Customer ID'
-            });
-            return res.status(400).json({ error: 'Invalid Customer ID' });
-          }
-          customerId = formatted;
-        }
-      }
+      const { cpf, cnpj, customerId } = resolveNumericIdentifier(customerIdentifier);
 
       // Validate required fields
       const requiredFields = {
         productId,
-        requesterName,
-        requesterPosition,
-        incidentDescription,
-        siteContactPerson
+        requesterNameAndPosition,
+        IncidentAndReceiverName,
+        requesterWhatsApp,
       };
 
       const missingFields = Object.entries(requiredFields)
@@ -370,81 +172,81 @@ class WorkOrderController {
       if (missingFields.length > 0) {
         await logEvent({
           uraRequestId,
-          source: 'controller_g4flex',
-          action: 'work_order_create_validation_error',
+          source: "controller_g4flex",
+          action: "work_order_create_validation_error",
           payload: { ...req.body, ...req.query },
-          response: { error: `Missing required fields: ${missingFields.join(', ')}` },
+          response: {
+            error: `Missing required fields: ${missingFields.join(", ")}`,
+          },
           statusCode: 400,
-          error: `Missing required fields: ${missingFields.join(', ')}`
+          error: `Missing required fields: ${missingFields.join(", ")}`,
         });
         return res.status(400).json({
-          error: `Missing required fields: ${missingFields.join(', ')}`
+          error: `Missing required fields: ${missingFields.join(", ")}`,
         });
       }
 
       // Return success response
       const response = {
         success: true,
-        message: "Solicitação de criação de Ordem de Serviço realizada com sucessso."
+        message:
+          "Solicitação de criação de Ordem de Serviço realizada com sucessso.",
       };
 
       await logEvent({
         uraRequestId,
-        source: 'controller_g4flex',
-        action: 'work_order_create_success',
+        source: "controller_g4flex",
+        action: "work_order_request_success",
         payload: {
           customerIdentifier,
           identifierType: determineIdentifierType(customerIdentifier),
-          ...req.body
+          ...req.body,
         },
         response,
         statusCode: 200,
-        error: null
+        error: null,
       });
 
       res.status(200).json(response);
 
       // Process the work order asynchronously
       WorkOrderService.createWorkOrder({
+        uraRequestId,
         cpf,
         cnpj,
         customerId,
         productId,
-        requesterName,
-        requesterPosition,
-        incidentDescription,
-        siteContactPerson,
+        requesterNameAndPosition,
+        IncidentAndReceiverName,
         requesterWhatsApp,
-        uraRequestId
-      }).catch(error => {
-        console.error('Error processing work order:', error);
+      }).catch((error) => {
+        console.error("Error processing work order:", error);
         logEvent({
           uraRequestId,
-          source: 'controller_g4flex',
-          action: 'work_order_create_processing_error',
+          source: "controller_g4flex",
+          action: "work_order_create_processing_error",
           payload: { customerIdentifier, ...req.body },
           response: { error: error.message },
           statusCode: 500,
-          error: error.message
-        }).catch(logError => {
-          console.error('Error logging event:', logError);
+          error: error.message,
+        }).catch((logError) => {
+          console.error("Error logging event:", logError);
         });
       });
     } catch (error) {
-
       await logEvent({
         uraRequestId,
-        source: 'controller_g4flex',
-        action: 'work_order_create_controller_error',
+        source: "controller_g4flex",
+        action: "work_order_create_controller_error",
         payload: { ...req.query, ...req.body },
         response: { error: error.message },
         statusCode: 500,
-        error: error.message
+        error: error.message,
       });
 
-      console.error('Error handling work order request:', error);
+      console.error("Error handling work order request:", error);
       return res.status(500).json({
-        error: error.message || 'Error handling work order request'
+        error: error.message || "Error handling work order request",
       });
     }
   }

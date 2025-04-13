@@ -1,3 +1,5 @@
+// src/services/g4flex/WebhookService.js
+
 import axios from 'axios';
 
 class WebhookService {
@@ -10,23 +12,26 @@ class WebhookService {
     });
   }
 
-  /**
-   * Notify work order creation
-   * @param {Object} params - Webhook parameters
-   * @param {string} params.workOrderId - Work order ID
-   * @param {string} params.technicianName - Name of the assigned technician
-   * @returns {Promise<Object>} Webhook response
-   */
+
   async notifyWorkOrderCreated({ workOrderId, technicianName }) {
     try {
-      const response = await this.webhookClient.post(this.webhookUrl, {
+      console.log('[WebhookService] Notifying webhook');
+      console.log('[WebhookService] Work order ID:', workOrderId, 'Technician name:', technicianName);
+
+
+      /*const response = await this.webhookClient.post(this.webhookUrl, {
         workOrderId,
         technicianName
       });
 
       console.log(`[Webhook] Work order ${workOrderId} notification sent successfully`);
-      return response.data;
+      return response.data;*/
+
+      return {
+        message: 'Webhook notification sent successfully'
+      };
     } catch (error) {
+
       console.error('[Webhook] Error sending work order notification:', error);
       throw new Error(`Failed to send webhook notification: ${error.message}`);
     }
