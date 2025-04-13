@@ -5,10 +5,11 @@ export default class WorkShift extends Model {
     super.init(
       {
         status: {
-          type: Sequelize.ENUM('Ativo', 'Inativo'),
-          defaultValue: 'Ativo',
+          type: Sequelize.ENUM('ACTIVE', 'INACTIVE'),
+          allowNull: false,
+          defaultValue: 'ACTIVE',
           validate: {
-            isIn: [['Ativo', 'Inativo']],
+            isIn: [['ACTIVE', 'INACTIVE']],
           },
         },
         start_time: {
@@ -27,7 +28,7 @@ export default class WorkShift extends Model {
             },
           },
         },
-        technician_id: {
+        user_code: {
           type: Sequelize.STRING,
           allowNull: false,
           validate: {
