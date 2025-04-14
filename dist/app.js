@@ -9,6 +9,7 @@ require('./database');
 
 var _express = require('express'); var _express2 = _interopRequireDefault(_express);
 var _setup = require('./swagger/setup'); var _setup2 = _interopRequireDefault(_setup);
+var _errorHandler = require('./middlewares/errorHandler'); var _errorHandler2 = _interopRequireDefault(_errorHandler);
 var _homeRoutes = require('./routes/homeRoutes'); var _homeRoutes2 = _interopRequireDefault(_homeRoutes);
 var _entityRoutes = require('./routes/entityRoutes'); var _entityRoutes2 = _interopRequireDefault(_entityRoutes);
 var _workOrderRoutes = require('./routes/workOrderRoutes'); var _workOrderRoutes2 = _interopRequireDefault(_workOrderRoutes);
@@ -33,8 +34,8 @@ var _addressRoutes = require('./routes/addressRoutes'); var _addressRoutes2 = _i
 var _gupshupRoutes = require('./routes/gupshupRoutes'); var _gupshupRoutes2 = _interopRequireDefault(_gupshupRoutes);
 
 // G4Flex
-var _contractRoutes = require('./routes/g4flex/contractRoutes'); var _contractRoutes2 = _interopRequireDefault(_contractRoutes);
-var _workOrderRoutes3 = require('./routes/g4flex/workOrderRoutes'); var _workOrderRoutes4 = _interopRequireDefault(_workOrderRoutes3);
+var _contractRoutes = require('./integrations/g4flex/routes/contractRoutes'); var _contractRoutes2 = _interopRequireDefault(_contractRoutes);
+var _workOrderRoutes3 = require('./integrations/g4flex/routes/workOrderRoutes'); var _workOrderRoutes4 = _interopRequireDefault(_workOrderRoutes3);
 
 
 const whiteList = [
@@ -59,6 +60,7 @@ class App {
     this.middlewares();
     this.routes();
     this.swagger();
+    this.errorHandler();
   }
 
   middlewares() {
@@ -101,6 +103,11 @@ class App {
 
   swagger() {
     _setup2.default.call(void 0, this.app);
+  }
+
+  errorHandler() {
+    // Middleware global de tratamento de erros - deve ser o último middleware
+    this.app.use(_errorHandler2.default);
   }
 }
 

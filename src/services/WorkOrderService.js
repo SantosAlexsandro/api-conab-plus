@@ -51,7 +51,7 @@ class WorkOrderService {
 
   async getAllbyTech() {
     try {
-      const url = `/api/OrdServ/Lista?codigoUsuario=LEONARDO.LIMA&codigoEmpresa=1&dataAtualizacao=01/03/2025`;
+      const url = `/api/OrdServ/Lista?codigoUsuario=LEONARDO.LIMA&codigoEmpresa=1&dataAtualizacao=01/04/2025`;
 
       const response = await this.axiosInstance.get(url);
 

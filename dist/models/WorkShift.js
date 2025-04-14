@@ -5,10 +5,11 @@
     super.init(
       {
         status: {
-          type: _sequelize2.default.ENUM('Ativo', 'Inativo'),
-          defaultValue: 'Ativo',
+          type: _sequelize2.default.ENUM('ACTIVE', 'INACTIVE'),
+          allowNull: false,
+          defaultValue: 'ACTIVE',
           validate: {
-            isIn: [['Ativo', 'Inativo']],
+            isIn: [['ACTIVE', 'INACTIVE']],
           },
         },
         start_time: {
@@ -27,7 +28,7 @@
             },
           },
         },
-        technician_id: {
+        user_code: {
           type: _sequelize2.default.STRING,
           allowNull: false,
           validate: {
