@@ -9,6 +9,7 @@ import './database';
 
 import express from 'express';
 import setupSwagger from './swagger/setup';
+import errorHandler from './middlewares/errorHandler';
 import homeRoutes from './routes/homeRoutes';
 import entityRoutes from './routes/entityRoutes';
 import workOrderRoutes from './routes/workOrderRoutes';
@@ -59,6 +60,7 @@ class App {
     this.middlewares();
     this.routes();
     this.swagger();
+    this.errorHandler();
   }
 
   middlewares() {
@@ -101,6 +103,11 @@ class App {
 
   swagger() {
     setupSwagger(this.app);
+  }
+
+  errorHandler() {
+    // Middleware global de tratamento de erros - deve ser o último middleware
+    this.app.use(errorHandler);
   }
 }
 
