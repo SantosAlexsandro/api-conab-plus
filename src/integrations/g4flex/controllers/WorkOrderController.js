@@ -7,6 +7,7 @@ import {
 } from "../utils/uraValidator";
 import { resolveNumericIdentifier } from "../utils/resolveNumericIdentifier";
 import logEvent from "../../../utils/logEvent";
+import workOrderQueue from "../queues/workOrder.queue";
 
 class WorkOrderController {
   async checkWorkOrder(req, res) {
@@ -209,8 +210,8 @@ class WorkOrderController {
 
       res.status(200).json(response);
 
-      // Process the work order asynchronously
-      WorkOrderService.createWorkOrder({
+      // Adicionar à fila de criação de ordem de serviço
+      await workOrderQueue.add('createWorkOrder', {
         uraRequestId,
         cpf,
         cnpj,
@@ -219,20 +220,9 @@ class WorkOrderController {
         requesterNameAndPosition,
         IncidentAndReceiverName,
         requesterWhatsApp,
-      }).catch((error) => {
-        console.error("Error processing work order:", error);
-        logEvent({
-          uraRequestId,
-          source: "controller_g4flex",
-          action: "work_order_create_processing_error",
-          payload: { customerIdentifier, ...req.body },
-          response: { error: error.message },
-          statusCode: 500,
-          error: error.message,
-        }).catch((logError) => {
-          console.error("Error logging event:", logError);
-        });
       });
+
+      console.log('[WorkOrderController] Ordem adicionada à fila para processamento');
     } catch (error) {
       await logEvent({
         uraRequestId,
