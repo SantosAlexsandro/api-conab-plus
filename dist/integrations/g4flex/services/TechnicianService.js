@@ -1,9 +1,9 @@
-import BaseG4FlexService from './BaseG4FlexService';
-import logEvent from '../../../utils/logEvent';
-import WorkShift from '../../../models/WorkShift';
-import { Op } from 'sequelize';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _BaseG4FlexService = require('./BaseG4FlexService'); var _BaseG4FlexService2 = _interopRequireDefault(_BaseG4FlexService);
+var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
+var _WorkShift = require('../../../models/WorkShift'); var _WorkShift2 = _interopRequireDefault(_WorkShift);
+var _sequelize = require('sequelize');
 
-class TechnicianService extends BaseG4FlexService {
+class TechnicianService extends _BaseG4FlexService2.default {
   constructor() {
     super();
   }
@@ -16,11 +16,11 @@ class TechnicianService extends BaseG4FlexService {
     try {
       // Buscar turnos ativos no momento atual
       const now = new Date();
-      const activeShifts = await WorkShift.findAll({
+      const activeShifts = await _WorkShift2.default.findAll({
         where: {
           status: 'ACTIVE',
-          start_time: { [Op.lte]: now },
-          end_time: { [Op.gte]: now },
+          start_time: { [_sequelize.Op.lte]: now },
+          end_time: { [_sequelize.Op.gte]: now },
         },
       });
 
@@ -91,4 +91,4 @@ class TechnicianService extends BaseG4FlexService {
   }
 }
 
-export default new TechnicianService();
+exports. default = new TechnicianService();

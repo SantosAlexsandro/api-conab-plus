@@ -3,13 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "concurrently \"nodemon src/server.js\" \"nodemon src/integrations/g4flex/queues/workOrder.worker.js\" \"nodemon src/integrations/g4flex/queues/bull-dashboard.js\"",
     "dev:server": "nodemon src/server.js",
     "dev:worker": "nodemon src/integrations/g4flex/queues/workOrder.worker.js",
     "dev:dashboard": "nodemon src/integrations/g4flex/queues/bull-dashboard.js",
+    "dev:queue": "concurrently \"nodemon src/integrations/g4flex/queues/workOrder.worker.js\" \"nodemon src/integrations/g4flex/queues/bull-dashboard.js\"",
     "build": "sucrase ./src -d ./dist --transforms imports",
     "start": "node dist/server.js"
   },
