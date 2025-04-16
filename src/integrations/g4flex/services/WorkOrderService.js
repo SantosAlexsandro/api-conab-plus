@@ -254,6 +254,25 @@ class WorkOrderService extends BaseG4FlexService {
       throw new Error(`Error creating work order: ${error.message}`);
     }
   }
+
+  async assignTechnicianToWorkOrder(workOrderId, technicianId) {
+    try {
+      const response = await this.axiosInstance.post(
+        `/api/OrdServ/AtribuirTecnico`,
+        {
+          CodigoEmpresaFilial: '1',
+          Numero: workOrderId,
+          CodigoTecnico: technicianId
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+      throw new Error(`Error assigning technician to work order: ${error.message}`);
+    }
+  }
+
 }
 
 export default new WorkOrderService();

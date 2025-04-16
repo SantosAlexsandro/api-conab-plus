@@ -8,10 +8,6 @@ class TechnicianService extends BaseG4FlexService {
     super();
   }
 
-  /**
-   * Busca um técnico disponível com base nos turnos ativos
-   * @returns {Promise<Object|null>} Técnico disponível ou null se não houver
-   */
   async getAvailableTechnician() {
     try {
       // Buscar turnos ativos no momento atual
@@ -33,6 +29,7 @@ class TechnicianService extends BaseG4FlexService {
       const activeTechnicianCodes = activeShifts.map(shift => shift.user_code);
       console.log(`[TechnicianService] Técnicos em turno ativo: ${activeTechnicianCodes.join(', ')}`);
 
+      /*
       // Buscar técnicos disponíveis no G4Flex
       const response = await this.axiosInstance.get('/api/Tecnicos/RetrievePage?filter=Disponivel=true&pageSize=20');
       const allAvailableTechnicians = response.data;
@@ -46,7 +43,6 @@ class TechnicianService extends BaseG4FlexService {
       const availableTechnicians = allAvailableTechnicians.filter(tech =>
         activeTechnicianCodes.includes(tech.Codigo)
       );
-
       console.log(`[TechnicianService] ${availableTechnicians.length} técnicos disponíveis e em turno ativo`);
 
       // Retorna o primeiro técnico disponível ou null
@@ -57,38 +53,23 @@ class TechnicianService extends BaseG4FlexService {
           nome: selectedTechnician.Nome,
           disponivel: true
         };
-      }
+      }  */
 
+      if (activeTechnicianCodes.length > 0) {
+        const selectedTechnician = activeTechnicianCodes[0];
+        return {
+          id: selectedTechnician,
+          nome: selectedTechnician,
+          disponivel: true
+        };
+      }
       return null;
     } catch (error) {
       this.handleError(error);
       throw new Error(`Erro ao buscar técnicos disponíveis: ${error.message}`);
     }
   }
-
-  /**
-   * Atribui um técnico a uma ordem de serviço
-   * @param {string} orderId ID da ordem de serviço
-   * @param {string} technicianId ID do técnico
-   * @returns {Promise<boolean>} True se atribuído com sucesso
-   */
-  async assignTechnician(orderId, technicianId) {
-    try {
-      // Chamada à API do G4Flex para atribuir o técnico
-      const response = await this.axiosInstance.post('/api/OrdServ/AtribuirTecnico', {
-        numeroOrdemServico: orderId,
-        codigoTecnico: technicianId
-      });
-
-      const success = response.status === 200;
-      console.log(`[G4Flex] ${success ? 'Sucesso' : 'Falha'} ao atribuir técnico ${technicianId} à ordem ${orderId}`);
-
-      return success;
-    } catch (error) {
-      this.handleError(error);
-      throw new Error(`Erro ao atribuir técnico à ordem: ${error.message}`);
-    }
-  }
 }
 
-export default new TechnicianService();
+const technicianService = new TechnicianService();
+export default technicianService;
