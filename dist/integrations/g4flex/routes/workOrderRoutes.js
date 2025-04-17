@@ -5,7 +5,7 @@ const router = new (0, _express.Router)();
 
 router.get('/check-open', _WorkOrderController2.default.checkWorkOrder);
 
-router.post('/requests', _WorkOrderController2.default.createWorkOrder);
+router.post('/requests', _WorkOrderController2.default.requestWorkOrder);
 
 router.post('/close', _WorkOrderController2.default.closeWorkOrder);
 

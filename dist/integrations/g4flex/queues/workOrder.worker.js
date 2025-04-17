@@ -6,11 +6,12 @@
 
 var _bullmq = require('bullmq');
 var _redis = require('./redis'); var _redis2 = _interopRequireDefault(_redis);
-var _TechnicianService = require('../services/TechnicianService');
+var _TechnicianService = require('../services/TechnicianService'); var _TechnicianService2 = _interopRequireDefault(_TechnicianService);
 var _WorkOrderService = require('../services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
 var _workOrderqueue = require('./workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
 
 const INTERVALO_REPROCESSAMENTO_MS = 5 * 60 * 1000;
+
 
 const workOrderWorker = new (0, _bullmq.Worker)('workOrderQueue', async (job) => {
   const jobType = job.name;
@@ -57,17 +58,40 @@ async function processAssignTechnician(job) {
   console.log(`🔄 Processando atribuição de técnico para ordem ${orderId}`);
 
   try {
-    const technician = await _TechnicianService.getAvailableTechnician.call(void 0, );
+    const technician = await _TechnicianService2.default.getAvailableTechnician();
 
     if (technician) {
-      await _TechnicianService.assignTechnician.call(void 0, orderId, technician.id);
-      await _WorkOrderService2.default.updateWorkOrderStatus(orderId, 'ATRIBUIDA');
+      await _WorkOrderService2.default.assignTechnicianToWorkOrder(orderId, technician.id);
       console.log(`✅ Técnico atribuído à ordem ${orderId}`);
       return { success: true, orderId, technicianId: technician.id };
     } else {
       console.log(`⏳ Sem técnico disponível. Reagendando ordem ${orderId}`);
-      await job.moveToDelayed(Date.now() + INTERVALO_REPROCESSAMENTO_MS);
-      return { success: false, rescheduled: true };
+      // Adiciona um novo job na fila em vez de mover o atual
+      await _workOrderqueue2.default.add('assignTechnician', { orderId }, {
+        delay: INTERVALO_REPROCESSAMENTO_MS,
+        removeOnComplete: false
+      });
+      console.log(`🕒 Ordem ${orderId} reagendada para processamento futuro`);
+
+      // Criar data no fuso horário de Brasília (GMT-3)
+      const nextAttemptDate = new Date(Date.now() + INTERVALO_REPROCESSAMENTO_MS);
+      // Formatar a data como string no fuso horário de Brasília
+      const brasiliaTime = nextAttemptDate.toLocaleString('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/, '$3-$2-$1T$4:$5:$6');
+
+      return {
+        success: false,
+        rescheduled: true,
+        nextAttempt: brasiliaTime
+      };
     }
   } catch (error) {
     console.error(`❌ Erro ao atribuir técnico à ordem ${orderId}:`, error);

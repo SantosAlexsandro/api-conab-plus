@@ -130,8 +130,8 @@ class WorkOrderController {
     }
   }
 
-  // Criar Ordem de Serviço
-  async createWorkOrder(req, res) {
+  // Solicita Ordem de Serviço
+  async requestWorkOrder(req, res) {
     let { customerIdentifier = "", uraRequestId = "" } = req.query;
 
     try {
