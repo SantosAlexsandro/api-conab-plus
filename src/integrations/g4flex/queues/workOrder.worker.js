@@ -12,6 +12,7 @@ import workOrderQueue from './workOrder.queue';
 
 const INTERVALO_REPROCESSAMENTO_MS = 5 * 60 * 1000;
 
+
 const workOrderWorker = new Worker('workOrderQueue', async (job) => {
   const jobType = job.name;
 
@@ -60,8 +61,7 @@ async function processAssignTechnician(job) {
     const technician = await technicianService.getAvailableTechnician();
 
     if (technician) {
-      await technicianService.assignTechnician(orderId, technician.id);
-      await workOrderService.updateWorkOrderStatus(orderId, 'ATRIBUIDA');
+      await workOrderService.assignTechnicianToWorkOrder(orderId, technician.id);
       console.log(`✅ Técnico atribuído à ordem ${orderId}`);
       return { success: true, orderId, technicianId: technician.id };
     } else {
@@ -69,7 +69,7 @@ async function processAssignTechnician(job) {
       // Adiciona um novo job na fila em vez de mover o atual
       await workOrderQueue.add('assignTechnician', { orderId }, {
         delay: INTERVALO_REPROCESSAMENTO_MS,
-        removeOnComplete: true
+        removeOnComplete: false
       });
       console.log(`🕒 Ordem ${orderId} reagendada para processamento futuro`);
 

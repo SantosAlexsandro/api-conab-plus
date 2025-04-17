@@ -178,7 +178,22 @@ class WorkOrderService extends BaseG4FlexService {
         CodigoTipoOrdServ: '007',
         CodigoTipoAtendContrato: '0000002',
         CodigoProduto: productId,
-        //NumeroContrato: '0017693'
+        //NumeroContrato: '0017693',
+        EtapaOrdServChildList: [
+          {
+            CodigoEmpresaFilial: '1',
+            Sequencia: 1,
+            CodigoTipoEtapa: '007.008',
+            CodigoTipoEtapaProxima: '007.002',
+            CodigoUsuario: 'CONAB+'
+          },
+          {
+            CodigoEmpresaFilial: '1',
+            Sequencia: 2,
+            CodigoTipoEtapa: '007.002',
+            CodigoUsuario: 'CONAB+'
+          }
+        ]
       };
 
       // 1. Create work order
@@ -258,12 +273,33 @@ class WorkOrderService extends BaseG4FlexService {
   async assignTechnicianToWorkOrder(workOrderId, technicianId) {
     try {
       const response = await this.axiosInstance.post(
-        `/api/OrdServ/AtribuirTecnico`,
+        `/api/OrdServ/SavePartial?action=Update`,
         {
-          CodigoEmpresaFilial: '1',
+          CodigoEmpresaFilial: "1",
           Numero: workOrderId,
-          CodigoTecnico: technicianId
+          EtapaOrdServChildList: [
+            {
+              CodigoEmpresaFilial: "1",
+              NumeroOrdServ: workOrderId,
+              Sequencia: 2,
+              CodigoTipoEtapaProxima: "007.004"
+            },
+            {
+              CodigoEmpresaFilial: "1",
+              NumeroOrdServ: workOrderId,
+              Sequencia: 1
+            },
+            {
+              CodigoEmpresaFilial: "1",
+              NumeroOrdServ: workOrderId,
+              Sequencia: 3,
+              CodigoTipoEtapa: "007.004",
+              CodigoUsuario: technicianId,
+              CodigoUsuarioAlteracao: "CONAB+"
+            }
+          ]
         }
+
       );
 
       return response.data;
