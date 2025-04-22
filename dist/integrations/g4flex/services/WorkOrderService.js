@@ -5,7 +5,8 @@ var _WebhookService = require('./WebhookService'); var _WebhookService2 = _inter
 var _uraValidator = require('../utils/uraValidator');
 var _formatUtils = require('../../../utils/string/formatUtils');
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
-
+var _TechnicianService = require('./TechnicianService'); var _TechnicianService2 = _interopRequireDefault(_TechnicianService);
+var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
 class WorkOrderService extends _BaseG4FlexService2.default {
   constructor() {
     super();
@@ -16,6 +17,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       PAGE_SIZE: 10,
       PAGE_INDEX: 1
     };
+
   }
 
   async isOrderFinished(orderNumber) {
@@ -138,6 +140,9 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         console.log(`[G4Flex] Closed work order ${order.Numero}`);
       }));
 
+      // TODO: Enviar SMS para o técnico
+      // TODO: Concluir cancelamento da OS
+
       return {
         success: true,
         message: 'Work orders closed successfully',
@@ -148,7 +153,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       throw new Error(`Error closing work order: ${error.message}`);
     }
   }
-
 
   // Criar Ordem de Serviço
   async createWorkOrder({
@@ -204,7 +208,14 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       );
 
       if (!response.data || response.data.error) {
-        throw new Error(_optionalChain([response, 'access', _ => _.data, 'optionalAccess', _2 => _2.error]) || 'Failed to create work order');
+        await _logEvent2.default.call(void 0, {
+          uraRequestId,
+          source: 'service_g4flex',
+          action: 'work_order_create_error',
+          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+          response: { error: _optionalChain([response, 'access', _ => _.data, 'optionalAccess', _2 => _2.error]) || 'Failed to create work order' }
+        });
+        throw new Error(_optionalChain([response, 'access', _3 => _3.data, 'optionalAccess', _4 => _4.error]) || 'Failed to create work order');
       }
 
       await _logEvent2.default.call(void 0, {
@@ -212,26 +223,21 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         source: 'service_g4flex',
         action: 'work_order_create_success',
         payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
-        response: { workOrder: _optionalChain([response, 'optionalAccess', _3 => _3.data, 'optionalAccess', _4 => _4.Numero]) }
+        response: { workOrder: _optionalChain([response, 'optionalAccess', _5 => _5.data, 'optionalAccess', _6 => _6.Numero]) }
       });
 
-      console.log(`[WorkOrderService] Work order ${_optionalChain([response, 'optionalAccess', _5 => _5.data, 'optionalAccess', _6 => _6.Numero])} created successfully`);
+      console.log(`[WorkOrderService] Work order ${_optionalChain([response, 'optionalAccess', _7 => _7.data, 'optionalAccess', _8 => _8.Numero])} created successfully`);
 
       // 2. Notify webhook
       console.log('[WorkOrderService] Notifying webhook');
       try {
-        await _WebhookService2.default.notifyWorkOrderCreated({
-          workOrderId: _optionalChain([response, 'optionalAccess', _7 => _7.data, 'optionalAccess', _8 => _8.Numero])
+        await _workOrderqueue2.default.add('processWorkOrderFeedback', {
+          orderId: _optionalChain([response, 'optionalAccess', _9 => _9.data, 'optionalAccess', _10 => _10.Numero]),
+          feedback: 'work_order_created',
+          uraRequestId: uraRequestId || `auto-creation-${Date.now()}`
         });
 
-        await _logEvent2.default.call(void 0, {
-          uraRequestId,
-          source: 'service_g4flex',
-          action: 'work_order_create_webhook_success',
-          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
-          response: { workOrder: _optionalChain([response, 'optionalAccess', _9 => _9.data, 'optionalAccess', _10 => _10.Numero]) }
-        });
-        console.log('[WorkOrderService] Webhook notification sent successfully');
+        console.log('[WorkOrderService] Webhook notification scheduled successfully');
       } catch (webhookError) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
@@ -270,45 +276,94 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     }
   }
 
-  async assignTechnicianToWorkOrder(workOrderId, technicianId) {
+  // Atribuir técnico à OS
+  // TODO: Criar outra tabela para armazenar as tentativas de atribuição de técnico
+  async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
+    await _logEvent2.default.call(void 0, {
+      uraRequestId,
+      source: 'service_g4flex',
+      action: 'work_order_assign_technician_init',
+      payload: { workOrderId, uraRequestId }
+    });
+
     try {
-      const response = await this.axiosInstance.post(
-        `/api/OrdServ/SavePartial?action=Update`,
-        {
-          CodigoEmpresaFilial: "1",
-          Numero: workOrderId,
-          EtapaOrdServChildList: [
-            {
-              CodigoEmpresaFilial: "1",
-              NumeroOrdServ: workOrderId,
-              Sequencia: 2,
-              CodigoTipoEtapaProxima: "007.004"
-            },
-            {
-              CodigoEmpresaFilial: "1",
-              NumeroOrdServ: workOrderId,
-              Sequencia: 1
-            },
-            {
-              CodigoEmpresaFilial: "1",
-              NumeroOrdServ: workOrderId,
-              Sequencia: 3,
-              CodigoTipoEtapa: "007.004",
-              CodigoUsuario: technicianId,
-              CodigoUsuarioAlteracao: "CONAB+"
-            }
-          ]
+      const technician = await _TechnicianService2.default.getAvailableTechnician();
+
+      if (technician) {
+        console.log('[WorkOrderService] Atribuindo técnico à ordem de serviço');
+        await this.axiosInstance.post(
+          `/api/OrdServ/SavePartial?action=Update`,
+          {
+            CodigoEmpresaFilial: "1",
+            Numero: workOrderId,
+            EtapaOrdServChildList: [
+              {
+                CodigoEmpresaFilial: "1",
+                NumeroOrdServ: workOrderId,
+                Sequencia: 2,
+                CodigoTipoEtapaProxima: "007.004"
+              },
+              {
+                CodigoEmpresaFilial: "1",
+                NumeroOrdServ: workOrderId,
+                Sequencia: 1
+              },
+              {
+                CodigoEmpresaFilial: "1",
+                NumeroOrdServ: workOrderId,
+                Sequencia: 3,
+                CodigoTipoEtapa: "007.004",
+                CodigoUsuario: technician.id,
+                CodigoUsuarioAlteracao: "CONAB+"
+              }
+            ]
+          }
+        );
+
+        await _logEvent2.default.call(void 0, {
+          uraRequestId,
+          source: 'service_g4flex',
+          action: 'work_order_assign_technician_success',
+          payload: { workOrderId, technicianId: technician.id }
+        });
+
+        // Adicionar na fila de feedback para notificar sobre a atribuição do técnico
+        try {
+          await _workOrderqueue2.default.add('processWorkOrderFeedback', {
+            orderId: workOrderId,
+            feedback: 'technician_assigned',
+            technicianName: technician.nome || technician.id,
+            uraRequestId: uraRequestId || `tech-assigned-${Date.now()}`
+          });
+          console.log(`[WorkOrderService] Feedback de atribuição de técnico agendado para ordem ${workOrderId}`);
+        } catch (feedbackError) {
+          console.error(`[WorkOrderService] Erro ao agendar feedback de atribuição: ${feedbackError.message}`);
         }
 
-      );
+        return { success: true, orderId: workOrderId, technicianId: technician.id };
+      } else {
+        // Sem técnico disponível, o reagendamento será feito pelo worker
+        await _logEvent2.default.call(void 0, {
+          uraRequestId,
+          source: 'service_g4flex',
+          action: 'work_order_assign_technician_no_tech',
+          payload: { workOrderId }
+        });
 
-      return response.data;
+        return { success: false, noTechnician: true };
+      }
     } catch (error) {
+      await _logEvent2.default.call(void 0, {
+        uraRequestId,
+        source: 'service_g4flex',
+        action: 'work_order_assign_technician_error',
+        payload: { workOrderId },
+        response: { error: error.message }
+      });
       this.handleError(error);
-      throw new Error(`Error assigning technician to work order: ${error.message}`);
+      throw new Error(`Erro ao atribuir técnico à ordem de serviço: ${error.message}`);
     }
   }
-
 }
 
 exports. default = new WorkOrderService();

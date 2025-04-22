@@ -41,11 +41,6 @@ class ContractService extends BaseG4FlexService {
     }
   }
 
-  /**
-   * Validates if there is an active contract
-   * @param {Array} contractData - Contract data from API
-   * @returns {boolean} Whether there is an active contract
-   */
   validateActiveContract(contractData) {
     return contractData && contractData.length > 0;
   }

@@ -4,30 +4,46 @@
 // Ele atribui um técnico disponível à OS e atualiza o status da OS.
 // Se não houver técnico disponível, a OS é reagendada para um tempo futuro.
 
-import { Worker } from 'bullmq';
-import redisConnection from './redis';
-import technicianService from '../services/TechnicianService';
-import workOrderService from '../services/WorkOrderService';
-import workOrderQueue from './workOrder.queue';
+import { Worker } from "bullmq";
+import redisConnection from "./redis";
+import workOrderService from "../services/WorkOrderService";
+import workOrderQueue from "./workOrder.queue";
+import WebhookService from "../services/WebhookService";
 
-const INTERVALO_REPROCESSAMENTO_MS = 5 * 60 * 1000;
+const RETRY_INTERVAL_MS = 3 * 60 * 1000;
+const TIMEZONE_BRASILIA = 'America/Sao_Paulo';
 
+// Function to generate date in Brazil timezone
+function generateNextAttemptDate(delay) {
+  const futureDate = new Date(Date.now() + delay);
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: TIMEZONE_BRASILIA,
+    dateStyle: 'short',
+    timeStyle: 'medium'
+  }).format(futureDate);
+}
 
-const workOrderWorker = new Worker('workOrderQueue', async (job) => {
-  const jobType = job.name;
+const workOrderWorker = new Worker(
+  "workOrderQueue",
+  async (job) => {
+    const jobType = job.name;
 
-  // Processar com base no tipo de job
-  if (jobType === 'createWorkOrder') {
-    return await processCreateWorkOrder(job);
-  } else if (jobType === 'assignTechnician') {
-    return await processAssignTechnician(job);
-  } else {
-    console.log(`❓ Tipo de job não reconhecido: ${jobType}`);
-    throw new Error(`Tipo de job não reconhecido: ${jobType}`);
+    // Processar com base no tipo de job
+    if (jobType === "createWorkOrder") {
+      return await processCreateWorkOrder(job);
+    } else if (jobType === "assignTechnician") {
+      return await processAssignTechnician(job);
+    } else if (jobType === "processWorkOrderFeedback") {
+      return await processWorkOrderFeedback(job);
+    } else {
+      console.log(`❓ Tipo de job não reconhecido: ${jobType}`);
+      throw new Error(`Tipo de job não reconhecido: ${jobType}`);
+    }
+  },
+  {
+    connection: redisConnection,
   }
-}, {
-  connection: redisConnection,
-});
+);
 
 // Função para processar criação de ordem de serviço
 async function processCreateWorkOrder(job) {
@@ -40,10 +56,13 @@ async function processCreateWorkOrder(job) {
     console.log(`✅ Ordem de serviço ${result.workOrder} criada com sucesso`);
 
     // Adicionar na fila de atribuição de técnico
-    await workOrderQueue.add('assignTechnician', {
-      orderId: result.workOrder
+    await workOrderQueue.add("assignTechnician", {
+      orderId: result.workOrder,
     });
-    console.log(`📨 Ordem ${result.workOrder} adicionada à fila de atribuição de técnico`);
+    // TODO: Adicionar na fila Ordens geradas manualmente.
+    console.log(
+      `📨 Ordem ${result.workOrder} adicionada à fila de atribuição de técnico`
+    );
 
     return { success: true, workOrder: result.workOrder };
   } catch (error) {
@@ -54,48 +73,111 @@ async function processCreateWorkOrder(job) {
 
 // Função para processar atribuição de técnico à ordem
 async function processAssignTechnician(job) {
-  const { orderId } = job.data;
+  const { orderId, uraRequestId } = job.data;
   console.log(`🔄 Processando atribuição de técnico para ordem ${orderId}`);
 
   try {
-    const technician = await technicianService.getAvailableTechnician();
+    const result = await workOrderService.assignTechnicianToWorkOrder(
+      orderId,
+      uraRequestId || `auto-${Date.now()}`
+    );
 
-    if (technician) {
-      await workOrderService.assignTechnicianToWorkOrder(orderId, technician.id);
-      console.log(`✅ Técnico atribuído à ordem ${orderId}`);
-      return { success: true, orderId, technicianId: technician.id };
-    } else {
-      console.log(`⏳ Sem técnico disponível. Reagendando ordem ${orderId}`);
-      // Adiciona um novo job na fila em vez de mover o atual
-      await workOrderQueue.add('assignTechnician', { orderId }, {
-        delay: INTERVALO_REPROCESSAMENTO_MS,
-        removeOnComplete: false
-      });
-      console.log(`🕒 Ordem ${orderId} reagendada para processamento futuro`);
+    // Verificar se não há técnicos disponíveis e reagendar
+    if (result.noTechnician) {
+      console.log(`⚠️ Sem técnicos disponíveis para ordem ${orderId}`);
 
-      // Criar data no fuso horário de Brasília (GMT-3)
-      const nextAttemptDate = new Date(Date.now() + INTERVALO_REPROCESSAMENTO_MS);
-      // Formatar a data como string no fuso horário de Brasília
-      const brasiliaTime = nextAttemptDate.toLocaleString('pt-BR', {
-        timeZone: 'America/Sao_Paulo',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      }).replace(/(\d+)\/(\d+)\/(\d+), (\d+):(\d+):(\d+)/, '$3-$2-$1T$4:$5:$6');
+      // Calcular próxima tentativa
+      const delay = RETRY_INTERVAL_MS;
+      const nextAttemptDate = generateNextAttemptDate(delay);
 
-      return {
-        success: false,
-        rescheduled: true,
-        nextAttempt: brasiliaTime
-      };
+      await workOrderQueue.add("assignTechnician",
+        {
+          orderId,
+          uraRequestId: uraRequestId || `no-tech-retry-${Date.now()}`,
+          retryCount: (job.data.retryCount || 0) + 1
+        },
+        {
+          delay,
+          removeOnComplete: false
+        }
+      );
+
+      console.log(`📅 Reagendada nova tentativa para ordem ${orderId} em ${nextAttemptDate}`);
+      return { ...result, rescheduled: true, nextAttempt: nextAttemptDate };
     }
+
+    return result;
   } catch (error) {
     console.error(`❌ Erro ao atribuir técnico à ordem ${orderId}:`, error);
-    throw error;
+
+    // Registra a falha, mas reagenda para nova tentativa
+    const delay = RETRY_INTERVAL_MS;
+    const nextAttemptDate = generateNextAttemptDate(delay);
+
+    await workOrderQueue.add("assignTechnician",
+      {
+        orderId,
+        uraRequestId: uraRequestId || `retry-${Date.now()}`,
+        retryCount: (job.data.retryCount || 0) + 1
+      },
+      {
+        delay,
+        removeOnComplete: false
+      }
+    );
+
+    console.log(`📅 Reagendada nova tentativa para ordem ${orderId} em ${nextAttemptDate}`);
+    return { success: false, rescheduled: true, nextAttempt: nextAttemptDate };
+  }
+}
+
+// Função para processar feedback de OS para a URA
+async function processWorkOrderFeedback(job) {
+  const { orderId, feedback, technicianName, uraRequestId } = job.data;
+
+  // Garantir que uraRequestId tenha um valor válido (nunca nulo)
+  const validUraRequestId = uraRequestId || `auto-feedback-${Date.now()}`;
+
+  console.log(`🔄 Processando feedback de ordem ${orderId}, URA Request ID: ${validUraRequestId}`);
+
+  try {
+    // Passar o objeto com os parâmetros nomeados conforme esperado pelo WebhookService
+    const result = await WebhookService.notifyWorkOrderCreated({
+      workOrderId: orderId,
+      technicianName: technicianName || 'Não atribuído',
+      uraRequestId: validUraRequestId
+    });
+
+    console.log(`✅ Feedback processado com sucesso para ordem ${orderId}`);
+    return result;
+  } catch (error) {
+    console.error(`❌ Erro ao processar feedback de ordem ${orderId}:`, error);
+
+    // Tentar novamente após um intervalo
+    const delay = RETRY_INTERVAL_MS;
+    const nextAttemptDate = generateNextAttemptDate(delay);
+
+    await workOrderQueue.add("processWorkOrderFeedback",
+      {
+        orderId,
+        feedback,
+        technicianName,
+        uraRequestId: validUraRequestId,
+        retryCount: (job.data.retryCount || 0) + 1
+      },
+      {
+        delay,
+        removeOnComplete: false
+      }
+    );
+
+    console.log(`📅 Reagendado processamento de feedback para ordem ${orderId} em ${nextAttemptDate}`);
+    return {
+      success: false,
+      error: error.message,
+      rescheduled: true,
+      nextAttempt: nextAttemptDate
+    };
   }
 }
 
