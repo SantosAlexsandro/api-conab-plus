@@ -26,5 +26,5 @@ const HOST = '0.0.0.0'; // Permite acesso de qualquer IP
 
 app.listen(PORT, HOST, () => {
   console.log(`🚀 Painel Bull Board rodando em: http://0.0.0.0:${PORT}/admin/queues`);
-  console.log(`🌐 Acesse externamente usando: https://api.conabbombas.com.br:${PORT}/admin/queues`);
+  console.log(`🌐 Acesse externamente usando: http://${HOST}:${PORT}/admin/queues`);
 });
