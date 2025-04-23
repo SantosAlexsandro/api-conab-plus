@@ -14,7 +14,7 @@ RUN npm install --omit=dev
 COPY . .
 
 # Compila o código com Sucrase (gera dist/)
-RUN npm run build
+# RUN npm run build  //comentado o npm run build, porque o dist/ já estará pronto.
 
 # Expõe a porta da aplicação
 EXPOSE 3002
