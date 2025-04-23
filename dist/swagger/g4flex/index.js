@@ -25,6 +25,10 @@
   ],
   tags: [
     {
+      name: 'Autenticação - Integração da URA G4Flex com a Conab+',
+      description: 'Endpoints para autenticação e geração de tokens'
+    },
+    {
       name: 'Contratos - Integração da URA G4Flex com a Conab+',
       description: 'Endpoints para gerenciamento de contratos da Conab+ via URA G4Flex'
     },

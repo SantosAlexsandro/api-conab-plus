@@ -27,30 +27,23 @@
  *    WorkOrderCreateRequest:
  *      type: object
  *      required:
- *        - requesterName
- *        - requesterPosition
- *        - incidentDescription
- *        - siteContactPerson
  *        - productId
+ *        - requesterNameAndPosition
+ *        - IncidentAndReceiverName
+ *        - requesterWhatsApp
  *      properties:
- *        requesterWhatsApp:
- *          type: string
- *          description: Número do WhatsApp do cliente
  *        productId:
  *          type: string
  *          description: Código de identificação do produto
- *        requesterName:
+ *        requesterNameAndPosition:
  *          type: string
- *          description: Nome do solicitante
- *        requesterPosition:
+ *          description: Nome e cargo/função do solicitante
+ *        IncidentAndReceiverName:
  *          type: string
- *          description: Cargo/função do solicitante
- *        incidentDescription:
+ *          description: Descrição do incidente e nome da pessoa responsável que estará no local
+ *        requesterWhatsApp:
  *          type: string
- *          description: Descrição do problema relatado
- *        siteContactPerson:
- *          type: string
- *          description: Responsável que estará no local (zelador/acompanhante)
+ *          description: Número do WhatsApp do solicitante
  *    WorkOrderCreateResponse:
  *      type: object
  *      properties:
@@ -90,6 +83,39 @@
  *        cancellationReason:
  *          type: string
  *          description: Motivo do cancelamento
+ *    TokenRequest:
+ *      type: object
+ *      required:
+ *        - email
+ *        - password
+ *      properties:
+ *        email:
+ *          type: string
+ *          format: email
+ *          description: Email do usuário
+ *        password:
+ *          type: string
+ *          format: password
+ *          description: Senha do usuário
+ *    TokenResponse:
+ *      type: object
+ *      properties:
+ *        token:
+ *          type: string
+ *          description: Token JWT gerado para autenticação
+ *        user:
+ *          type: object
+ *          properties:
+ *            nome:
+ *              type: string
+ *              description: Nome do usuário
+ *            id:
+ *              type: integer
+ *              description: ID do usuário
+ *            entity_email:
+ *              type: string
+ *              format: email
+ *              description: Email do usuário
  *  parameters:
  *    customerIdentifierParam:
  *      in: query
@@ -109,6 +135,44 @@
 
 /**
  * @swagger
+ * /tokens:
+ *  post:
+ *    tags:
+ *      - Autenticação - Integração da URA G4Flex com a Conab+
+ *    summary: Gera um token de autenticação
+ *    description: Gera um token JWT para autenticação nas APIs da Conab+
+ *    requestBody:
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            $ref: '#/components/schemas/TokenRequest'
+ *    responses:
+ *      '200':
+ *        description: Token gerado com sucesso
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/TokenResponse'
+ *      '401':
+ *        description: Credenciais inválidas
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                errors:
+ *                  type: array
+ *                  items:
+ *                    type: string
+ *                  example: ['Credenciais inválidas', 'Usuário não existe', 'Senha inválida']
+ *      '500':
+ *        description: Erro interno do servidor
+ *        content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/Error'
+ *
  * /g4flex/work-orders/check-open:
  *  get:
  *    tags:
@@ -167,7 +231,7 @@
  *            schema:
  *              $ref: '#/components/schemas/WorkOrderCreateResponse'
  *      '400':
- *        description: Erro de validação dos parâmetros
+ *        description: Erro de validação dos parâmetros ou campos obrigatórios ausentes
  *        content:
  *          application/json:
  *            schema:
