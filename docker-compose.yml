@@ -13,6 +13,38 @@ services:
     restart: always
     depends_on:
       - mariadb
+      - redis
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: conabplus-worker
+    command: ["node", "dist/integrations/g4flex/queues/workOrder.worker.js"]
+    env_file:
+      - .env
+    networks:
+      - conabplus-net
+    restart: always
+    depends_on:
+      - mariadb
+      - redis
+
+  bull-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: conabplus-dashboard
+    command: ["node", "dist/integrations/g4flex/queues/bull-dashboard.js"]
+    env_file:
+      - .env
+    ports:
+      - "3006:3006"
+    networks:
+      - conabplus-net
+    restart: always
+    depends_on:
+      - redis
 
   mariadb:
     image: mariadb:10.11
@@ -29,6 +61,15 @@ services:
       - conabplus-net
     expose:
       - "3306"
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: conabplus-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - conabplus-net
 
 volumes:
   mariadb_data:
