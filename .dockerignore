@@ -6,4 +6,3 @@ docker-compose.yml
 .env
 .git
 .gitignore
-dist
