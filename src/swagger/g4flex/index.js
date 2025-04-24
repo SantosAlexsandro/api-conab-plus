@@ -11,15 +11,11 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'http://localhost:3000',
-      description: 'Servidor Local'
-    },
-    {
       url: 'https://api.conabplus.com.br',
       description: 'Servidor de Produção'
     },
     {
-      url: 'https://staging.conabplus.com.br',
+      url: 'https://staging-api.conabplus.com.br',
       description: 'Servidor de Homologação'
     }
   ],

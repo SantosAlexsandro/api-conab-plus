@@ -11,10 +11,6 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: 'http://localhost:3000',
-      description: 'Servidor Local'
-    },
-    {
       url: 'https://api.conabplus.com.br',
       description: 'Servidor de Produção'
     },
