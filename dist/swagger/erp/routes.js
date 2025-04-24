@@ -120,6 +120,7 @@
  *  post:
  *    tags:
  *      - ERP - Usuários
+ *    x-public: true
  *    summary: Login de usuário
  *    description: Autentica um usuário e retorna um token JWT
  *    requestBody:

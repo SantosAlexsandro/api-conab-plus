@@ -138,7 +138,7 @@
  * /tokens:
  *  post:
  *    tags:
- *      - Autenticação - Integração da URA G4Flex com a Conab+
+ *      - G4Flex - Autenticação
  *    summary: Gera um token de autenticação
  *    description: Gera um token JWT para autenticação nas APIs da Conab+
  *    requestBody:
@@ -176,7 +176,7 @@
  * /g4flex/work-orders/check-open:
  *  get:
  *    tags:
- *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
+ *      - G4Flex - Ordens de Serviço
  *    summary: Verifica se o cliente possui ordens de serviço abertas
  *    description: Verifica na Conab+ se o cliente possui ordens de serviço abertas baseado no CPF, CNPJ ou ID do cliente
  *    parameters:
@@ -211,7 +211,7 @@
  * /g4flex/work-orders/requests:
  *  post:
  *    tags:
- *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
+ *      - G4Flex - Ordens de Serviço
  *    summary: Solicita uma nova ordem de serviço
  *    description: Solicita uma nova ordem de serviço na Conab+ para o cliente especificado
  *    parameters:
@@ -252,7 +252,7 @@
  * /g4flex/work-orders/close:
  *  post:
  *    tags:
- *      - Ordens de Serviço - Integração da URA G4Flex com a Conab+
+ *      - G4Flex - Ordens de Serviço
  *    summary: Fecha ordens de serviço abertas
  *    description: Fecha ordens de serviço abertas na Conab+ para o cliente especificado
  *    parameters:

@@ -42,14 +42,14 @@ const getFilteredSpec = () => {
     return g4flexSwaggerSpec;
   }
 
-  // In production, filter to include only routes with 'Public' tag
+  // In production, filter to include only routes with x-public attribute set to true
   const filteredSpec = JSON.parse(JSON.stringify(g4flexSwaggerSpec));
 
   if (filteredSpec.paths) {
     filteredSpec.paths = Object.fromEntries(
       Object.entries(filteredSpec.paths).filter(([_, pathItem]) =>
         Object.values(pathItem).some(operation =>
-          operation.tags?.includes('Public')
+          operation['x-public'] === true
         )
       )
     );

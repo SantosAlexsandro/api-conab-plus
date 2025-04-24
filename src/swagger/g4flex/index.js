@@ -25,16 +25,16 @@ const swaggerDefinition = {
   ],
   tags: [
     {
-      name: 'Autenticação - Integração da URA G4Flex com a Conab+',
+      name: 'G4Flex - Autenticação',
       description: 'Endpoints para autenticação e geração de tokens'
     },
     {
-      name: 'Contratos - Integração da URA G4Flex com a Conab+',
-      description: 'Endpoints para gerenciamento de contratos da Conab+ via URA G4Flex'
+      name: 'G4Flex - Contratos',
+      description: 'Endpoints para gerenciamento de contratos via URA G4Flex'
     },
     {
-      name: 'Ordens de Serviço - Integração da URA G4Flex com a Conab+',
-      description: 'Endpoints para gerenciamento de Ordens de Serviço da Conab+ via URA G4Flex'
+      name: 'G4Flex - Ordens de Serviço',
+      description: 'Endpoints para gerenciamento de Ordens de Serviço via URA G4Flex'
     }
   ]
 };
