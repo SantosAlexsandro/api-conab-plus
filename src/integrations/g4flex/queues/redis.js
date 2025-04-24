@@ -1,5 +1,8 @@
 // src/integrations/g4flex/queues/redis.js
 import { Redis } from 'ioredis';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const redisConnection = new Redis({
   host: process.env.REDIS_HOST,

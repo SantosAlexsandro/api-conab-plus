@@ -1,5 +1,8 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true});// src/integrations/g4flex/queues/redis.js
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// src/integrations/g4flex/queues/redis.js
 var _ioredis = require('ioredis');
+var _dotenv = require('dotenv'); var _dotenv2 = _interopRequireDefault(_dotenv);
+
+_dotenv2.default.config();
 
 const redisConnection = new (0, _ioredis.Redis)({
   host: process.env.REDIS_HOST,
