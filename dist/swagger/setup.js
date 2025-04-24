@@ -55,6 +55,11 @@ var _config3 = require('./erp/config'); var _config4 = _interopRequireDefault(_c
   app.use('/api-docs/erp', erpServer, _swaggeruiexpress2.default.setup(_config4.default, erpOptions));
 
   console.log('Swagger configurado com sucesso!');
+
+  // Informação adicional sobre configuração em produção
+  if (process.env.NODE_ENV === 'production') {
+    console.log('Swagger em modo de produção: exibindo apenas rotas com tag Public');
+  }
 }; exports.setupSwagger = setupSwagger;
 
 exports. default = exports.setupSwagger;
