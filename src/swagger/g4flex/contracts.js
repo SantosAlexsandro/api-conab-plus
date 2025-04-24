@@ -46,6 +46,8 @@
  *    x-public: true
  *    summary: Verifica se o cliente possui contratos ativos
  *    description: Verifica na Conab+ se o cliente possui contratos ativos baseado no CPF, CNPJ ou ID do cliente
+ *    security:
+ *      - bearerAuth: []
  *    parameters:
  *      - $ref: '#/components/parameters/customerIdentifierParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
@@ -62,6 +64,18 @@
  *          application/json:
  *            schema:
  *              $ref: '#/components/schemas/Error'
+ *      '401':
+ *        description: Não autenticado ou token inválido
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                errors:
+ *                  type: array
+ *                  items:
+ *                    type: string
+ *                  example: ["Token expirado ou inválido para G4Flex"]
  *      '404':
  *        description: Cliente não encontrado
  *        content:

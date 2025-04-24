@@ -1,5 +1,6 @@
 import swaggerJsDoc from 'swagger-jsdoc';
 import swaggerDefinition from './index';
+import './auth';
 import './contracts';
 import './workOrders';
 
@@ -10,12 +11,14 @@ import './workOrders';
 const getSwaggerOptions = () => {
   // Base API files that are always included
   const baseApiFiles = [
+    './src/routes/tokenRoutes.js',
     './src/routes/g4flex/contractRoutes.js',
     './src/routes/g4flex/workOrderRoutes.js'
   ];
 
   // Base Swagger documentation files
   const baseSwaggerFiles = [
+    './src/swagger/g4flex/auth.js',
     './src/swagger/g4flex/contracts.js',
     './src/swagger/g4flex/workOrders.js'
   ];

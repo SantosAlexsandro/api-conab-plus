@@ -83,39 +83,6 @@
  *        cancellationReason:
  *          type: string
  *          description: Motivo do cancelamento
- *    TokenRequest:
- *      type: object
- *      required:
- *        - email
- *        - password
- *      properties:
- *        email:
- *          type: string
- *          format: email
- *          description: Email do usuário
- *        password:
- *          type: string
- *          format: password
- *          description: Senha do usuário
- *    TokenResponse:
- *      type: object
- *      properties:
- *        token:
- *          type: string
- *          description: Token JWT gerado para autenticação
- *        user:
- *          type: object
- *          properties:
- *            nome:
- *              type: string
- *              description: Nome do usuário
- *            id:
- *              type: integer
- *              description: ID do usuário
- *            entity_email:
- *              type: string
- *              format: email
- *              description: Email do usuário
  *  parameters:
  *    customerIdentifierParam:
  *      in: query
@@ -135,50 +102,14 @@
 
 /**
  * @swagger
- * /tokens:
- *  post:
- *    tags:
- *      - G4Flex - Autenticação
- *    summary: Gera um token de autenticação
- *    description: Gera um token JWT para autenticação nas APIs da Conab+
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            $ref: '#/components/schemas/TokenRequest'
- *    responses:
- *      '200':
- *        description: Token gerado com sucesso
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/TokenResponse'
- *      '401':
- *        description: Credenciais inválidas
- *        content:
- *          application/json:
- *            schema:
- *              type: object
- *              properties:
- *                errors:
- *                  type: array
- *                  items:
- *                    type: string
- *                  example: ['Credenciais inválidas', 'Usuário não existe', 'Senha inválida']
- *      '500':
- *        description: Erro interno do servidor
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/Error'
- *
  * /g4flex/work-orders/check-open:
  *  get:
  *    tags:
  *      - G4Flex - Ordens de Serviço
  *    summary: Verifica se o cliente possui ordens de serviço abertas
  *    description: Verifica na Conab+ se o cliente possui ordens de serviço abertas baseado no CPF, CNPJ ou ID do cliente
+ *    security:
+ *      - bearerAuth: []
  *    parameters:
  *      - $ref: '#/components/parameters/customerIdentifierParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
@@ -195,6 +126,18 @@
  *          application/json:
  *            schema:
  *              $ref: '#/components/schemas/Error'
+ *      '401':
+ *        description: Não autenticado ou token inválido
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                errors:
+ *                  type: array
+ *                  items:
+ *                    type: string
+ *                  example: ["Token expirado ou inválido para G4Flex"]
  *      '404':
  *        description: Cliente não encontrado
  *        content:
@@ -214,6 +157,8 @@
  *      - G4Flex - Ordens de Serviço
  *    summary: Solicita uma nova ordem de serviço
  *    description: Solicita uma nova ordem de serviço na Conab+ para o cliente especificado
+ *    security:
+ *      - bearerAuth: []
  *    parameters:
  *      - $ref: '#/components/parameters/customerIdentifierParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
@@ -236,6 +181,18 @@
  *          application/json:
  *            schema:
  *              $ref: '#/components/schemas/Error'
+ *      '401':
+ *        description: Não autenticado ou token inválido
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                errors:
+ *                  type: array
+ *                  items:
+ *                    type: string
+ *                  example: ["Token expirado ou inválido para G4Flex"]
  *      '404':
  *        description: Cliente não encontrado
  *        content:
@@ -253,8 +210,10 @@
  *  post:
  *    tags:
  *      - G4Flex - Ordens de Serviço
- *    summary: Fecha ordens de serviço abertas
- *    description: Fecha ordens de serviço abertas na Conab+ para o cliente especificado
+ *    summary: Fecha uma ordem de serviço
+ *    description: Fecha uma ordem de serviço na Conab+ para o cliente especificado
+ *    security:
+ *      - bearerAuth: []
  *    parameters:
  *      - $ref: '#/components/parameters/customerIdentifierParam'
  *      - $ref: '#/components/parameters/uraRequestIdParam'
@@ -266,19 +225,31 @@
  *            $ref: '#/components/schemas/WorkOrderCloseRequest'
  *    responses:
  *      '200':
- *        description: Ordens de serviço fechadas com sucesso
+ *        description: Ordem de serviço fechada com sucesso
  *        content:
  *          application/json:
  *            schema:
  *              $ref: '#/components/schemas/WorkOrderCloseResponse'
  *      '400':
- *        description: Erro de validação dos parâmetros
+ *        description: Erro de validação dos parâmetros ou campos obrigatórios ausentes
  *        content:
  *          application/json:
  *            schema:
  *              $ref: '#/components/schemas/Error'
+ *      '401':
+ *        description: Não autenticado ou token inválido
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                errors:
+ *                  type: array
+ *                  items:
+ *                    type: string
+ *                  example: ["Token expirado ou inválido para G4Flex"]
  *      '404':
- *        description: Cliente não encontrado ou sem ordens de serviço abertas
+ *        description: Cliente ou ordem de serviço não encontrada
  *        content:
  *          application/json:
  *            schema:
