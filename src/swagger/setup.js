@@ -55,6 +55,11 @@ export const setupSwagger = (app) => {
   app.use('/api-docs/erp', erpServer, swaggerUi.setup(erpSwaggerSpec, erpOptions));
 
   console.log('Swagger configurado com sucesso!');
+
+  // Informação adicional sobre configuração em produção
+  if (process.env.NODE_ENV === 'production') {
+    console.log('Swagger em modo de produção: exibindo apenas rotas com tag Public');
+  }
 };
 
 export default setupSwagger;

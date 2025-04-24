@@ -43,6 +43,7 @@
  *  get:
  *    tags:
  *      - Contratos - Integração da URA G4Flex com a Conab+
+ *      - Public
  *    summary: Verifica se o cliente possui contratos ativos
  *    description: Verifica na Conab+ se o cliente possui contratos ativos baseado no CPF, CNPJ ou ID do cliente
  *    parameters:
