@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import workOrderController from '../controllers/WorkOrderController';
-import loginRequired from '../middlewares/loginRequired';
+import authMiddleware from '../middlewares/authMiddleware';
 
 const router = new Router();
 
@@ -10,7 +10,7 @@ router.get('/tech', workOrderController.getAllbyTech);
 router.post('/', workOrderController.create);
 router.post('/updateStage', workOrderController.updateOrderStage);
 router.get('/nextStages', workOrderController.getNextStages);
-//router.put('/', loginRequired, entityController.update);
-//router.delete('/', loginRequired, entityController.delete);
+//router.put('/', authMiddleware, entityController.update);
+//router.delete('/', authMiddleware, entityController.delete);
 
 export default router;

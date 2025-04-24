@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import workShiftController from '../controllers/WorkShiftController';
 import { WorkShiftValidator } from '../validators/WorkShiftValidator';
-import loginRequired from '../middlewares/loginRequired';
+import authMiddleware from '../middlewares/authMiddleware';
 import validation from '../middlewares/validation';
 
 const router = new Router();

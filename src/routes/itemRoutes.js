@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import itemController from '../controllers/ItemController';
-
-import loginRequired from '../middlewares/loginRequired';
+import authMiddleware from '../middlewares/authMiddleware';
 
 const router = new Router();
 
 router.get('/', itemController.index);
-router.post('/:id', loginRequired, itemController.store);
-router.put('/:id', loginRequired, itemController.update);
+router.post('/:id', authMiddleware, itemController.store);
+router.put('/:id', authMiddleware, itemController.update);
 router.get('/:id', itemController.show);
-router.delete('/:id', loginRequired, itemController.delete);
+router.delete('/:id', authMiddleware, itemController.delete);
 
 export default router;

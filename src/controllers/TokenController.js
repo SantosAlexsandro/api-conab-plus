@@ -1,36 +1,99 @@
 import jwt from 'jsonwebtoken';
-// import Entity from '../models/Entity';
+import UserSession from '../models/UserSession';
+import bcrypt from 'bcryptjs';
 
 class TokenController {
   async store(req, res) {
-    const { email = '', password = '' } = req.body;
+    const { username = '', password = '' } = req.body;
 
-    if (!email || !password) {
+    if (!username || !password) {
       return res.status(401).json({
         errors: ['Credenciais inválidas'],
       });
     }
 
-    const user = await Entity.findOne({ where: { entity_email: email } });
-    //console.log('log', user)
-
-    if (!user) {
-      return res.status(401).json({
-        errors: ['Usuário não existe.'],
-      });
-    }
-    if (!(await user.passwordIsValid(password))) {
-      return res.status(401).json({
-        errors: ['Senha inválida.'],
-      });
-    }
-
-    const { id } = user;
-    const token = jwt.sign({ id, entity_email: email }, process.env.TOKEN_SECRET, {
-      expiresIn: process.env.TOKEN_EXPIRATION,
+    const userSession = await UserSession.findOne({
+      where: {
+        userName: username
+      }
     });
 
-    return res.status(200).json({ token, user: { nome: user.entity_first_name, id, entity_email: email } });
+    if (!userSession) {
+      return res.status(401).json({
+        errors: ['Usuário não existe'],
+      });
+    }
+
+    // Verificando a senha
+    const passwordMatch = await bcrypt.compare(password, userSession.encryptedPassword);
+    if (!passwordMatch) {
+      return res.status(401).json({
+        errors: ['Senha inválida'],
+      });
+    }
+
+    const { id } = userSession;
+    const token = jwt.sign(
+      {
+        id,
+        userName: username,
+        type: 'user'
+      },
+      process.env.JWT_TOKEN_SECRET,
+      {
+        expiresIn: process.env.TOKEN_EXPIRATION,
+      }
+    );
+
+    return res.status(200).json({
+      token,
+      user: {
+        nome: username,
+        id,
+        userName: username
+      }
+    });
+  }
+
+  async storeG4Flex(req, res) {
+    const { apiKey, clientId } = req.body;
+
+    if (!apiKey || !clientId) {
+      return res.status(401).json({
+        success: false,
+        errors: ['Credenciais inválidas'],
+      });
+    }
+
+    // Verificar se as credenciais do G4Flex são válidas
+    const validApiKey = process.env.G4FLEX_API_KEY;
+    const validClientId = process.env.G4FLEX_CLIENT_ID;
+
+    if (apiKey !== validApiKey || clientId !== validClientId) {
+      return res.status(401).json({
+        success: false,
+        errors: ['Credenciais inválidas para integração G4Flex'],
+      });
+    }
+
+    // Gerar token JWT com tipo específico para G4Flex
+    const token = jwt.sign(
+      {
+        clientId,
+        type: 'integration',
+        integration: 'g4flex',
+      },
+      process.env.JWT_TOKEN_SECRET,
+      {
+        expiresIn: process.env.G4FLEX_TOKEN_EXPIRATION,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      token,
+      expiresIn: process.env.G4FLEX_TOKEN_EXPIRATION,
+    });
   }
 }
 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import workOrderPhotoController from '../controllers/WorkOrderPhotoController';
-import loginRequired from '../middlewares/loginRequired';
+import authMiddleware from '../middlewares/authMiddleware';
 import { uploadToMemory } from '../config/multerConfig'; // Importa as duas opções
 
 const router = new Router();

@@ -24,9 +24,31 @@ export default async (req, res, next) => {
       return res.status(401).json({ message: "Token inválido ou expirado." });
     }
 
+    // Verifica o tipo de token
+    if (decoded.type === 'integration') {
+      // Se for um token de integração, verificamos se é para G4Flex
+      if (decoded.integration === 'g4flex') {
+        // Verificar se o clientId é válido
+        if (decoded.clientId !== process.env.G4FLEX_CLIENT_ID) {
+          return res.status(401).json({ message: "Cliente não autorizado para integração G4Flex" });
+        }
+
+        // Adicionar informações do G4Flex à requisição
+        req.integration = {
+          name: 'g4flex',
+          clientId: decoded.clientId,
+        };
+
+        return next();
+      }
+
+      return res.status(401).json({ message: "Tipo de integração não reconhecida" });
+    }
+
+    // Para tokens de usuário (type === 'user')
     // Verifica se há uma sessão válida no banco
     const session = await UserSession.findOne({
-      where: { userName: decoded.UserName },
+      where: { userName: decoded.userName },
     });
 
     if (!session || !session.sessionToken || !session.sessionExpiration) {
@@ -45,6 +67,10 @@ export default async (req, res, next) => {
     } else {
       req.sessionToken = session.sessionToken;
     }
+
+    // Armazena informações do usuário na requisição
+    req.userId = session.id;
+    req.userName = session.userName;
 
     // Injeta o token ERP dinamicamente no EntityService
     EntityService.setToken(req.sessionToken);

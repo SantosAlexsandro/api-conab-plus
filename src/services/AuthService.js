@@ -1,4 +1,3 @@
-
 // AuthService
 
 import jwt from "jsonwebtoken";
@@ -46,7 +45,10 @@ class AuthService {
       );
 
       const jwtToken = jwt.sign(
-        { UserName: data.Nome },
+        {
+          userName: data.Nome,
+          type: 'user'
+        },
         process.env.JWT_TOKEN_SECRET,
         { expiresIn: Math.floor((endOfDay.getTime() - now.getTime()) / 1000) }
       );

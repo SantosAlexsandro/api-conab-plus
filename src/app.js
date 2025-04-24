@@ -37,7 +37,6 @@ import gupshupRoutes from './routes/gupshupRoutes'
 import g4flexContractRoutes from './integrations/g4flex/routes/contractRoutes'
 import g4flexWorkOrderRoutes from './integrations/g4flex/routes/workOrderRoutes'
 
-
 const whiteList = [
   'http://localhost:8080',
   'https://app.conabplus.com.br',
