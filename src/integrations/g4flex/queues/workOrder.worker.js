@@ -9,6 +9,7 @@ import redisConnection from "./redis";
 import workOrderService from "../services/WorkOrderService";
 import workOrderQueue from "./workOrder.queue";
 import WebhookService from "../services/WebhookService";
+import WorkOrderWaitingQueueService from "../../../services/WorkOrderWaitingQueueService";
 
 const RETRY_INTERVAL_MS = 3 * 60 * 1000;
 const TIMEZONE_BRASILIA = 'America/Sao_Paulo';
@@ -51,9 +52,24 @@ async function processCreateWorkOrder(job) {
   const orderData = job.data;
 
   try {
+    // Registrar na fila de espera que a ordem está sendo processada
+    await WorkOrderWaitingQueueService.createInQueue({
+      orderNumber: orderData.orderId || `order-${Date.now()}`,
+      entityName: orderData.entityName || 'Não especificado',
+      serviceType: orderData.serviceType || 'Não especificado',
+      priority: orderData.priority || 'normal',
+      source: orderData.source || 'g4flex'
+    });
+
     // Chamar o serviço para criar a ordem
     const result = await workOrderService.createWorkOrder(orderData);
     console.log(`✅ Ordem de serviço ${result.workOrder} criada com sucesso`);
+
+    // Atualizar status na fila de espera
+    await WorkOrderWaitingQueueService.updateQueueStatus(
+      result.workOrder,
+      'WAITING_TECHNICIAN'
+    );
 
     // Adicionar na fila de atribuição de técnico
     await workOrderQueue.add("assignTechnician", {
@@ -67,6 +83,19 @@ async function processCreateWorkOrder(job) {
     return { success: true, workOrder: result.workOrder };
   } catch (error) {
     console.error(`❌ Erro ao criar ordem de serviço:`, error);
+
+    // Registrar falha na fila de espera, se possível
+    if (orderData.orderId) {
+      try {
+        await WorkOrderWaitingQueueService.updateQueueStatus(
+          orderData.orderId,
+          'FAILED'
+        );
+      } catch (queueError) {
+        console.error('Erro ao atualizar status na fila de espera:', queueError);
+      }
+    }
+
     throw error;
   }
 }
@@ -105,6 +134,12 @@ async function processAssignTechnician(job) {
       console.log(`📅 Reagendada nova tentativa para ordem ${orderId} em ${nextAttemptDate}`);
       return { ...result, rescheduled: true, nextAttempt: nextAttemptDate };
     }
+
+    // Atualizar status na fila de espera
+    await WorkOrderWaitingQueueService.updateQueueStatus(
+      orderId,
+      'WAITING_ARRIVAL'
+    );
 
     return result;
   } catch (error) {
@@ -147,6 +182,14 @@ async function processWorkOrderFeedback(job) {
       technicianName: technicianName || 'Não atribuído',
       uraRequestId: validUraRequestId
     });
+
+    // Atualizar status na fila de espera
+    if (result.success) {
+      await WorkOrderWaitingQueueService.updateQueueStatus(
+        orderId,
+        'IN_PROGRESS'
+      );
+    }
 
     console.log(`✅ Feedback processado com sucesso para ordem ${orderId}`);
     return result;
