@@ -94,7 +94,7 @@ class App {
     //this.app.use('/gupshup/', gupshupRoutes);
 
     // G4Flex
-    this.app.use('/g4flex/contracts/', g4flexContractRoutes);
+    this.app.use('/api/integrations/g4flex/contracts/', g4flexContractRoutes);
     this.app.use('/g4flex/work-orders/', g4flexWorkOrderRoutes);
     this.app.use('/api/integrations/g4flex/token', g4flexTokenRoutes);
 

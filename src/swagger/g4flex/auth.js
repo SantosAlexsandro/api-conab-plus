@@ -40,7 +40,7 @@
  *       example:
  *         success: true
  *         token: "eyJhbGciOi...EXEMPLO_PARCIAL"
- *         expiresIn: "8h"
+ *         expiresIn: "24h"
  */
 
 /**

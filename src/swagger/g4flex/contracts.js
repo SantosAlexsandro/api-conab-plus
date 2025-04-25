@@ -39,7 +39,7 @@
 
 /**
  * @swagger
- * /g4flex/contracts/check-active:
+ * /api/integrations/g4flex/contracts/check-active:
  *  get:
  *    tags:
  *      - G4Flex - Contratos
