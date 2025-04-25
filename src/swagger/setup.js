@@ -5,6 +5,15 @@ import erpSwaggerSpec from './erp/config';
 
 // Função para configurar o Swagger na aplicação
 export const setupSwagger = (app) => {
+  // Verifica o ambiente atual
+  const env = process.env.NODE_ENV || 'development';
+
+  // Não habilita o Swagger em ambiente de staging
+  if (env === 'staging') {
+    console.log('Swagger desabilitado no ambiente de staging.');
+    return;
+  }
+
   // Middleware para servir a página inicial da documentação (deve vir antes das outras rotas específicas)
   app.use('/api-docs', express.static('src/swagger/static'));
 
@@ -54,10 +63,10 @@ export const setupSwagger = (app) => {
   app.use('/api-docs/g4flex', g4flexServer, swaggerUi.setup(g4flexSwaggerSpec, g4flexOptions));
   app.use('/api-docs/erp', erpServer, swaggerUi.setup(erpSwaggerSpec, erpOptions));
 
-  console.log('Swagger configurado com sucesso!');
+  console.log(`Swagger configurado com sucesso no ambiente: ${env}`);
 
   // Informação adicional sobre configuração em produção
-  if (process.env.NODE_ENV === 'production') {
+  if (env === 'production') {
     console.log('Swagger em modo de produção: exibindo apenas rotas com tag Public');
   }
 };
