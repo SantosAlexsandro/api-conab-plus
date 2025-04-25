@@ -11,9 +11,9 @@ import './workOrders';
 const getSwaggerOptions = () => {
   // Base API files that are always included
   const baseApiFiles = [
-    './src/routes/tokenRoutes.js',
-    './src/routes/g4flex/contractRoutes.js',
-    './src/routes/g4flex/workOrderRoutes.js'
+    './src/integrations/g4flex/routes/tokenRoutes.js',
+    './src/integrations/g4flex/routes/contractRoutes.js',
+    './src/integrations/g4flex/routes/workOrderRoutes.js'
   ];
 
   // Base Swagger documentation files

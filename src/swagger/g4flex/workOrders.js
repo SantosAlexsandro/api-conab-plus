@@ -133,11 +133,9 @@
  *            schema:
  *              type: object
  *              properties:
- *                errors:
- *                  type: array
- *                  items:
- *                    type: string
- *                  example: ["Token expirado ou inválido para G4Flex"]
+ *                message:
+ *                  type: string
+ *                  example: "Token inválido para acesso à API G4Flex."
  *      '404':
  *        description: Cliente não encontrado
  *        content:
@@ -188,11 +186,9 @@
  *            schema:
  *              type: object
  *              properties:
- *                errors:
- *                  type: array
- *                  items:
- *                    type: string
- *                  example: ["Token expirado ou inválido para G4Flex"]
+ *                message:
+ *                  type: string
+ *                  example: "Token inválido para acesso à API G4Flex."
  *      '404':
  *        description: Cliente não encontrado
  *        content:
@@ -243,11 +239,9 @@
  *            schema:
  *              type: object
  *              properties:
- *                errors:
- *                  type: array
- *                  items:
- *                    type: string
- *                  example: ["Token expirado ou inválido para G4Flex"]
+ *                message:
+ *                  type: string
+ *                  example: "Token inválido para acesso à API G4Flex."
  *      '404':
  *        description: Cliente ou ordem de serviço não encontrada
  *        content:

@@ -45,7 +45,7 @@
 
 /**
  * @swagger
- * /tokens/g4flex:
+ * /api/integrations/g4flex/token:
  *   post:
  *     summary: Autenticação para G4Flex
  *     description: Gera um token JWT para autenticação do G4Flex nas APIs de integração
