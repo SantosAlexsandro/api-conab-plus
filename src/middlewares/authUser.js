@@ -1,5 +1,3 @@
-// AuthMiddleware
-
 import jwt from "jsonwebtoken";
 import UserSession from "../models/UserSession";
 import AuthService from "../services/AuthService";
@@ -24,28 +22,11 @@ export default async (req, res, next) => {
       return res.status(401).json({ message: "Token inválido ou expirado." });
     }
 
-    // Verifica o tipo de token
-    if (decoded.type === 'integration') {
-      // Se for um token de integração, verificamos se é para G4Flex
-      if (decoded.integration === 'g4flex') {
-        // Verificar se o clientId é válido
-        if (decoded.clientId !== process.env.G4FLEX_CLIENT_ID) {
-          return res.status(401).json({ message: "Cliente não autorizado para integração G4Flex" });
-        }
-
-        // Adicionar informações do G4Flex à requisição
-        req.integration = {
-          name: 'g4flex',
-          clientId: decoded.clientId,
-        };
-
-        return next();
-      }
-
-      return res.status(401).json({ message: "Tipo de integração não reconhecida" });
+    // Verifica se é um token de usuário
+    if (decoded.type !== 'user') {
+      return res.status(401).json({ message: "Tipo de token inválido para esta rota." });
     }
 
-    // Para tokens de usuário (type === 'user')
     // Verifica se há uma sessão válida no banco
     const session = await UserSession.findOne({
       where: { userName: decoded.userName },

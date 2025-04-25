@@ -6,5 +6,6 @@ var _AuthControllerjs = require('../controllers/AuthController.js'); var _AuthCo
 const router = _express2.default.Router();
 
 router.post('/login', _AuthControllerjs2.default.getByUserName);
+router.post('/user', _AuthControllerjs2.default.login);
 
 exports. default = router;

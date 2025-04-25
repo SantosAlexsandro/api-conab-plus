@@ -18,6 +18,7 @@ import workOrderAudioRoutes from './routes/workOrderAudioRoutes';
 import workShiftRoutes from './routes/workShiftRoutes';
 import erpUserGroupRoutes from './routes/userGroupRoutes';
 import tokenRoutes from './routes/tokenRoutes';
+import integrationRoutes from './routes/integrationRoutes';
 // import itemRoutes from './routes/itemRoutes';
 // import transactionRoutes from './routes/transactionRoutes';
 // import transactionItemRoutes from './routes/transactionItemRoutes';
@@ -36,6 +37,7 @@ import gupshupRoutes from './routes/gupshupRoutes'
 // G4Flex
 import g4flexContractRoutes from './integrations/g4flex/routes/contractRoutes'
 import g4flexWorkOrderRoutes from './integrations/g4flex/routes/workOrderRoutes'
+import g4flexTokenRoutes from './integrations/g4flex/routes/tokenRoutes'
 
 const whiteList = [
   'http://localhost:8080',
@@ -94,10 +96,14 @@ class App {
     // G4Flex
     this.app.use('/g4flex/contracts/', g4flexContractRoutes);
     this.app.use('/g4flex/work-orders/', g4flexWorkOrderRoutes);
+    this.app.use('/api/integrations/g4flex/token', g4flexTokenRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
     //this.app.use('/transactions/items/', transactionItemRoutes);
+
+    this.app.use('/token', tokenRoutes);
+    this.app.use('/api/integrations', integrationRoutes);
   }
 
   swagger() {

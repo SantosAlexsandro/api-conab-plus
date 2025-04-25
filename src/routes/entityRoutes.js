@@ -1,16 +1,16 @@
 import { Router } from 'express';
 import entityController from '../controllers/EntityController';
-import authMiddleware from '../middlewares/authMiddleware'
+import authUser from '../middlewares/authUser';
 
 const router = new Router();
 
-router.get('/', authMiddleware, entityController.getAll);
-router.get('/:id', authMiddleware, entityController.show);
-router.get('/cnpjcpf', authMiddleware, entityController.getByFilter);
-router.get('/address&number', authMiddleware, entityController.getByFilter);
-router.post('/', authMiddleware, entityController.create);
-router.post('/edit', authMiddleware, entityController.update);
-router.post('/savePartialData', authMiddleware, entityController.savePartialData);
-//router.delete('/', loginRequired, entityController.delete);
+router.get('/', authUser, entityController.getAll);
+router.get('/:id', authUser, entityController.show);
+router.get('/cnpjcpf', authUser, entityController.getByFilter);
+router.get('/address&number', authUser, entityController.getByFilter);
+router.post('/', authUser, entityController.create);
+router.post('/edit', authUser, entityController.update);
+router.post('/savePartialData', authUser, entityController.savePartialData);
+//router.delete('/', authUser, entityController.delete);
 
 export default router;

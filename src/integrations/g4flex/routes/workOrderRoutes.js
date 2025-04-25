@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import workOrderController from '../controllers/WorkOrderController';
-import authMiddleware from '../../../middlewares/authMiddleware';
+import authG4Flex from '../middlewares/authG4Flex';
 
 const router = new Router();
 
-router.get('/check-open', authMiddleware, workOrderController.checkWorkOrder);
+router.get('/check-open', authG4Flex, workOrderController.checkWorkOrder);
 
-router.post('/requests', authMiddleware, workOrderController.requestWorkOrder);
+router.post('/requests', authG4Flex, workOrderController.requestWorkOrder);
 
-router.post('/close', authMiddleware, workOrderController.closeWorkOrder);
+router.post('/close', authG4Flex, workOrderController.closeWorkOrder);
 
 export default router;

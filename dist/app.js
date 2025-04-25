@@ -18,6 +18,7 @@ var _workOrderAudioRoutes = require('./routes/workOrderAudioRoutes'); var _workO
 var _workShiftRoutes = require('./routes/workShiftRoutes'); var _workShiftRoutes2 = _interopRequireDefault(_workShiftRoutes);
 var _userGroupRoutes = require('./routes/userGroupRoutes'); var _userGroupRoutes2 = _interopRequireDefault(_userGroupRoutes);
 var _tokenRoutes = require('./routes/tokenRoutes'); var _tokenRoutes2 = _interopRequireDefault(_tokenRoutes);
+var _integrationRoutes = require('./routes/integrationRoutes'); var _integrationRoutes2 = _interopRequireDefault(_integrationRoutes);
 // import itemRoutes from './routes/itemRoutes';
 // import transactionRoutes from './routes/transactionRoutes';
 // import transactionItemRoutes from './routes/transactionItemRoutes';
@@ -36,7 +37,7 @@ var _gupshupRoutes = require('./routes/gupshupRoutes'); var _gupshupRoutes2 = _i
 // G4Flex
 var _contractRoutes = require('./integrations/g4flex/routes/contractRoutes'); var _contractRoutes2 = _interopRequireDefault(_contractRoutes);
 var _workOrderRoutes3 = require('./integrations/g4flex/routes/workOrderRoutes'); var _workOrderRoutes4 = _interopRequireDefault(_workOrderRoutes3);
-
+var _tokenRoutes3 = require('./integrations/g4flex/routes/tokenRoutes'); var _tokenRoutes4 = _interopRequireDefault(_tokenRoutes3);
 
 const whiteList = [
   'http://localhost:8080',
@@ -95,10 +96,14 @@ class App {
     // G4Flex
     this.app.use('/g4flex/contracts/', _contractRoutes2.default);
     this.app.use('/g4flex/work-orders/', _workOrderRoutes4.default);
+    this.app.use('/api/integrations/g4flex/token', _tokenRoutes4.default);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
     //this.app.use('/transactions/items/', transactionItemRoutes);
+
+    this.app.use('/token', _tokenRoutes2.default);
+    this.app.use('/api/integrations', _integrationRoutes2.default);
   }
 
   swagger() {

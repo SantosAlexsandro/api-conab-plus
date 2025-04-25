@@ -1,3 +1,5 @@
+// src/controllers/TokenController.js
+
 import jwt from 'jsonwebtoken';
 import UserSession from '../models/UserSession';
 import bcrypt from 'bcryptjs';
@@ -52,47 +54,6 @@ class TokenController {
         id,
         userName: username
       }
-    });
-  }
-
-  async storeG4Flex(req, res) {
-    const { apiKey, clientId } = req.body;
-
-    if (!apiKey || !clientId) {
-      return res.status(401).json({
-        success: false,
-        errors: ['Credenciais inválidas'],
-      });
-    }
-
-    // Verificar se as credenciais do G4Flex são válidas
-    const validApiKey = process.env.G4FLEX_API_KEY;
-    const validClientId = process.env.G4FLEX_CLIENT_ID;
-
-    if (apiKey !== validApiKey || clientId !== validClientId) {
-      return res.status(401).json({
-        success: false,
-        errors: ['Credenciais inválidas para integração G4Flex'],
-      });
-    }
-
-    // Gerar token JWT com tipo específico para G4Flex
-    const token = jwt.sign(
-      {
-        clientId,
-        type: 'integration',
-        integration: 'g4flex',
-      },
-      process.env.JWT_TOKEN_SECRET,
-      {
-        expiresIn: process.env.G4FLEX_TOKEN_EXPIRATION,
-      }
-    );
-
-    return res.status(200).json({
-      success: true,
-      token,
-      expiresIn: process.env.G4FLEX_TOKEN_EXPIRATION,
     });
   }
 }

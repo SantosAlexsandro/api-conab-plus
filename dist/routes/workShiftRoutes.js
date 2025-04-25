@@ -1,7 +1,7 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _express = require('express');
 var _WorkShiftController = require('../controllers/WorkShiftController'); var _WorkShiftController2 = _interopRequireDefault(_WorkShiftController);
 var _WorkShiftValidator = require('../validators/WorkShiftValidator');
-var _loginRequired = require('../middlewares/loginRequired'); var _loginRequired2 = _interopRequireDefault(_loginRequired);
+var _authUser = require('../middlewares/authUser'); var _authUser2 = _interopRequireDefault(_authUser);
 var _validation = require('../middlewares/validation'); var _validation2 = _interopRequireDefault(_validation);
 
 const router = new (0, _express.Router)();

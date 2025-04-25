@@ -1,36 +1,60 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _jsonwebtoken = require('jsonwebtoken'); var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
-// import Entity from '../models/Entity';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// src/controllers/TokenController.js
+
+var _jsonwebtoken = require('jsonwebtoken'); var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
+var _UserSession = require('../models/UserSession'); var _UserSession2 = _interopRequireDefault(_UserSession);
+var _bcryptjs = require('bcryptjs'); var _bcryptjs2 = _interopRequireDefault(_bcryptjs);
 
 class TokenController {
   async store(req, res) {
-    const { email = '', password = '' } = req.body;
+    const { username = '', password = '' } = req.body;
 
-    if (!email || !password) {
+    if (!username || !password) {
       return res.status(401).json({
         errors: ['Credenciais inválidas'],
       });
     }
 
-    const user = await Entity.findOne({ where: { entity_email: email } });
-    //console.log('log', user)
-
-    if (!user) {
-      return res.status(401).json({
-        errors: ['Usuário não existe.'],
-      });
-    }
-    if (!(await user.passwordIsValid(password))) {
-      return res.status(401).json({
-        errors: ['Senha inválida.'],
-      });
-    }
-
-    const { id } = user;
-    const token = _jsonwebtoken2.default.sign({ id, entity_email: email }, process.env.TOKEN_SECRET, {
-      expiresIn: process.env.TOKEN_EXPIRATION,
+    const userSession = await _UserSession2.default.findOne({
+      where: {
+        userName: username
+      }
     });
 
-    return res.status(200).json({ token, user: { nome: user.entity_first_name, id, entity_email: email } });
+    if (!userSession) {
+      return res.status(401).json({
+        errors: ['Usuário não existe'],
+      });
+    }
+
+    // Verificando a senha
+    const passwordMatch = await _bcryptjs2.default.compare(password, userSession.encryptedPassword);
+    if (!passwordMatch) {
+      return res.status(401).json({
+        errors: ['Senha inválida'],
+      });
+    }
+
+    const { id } = userSession;
+    const token = _jsonwebtoken2.default.sign(
+      {
+        id,
+        userName: username,
+        type: 'user'
+      },
+      process.env.JWT_TOKEN_SECRET,
+      {
+        expiresIn: process.env.TOKEN_EXPIRATION,
+      }
+    );
+
+    return res.status(200).json({
+      token,
+      user: {
+        nome: username,
+        id,
+        userName: username
+      }
+    });
   }
 }
 

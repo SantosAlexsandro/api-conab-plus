@@ -1,5 +1,6 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _swaggerjsdoc = require('swagger-jsdoc'); var _swaggerjsdoc2 = _interopRequireDefault(_swaggerjsdoc);
 var _index = require('./index'); var _index2 = _interopRequireDefault(_index);
+require('./auth');
 require('./contracts');
 require('./workOrders');
 
@@ -10,12 +11,14 @@ require('./workOrders');
 const getSwaggerOptions = () => {
   // Base API files that are always included
   const baseApiFiles = [
-    './src/routes/g4flex/contractRoutes.js',
-    './src/routes/g4flex/workOrderRoutes.js'
+    './src/integrations/g4flex/routes/tokenRoutes.js',
+    './src/integrations/g4flex/routes/contractRoutes.js',
+    './src/integrations/g4flex/routes/workOrderRoutes.js'
   ];
 
   // Base Swagger documentation files
   const baseSwaggerFiles = [
+    './src/swagger/g4flex/auth.js',
     './src/swagger/g4flex/contracts.js',
     './src/swagger/g4flex/workOrders.js'
   ];

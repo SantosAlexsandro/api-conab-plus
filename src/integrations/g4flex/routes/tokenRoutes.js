@@ -3,6 +3,7 @@ import tokenController from '../controllers/TokenController';
 
 const router = new Router();
 
-router.post('/', tokenController.store);
+// Rota para autenticação G4Flex
+router.post('/', tokenController.authenticate);
 
 export default router;
