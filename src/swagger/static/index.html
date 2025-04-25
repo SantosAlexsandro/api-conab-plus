@@ -3,130 +3,158 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API Conab+ - Documentação</title>
+  <title>API Documentation - Conab+</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 0;
+      background-color: #f5f5f5;
       color: #333;
-      background-color: #f8f9fa;
-    }
-    header {
-      background-color: #28a745;
-      color: white;
-      padding: 1rem 0;
-      text-align: center;
     }
     .container {
       max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
     }
-    .card {
+    header {
+      background-color: #1976d2;
+      color: white;
+      padding: 20px 0;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      margin: 0;
+      font-size: 2.5em;
+    }
+    h2 {
+      color: #1976d2;
+      margin-top: 30px;
+    }
+    .api-section {
       background-color: white;
       border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      margin-bottom: 20px;
+      padding: 25px;
+      margin: 20px 0;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
     }
-    h1, h2, h3 {
-      color: #28a745;
-    }
-    ul {
-      padding-left: 20px;
-    }
-    li {
-      margin-bottom: 10px;
-    }
-    a {
-      color: #28a745;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    a:hover {
-      text-decoration: underline;
+    .api-section:hover {
+      transform: translateY(-5px);
     }
     .api-link {
-      display: inline-block;
-      margin: 10px;
-      padding: 15px 25px;
-      background-color: #28a745;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #1976d2;
       color: white;
+      text-decoration: none;
+      padding: 0 20px;
       border-radius: 4px;
-      transition: background-color 0.3s;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+      height: 40px;
     }
     .api-link:hover {
-      background-color: #218838;
-      text-decoration: none;
+      background-color: #1565c0;
     }
-    .api-container {
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      padding: 20px;
+      font-size: 0.9em;
+      color: #666;
+      border-top: 1px solid #ddd;
+    }
+    .buttons-container {
       display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      align-items: center;
+    }
+    .json-link {
+      display: inline-flex;
+      align-items: center;
       justify-content: center;
-      flex-wrap: wrap;
-      margin: 30px 0;
+      background-color: white;
+      color: #1976d2;
+      border: 1px solid #1976d2;
+      text-decoration: none;
+      padding: 0 12px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      transition: all 0.3s ease;
+      height: 32px;
     }
-    .note {
-      background-color: #fff3cd;
-      border-left: 5px solid #ffc107;
-      padding: 15px;
-      margin: 20px 0;
+    .json-link:hover {
+      background-color: #e3f2fd;
     }
-    code {
-      background-color: #f5f5f5;
-      padding: 2px 5px;
-      border-radius: 3px;
-      font-family: monospace;
+    .contact-link {
+      display: inline-flex;
+      align-items: center;
+      color: #1976d2;
+      text-decoration: none;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+    .contact-link:hover {
+      text-decoration: underline;
+    }
+    .contact-link svg {
+      margin-right: 8px;
     }
   </style>
 </head>
 <body>
   <header>
     <div class="container">
-      <h1>API Conab+ - Documentação</h1>
+      <h1>API Documentation</h1>
+      <p>Conab+ - Documentação de Integrações</p>
     </div>
   </header>
 
   <div class="container">
-    <div class="card">
-      <h2>Documentação das APIs</h2>
-      <p>Bem-vindo à documentação das APIs da Conab+. Selecione a API que deseja explorar:</p>
-
-      <div class="api-container">
-        <a href="/api-docs/g4flex" class="api-link">API G4Flex</a>
-        <a href="/api-docs/erp" class="api-link">API ERP</a>
+    <div class="api-section">
+      <h2>Integração URA G4Flex</h2>
+      <p>
+        Documentação completa da API de integração entre a URA G4Flex e a Conab+.
+        Esta API inclui recursos para gerenciamento de contratos e ordens de serviço da Conab+ através da URA G4Flex.
+      </p>
+      <div class="buttons-container">
+        <a href="/api-docs/g4flex" class="api-link" onclick="localStorage.setItem('lastVisited', 'g4flex')">Acessar Documentação G4Flex</a>
+        <a href="/api-docs/g4flex.json" class="json-link" target="_blank">Visualizar JSON</a>
       </div>
     </div>
-
-    <div class="card">
-      <h2>G4Flex - Integração</h2>
-      <h3>Autenticação</h3>
-      <p>Para utilizar a API G4Flex, é necessário obter um token JWT através do endpoint de autenticação:</p>
-      <code>POST /api/integrations/g4flex/token</code>
-
-      <h4>Fluxo de Autenticação:</h4>
-      <ol>
-        <li>Faça uma requisição POST para <code>/api/integrations/g4flex/token</code> fornecendo <code>apiKey</code> e <code>clientId</code> válidos</li>
-        <li>O sistema retornará um token JWT</li>
-        <li>Inclua este token no header Authorization de todas as requisições subsequentes: <code>Bearer {seu-token}</code></li>
-      </ol>
-
-      <div class="note">
-        <strong>Nota:</strong> O token expira conforme configurado no ambiente. Verifique a documentação da API para detalhes sobre o tempo de expiração.
+    <!--
+    <div class="api-section">
+      <h2>ERP API</h2>
+      <p>
+        Documentação da API de integração com o sistema ERP.
+        Esta API inclui recursos para gerenciamento de usuários, produtos e pedidos.
+      </p>
+      <div class="buttons-container">
+        <a href="/api-docs/erp" class="api-link" onclick="localStorage.setItem('lastVisited', 'erp')">Acessar Documentação ERP</a>
+        <a href="/api-docs/erp.json" class="json-link" target="_blank">Visualizar JSON</a>
       </div>
-
-      <h3>Endpoints Disponíveis</h3>
-      <ul>
-        <li><strong>Contratos</strong>: Verificação de contratos ativos.</li>
-        <li><strong>Ordens de Serviço</strong>: Verificação, solicitação e fechamento de ordens de serviço.</li>
-      </ul>
     </div>
+    -->
 
-    <div class="card">
-      <h2>ERP - Integração</h2>
-      <p>API para integração com o sistema ERP interno da Conab+.</p>
-      <p>Consulte a documentação específica para mais detalhes.</p>
+    <div class="footer">
+      <p>&copy; 2025 Conab+ - Todos os direitos reservados</p>
     </div>
   </div>
+
+  <script>
+    // Este script ajuda a prevenir confusão entre as diferentes documentações
+    document.addEventListener('DOMContentLoaded', function() {
+      // Limpar o cache do navegador para evitar conflitos
+      if (window.location.pathname === '/api-docs/' || window.location.pathname === '/api-docs/index.html') {
+        localStorage.removeItem('swagger-ui-presets');
+        localStorage.removeItem('swagger-ui:oas3');
+        localStorage.removeItem('swagger-ui');
+      }
+    });
+  </script>
 </body>
 </html>
