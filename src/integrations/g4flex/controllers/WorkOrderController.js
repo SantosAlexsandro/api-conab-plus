@@ -1,6 +1,7 @@
 // src/integrations/g4flex/controllers/WorkOrderController.js
 
 import WorkOrderService from "../services/WorkOrderService";
+import EntityService from "../services/EntityService";
 import {
   validateURAQuery,
   determineIdentifierType,
@@ -216,6 +217,7 @@ class WorkOrderController {
         cpf,
         cnpj,
         customerId,
+        customerName: (await EntityService.getCustomerDataById(customerId)).nome,
         productId,
         requesterNameAndPosition,
         IncidentAndReceiverName,

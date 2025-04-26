@@ -4,17 +4,31 @@ export async function createInQueue(data) {
   return await WorkOrderWaitingQueue.create({
     orderNumber: data.orderNumber,
     entityName: data.entityName,
-    serviceType: data.serviceType,
+    uraRequestId: data.uraRequestId,
     priority: data.priority || 'normal',
     status: 'WAITING_CREATION',
     source: data.source || 'g4flex',
   });
 }
 
-export async function updateQueueStatus(orderNumber, newStatus) {
+export async function updateQueueStatus(uraRequestId, newStatus) {
   return await WorkOrderWaitingQueue.update(
     { status: newStatus },
-    { where: { orderNumber } }
+    { where: { uraRequestId } }
+  );
+}
+
+export async function updateQueueOrderNumber(uraRequestId, orderNumber) {
+  return await WorkOrderWaitingQueue.update(
+    { orderNumber },
+    { where: { uraRequestId } }
+  );
+}
+
+export async function updateTechnicianAssigned(uraRequestId, technicianName) {
+  return await WorkOrderWaitingQueue.update(
+    { technicianAssigned: technicianName },
+    { where: { uraRequestId } }
   );
 }
 
@@ -33,6 +47,8 @@ export async function findByStatus(status) {
 export default {
   createInQueue,
   updateQueueStatus,
+  updateQueueOrderNumber,
+  updateTechnicianAssigned,
   findByOrderNumber,
   findByStatus
 };

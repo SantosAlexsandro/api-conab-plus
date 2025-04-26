@@ -11,7 +11,8 @@ export default class WorkOrderWaitingQueue extends Model {
         },
         orderNumber: Sequelize.STRING,
         entityName: Sequelize.STRING,
-        serviceType: Sequelize.STRING,
+        uraRequestId: Sequelize.STRING,
+        technicianAssigned: Sequelize.STRING,
         priority: Sequelize.ENUM('low', 'normal', 'high'),
         status: Sequelize.ENUM(
           'RECEIVED',

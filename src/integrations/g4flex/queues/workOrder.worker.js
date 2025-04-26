@@ -54,11 +54,11 @@ async function processCreateWorkOrder(job) {
   try {
     // Registrar na fila de espera que a ordem está sendo processada
     await WorkOrderWaitingQueueService.createInQueue({
-      orderNumber: orderData.orderId || `order-${Date.now()}`,
-      entityName: orderData.entityName || 'Não especificado',
-      serviceType: orderData.serviceType || 'Não especificado',
-      priority: orderData.priority || 'normal',
-      source: orderData.source || 'g4flex'
+      orderNumber: orderData.orderId || 'Em processamento',
+      entityName: orderData.customerName,
+      uraRequestId: orderData.uraRequestId,
+      priority: orderData.priority || 'normal', // TODO: Criar método para definir prioridade
+      source: 'g4flex'
     });
 
     // Chamar o serviço para criar a ordem
@@ -67,13 +67,20 @@ async function processCreateWorkOrder(job) {
 
     // Atualizar status na fila de espera
     await WorkOrderWaitingQueueService.updateQueueStatus(
-      result.workOrder,
+      orderData.uraRequestId,
       'WAITING_TECHNICIAN'
+    );
+
+    // Atualizar o número da ordem na fila de espera
+    await WorkOrderWaitingQueueService.updateQueueOrderNumber(
+      orderData.uraRequestId,
+      result.workOrder
     );
 
     // Adicionar na fila de atribuição de técnico
     await workOrderQueue.add("assignTechnician", {
       orderId: result.workOrder,
+      uraRequestId: orderData.uraRequestId || `auto-creation-${Date.now()}`
     });
     // TODO: Adicionar na fila Ordens geradas manualmente.
     console.log(
@@ -85,10 +92,10 @@ async function processCreateWorkOrder(job) {
     console.error(`❌ Erro ao criar ordem de serviço:`, error);
 
     // Registrar falha na fila de espera, se possível
-    if (orderData.orderId) {
+    if (orderData.uraRequestId) {
       try {
         await WorkOrderWaitingQueueService.updateQueueStatus(
-          orderData.orderId,
+          orderData.uraRequestId,
           'FAILED'
         );
       } catch (queueError) {
@@ -106,9 +113,12 @@ async function processAssignTechnician(job) {
   console.log(`🔄 Processando atribuição de técnico para ordem ${orderId}`);
 
   try {
+    // Garantir que temos um uraRequestId válido
+    const validUraRequestId = uraRequestId || `tech-assign-${Date.now()}`;
+
     const result = await workOrderService.assignTechnicianToWorkOrder(
       orderId,
-      uraRequestId || `auto-${Date.now()}`
+      validUraRequestId
     );
 
     // Verificar se não há técnicos disponíveis e reagendar
@@ -122,7 +132,7 @@ async function processAssignTechnician(job) {
       await workOrderQueue.add("assignTechnician",
         {
           orderId,
-          uraRequestId: uraRequestId || `no-tech-retry-${Date.now()}`,
+          uraRequestId: validUraRequestId,
           retryCount: (job.data.retryCount || 0) + 1
         },
         {
@@ -137,9 +147,18 @@ async function processAssignTechnician(job) {
 
     // Atualizar status na fila de espera
     await WorkOrderWaitingQueueService.updateQueueStatus(
-      orderId,
+      validUraRequestId,
       'WAITING_ARRIVAL'
     );
+
+    // Registrar o técnico atribuído
+    if (result.technicianId) {
+      await WorkOrderWaitingQueueService.updateTechnicianAssigned(
+        validUraRequestId,
+        result.technicianName || result.technicianId
+      );
+      console.log(`✅ Técnico ${result.technicianName || result.technicianId} registrado para ordem ${orderId}`);
+    }
 
     return result;
   } catch (error) {
@@ -148,11 +167,12 @@ async function processAssignTechnician(job) {
     // Registra a falha, mas reagenda para nova tentativa
     const delay = RETRY_INTERVAL_MS;
     const nextAttemptDate = generateNextAttemptDate(delay);
+    const validUraRequestId = uraRequestId || `retry-${Date.now()}`;
 
     await workOrderQueue.add("assignTechnician",
       {
         orderId,
-        uraRequestId: uraRequestId || `retry-${Date.now()}`,
+        uraRequestId: validUraRequestId,
         retryCount: (job.data.retryCount || 0) + 1
       },
       {
@@ -186,7 +206,7 @@ async function processWorkOrderFeedback(job) {
     // Atualizar status na fila de espera
     if (result.success) {
       await WorkOrderWaitingQueueService.updateQueueStatus(
-        orderId,
+        validUraRequestId,
         'IN_PROGRESS'
       );
     }

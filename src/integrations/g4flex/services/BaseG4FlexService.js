@@ -16,66 +16,6 @@ class BaseG4FlexService {
   }
 
   /**
-   * Gets customer data using CPF or CNPJ
-   * @param {string} document - Customer CPF or CNPJ
-   * @returns {Promise<{codigo: string, nome: string}>} Customer data
-   */
-  async getCustomerData(document) {
-    try {
-      if (!document) {
-        throw new Error('Document (CPF/CNPJ) not provided');
-      }
-
-      const response = await this.axiosInstance.get(
-        `/api/Entidade/RetrievePage?filter=CPFCNPJ=${document}&order=&pageSize=10&pageIndex=1`
-      );
-
-      if (!response.data || response.data.length === 0) {
-        throw { status: 404, message: 'Customer not found' };
-      }
-
-      return {
-        codigo: response.data[0].Codigo,
-        nome: response.data[0].Nome
-      };
-
-    } catch (error) {
-      this.handleError(error);
-      throw error;
-    }
-  }
-
-  /**
-   * Gets customer data using customer ID
-   * @param {string} customerId - Customer ID
-   * @returns {Promise<{codigo: string, nome: string}>} Customer data
-   */
-  async getCustomerDataById(customerId) {
-    try {
-      if (!customerId) {
-        throw new Error('Customer ID not provided');
-      }
-
-      const response = await this.axiosInstance.get(
-        `/api/Entidade/RetrievePage?filter=Codigo=${customerId}&order=&pageSize=10&pageIndex=1`
-      );
-
-      if (!response.data || response.data.length === 0) {
-        throw { status: 404, message: 'Customer not found' };
-      }
-
-      return {
-        codigo: response.data[0].Codigo,
-        nome: response.data[0].Nome
-      };
-
-    } catch (error) {
-      this.handleError(error);
-      throw error;
-    }
-  }
-
-  /**
    * Handles API errors
    * @param {Error} error - Error occurred
    */

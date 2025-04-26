@@ -1,5 +1,6 @@
 // src/integrations/g4flex/services/ContractService.js
 import BaseG4FlexService from './BaseG4FlexService';
+import entityService from './EntityService';
 import logEvent from '../../../utils/logEvent';
 
 class ContractService extends BaseG4FlexService {
@@ -14,12 +15,12 @@ class ContractService extends BaseG4FlexService {
 
       if (!finalCustomerId) {
         const document = cpf || cnpj;
-        const customerData = await this.getCustomerData(document);
+        const customerData = await entityService.getCustomerData(document);
         finalCustomerId = customerData.codigo;
         customerName = customerData.nome;
       } else {
         // Se já temos o customerId, buscamos o nome
-        const customerData = await this.getCustomerDataById(finalCustomerId);
+        const customerData = await entityService.getCustomerDataById(finalCustomerId);
         customerName = customerData.nome;
       }
 
