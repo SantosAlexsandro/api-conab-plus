@@ -38,9 +38,25 @@ export async function findByOrderNumber(orderNumber) {
   });
 }
 
+export async function findByUraRequestId(uraRequestId) {
+  return await WorkOrderWaitingQueue.findOne({
+    where: { uraRequestId }
+  });
+}
+
+export async function findById(id) {
+  return await WorkOrderWaitingQueue.findByPk(id);
+}
+
 export async function findByStatus(status) {
   return await WorkOrderWaitingQueue.findAll({
     where: { status }
+  });
+}
+
+export async function findAll() {
+  return await WorkOrderWaitingQueue.findAll({
+    order: [['created_at', 'DESC']]
   });
 }
 
@@ -50,5 +66,8 @@ export default {
   updateQueueOrderNumber,
   updateTechnicianAssigned,
   findByOrderNumber,
-  findByStatus
+  findByStatus,
+  findByUraRequestId,
+  findById,
+  findAll
 };

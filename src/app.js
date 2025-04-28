@@ -33,6 +33,7 @@ import authRoutes from './routes/authRoutes'
 import addressRoutes from './routes/addressRoutes'
 import userGroupRoutes from './routes/userGroupRoutes'
 import gupshupRoutes from './routes/gupshupRoutes'
+import workOrderWaitingQueueRoutes from './routes/workOrderWaitingQueue'
 
 // G4Flex
 import g4flexContractRoutes from './integrations/g4flex/routes/contractRoutes'
@@ -91,6 +92,7 @@ class App {
     this.app.use('/auth/', authRoutes);
     this.app.use('/api/', addressRoutes);
     this.app.use('/user-groups/', userGroupRoutes);
+    this.app.use('/work-order-queue/', workOrderWaitingQueueRoutes);
     //this.app.use('/gupshup/', gupshupRoutes);
 
     // G4Flex
