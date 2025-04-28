@@ -9,6 +9,7 @@ var _redis = require('./redis'); var _redis2 = _interopRequireDefault(_redis);
 var _WorkOrderService = require('../services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
 var _workOrderqueue = require('./workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
 var _WebhookService = require('../services/WebhookService'); var _WebhookService2 = _interopRequireDefault(_WebhookService);
+var _WorkOrderWaitingQueueService = require('../../../services/WorkOrderWaitingQueueService'); var _WorkOrderWaitingQueueService2 = _interopRequireDefault(_WorkOrderWaitingQueueService);
 
 const RETRY_INTERVAL_MS = 3 * 60 * 1000;
 const TIMEZONE_BRASILIA = 'America/Sao_Paulo';
@@ -51,13 +52,35 @@ async function processCreateWorkOrder(job) {
   const orderData = job.data;
 
   try {
+    // Registrar na fila de espera que a ordem está sendo processada
+    await _WorkOrderWaitingQueueService2.default.createInQueue({
+      orderNumber: orderData.orderId || 'Em processamento',
+      entityName: orderData.customerName,
+      uraRequestId: orderData.uraRequestId,
+      priority: orderData.priority || 'normal', // TODO: Criar método para definir prioridade
+      source: 'g4flex'
+    });
+
     // Chamar o serviço para criar a ordem
     const result = await _WorkOrderService2.default.createWorkOrder(orderData);
     console.log(`✅ Ordem de serviço ${result.workOrder} criada com sucesso`);
 
+    // Atualizar status na fila de espera
+    await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+      orderData.uraRequestId,
+      'WAITING_TECHNICIAN'
+    );
+
+    // Atualizar o número da ordem na fila de espera
+    await _WorkOrderWaitingQueueService2.default.updateQueueOrderNumber(
+      orderData.uraRequestId,
+      result.workOrder
+    );
+
     // Adicionar na fila de atribuição de técnico
     await _workOrderqueue2.default.add("assignTechnician", {
       orderId: result.workOrder,
+      uraRequestId: orderData.uraRequestId || `auto-creation-${Date.now()}`
     });
     // TODO: Adicionar na fila Ordens geradas manualmente.
     console.log(
@@ -67,6 +90,19 @@ async function processCreateWorkOrder(job) {
     return { success: true, workOrder: result.workOrder };
   } catch (error) {
     console.error(`❌ Erro ao criar ordem de serviço:`, error);
+
+    // Registrar falha na fila de espera, se possível
+    if (orderData.uraRequestId) {
+      try {
+        await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+          orderData.uraRequestId,
+          'FAILED'
+        );
+      } catch (queueError) {
+        console.error('Erro ao atualizar status na fila de espera:', queueError);
+      }
+    }
+
     throw error;
   }
 }
@@ -77,9 +113,12 @@ async function processAssignTechnician(job) {
   console.log(`🔄 Processando atribuição de técnico para ordem ${orderId}`);
 
   try {
+    // Garantir que temos um uraRequestId válido
+    const validUraRequestId = uraRequestId || `tech-assign-${Date.now()}`;
+
     const result = await _WorkOrderService2.default.assignTechnicianToWorkOrder(
       orderId,
-      uraRequestId || `auto-${Date.now()}`
+      validUraRequestId
     );
 
     // Verificar se não há técnicos disponíveis e reagendar
@@ -93,7 +132,7 @@ async function processAssignTechnician(job) {
       await _workOrderqueue2.default.add("assignTechnician",
         {
           orderId,
-          uraRequestId: uraRequestId || `no-tech-retry-${Date.now()}`,
+          uraRequestId: validUraRequestId,
           retryCount: (job.data.retryCount || 0) + 1
         },
         {
@@ -106,6 +145,21 @@ async function processAssignTechnician(job) {
       return { ...result, rescheduled: true, nextAttempt: nextAttemptDate };
     }
 
+    // Atualizar status na fila de espera
+    await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+      validUraRequestId,
+      'WAITING_ARRIVAL'
+    );
+
+    // Registrar o técnico atribuído
+    if (result.technicianId) {
+      await _WorkOrderWaitingQueueService2.default.updateTechnicianAssigned(
+        validUraRequestId,
+        result.technicianName || result.technicianId
+      );
+      console.log(`✅ Técnico ${result.technicianName || result.technicianId} registrado para ordem ${orderId}`);
+    }
+
     return result;
   } catch (error) {
     console.error(`❌ Erro ao atribuir técnico à ordem ${orderId}:`, error);
@@ -113,11 +167,12 @@ async function processAssignTechnician(job) {
     // Registra a falha, mas reagenda para nova tentativa
     const delay = RETRY_INTERVAL_MS;
     const nextAttemptDate = generateNextAttemptDate(delay);
+    const validUraRequestId = uraRequestId || `retry-${Date.now()}`;
 
     await _workOrderqueue2.default.add("assignTechnician",
       {
         orderId,
-        uraRequestId: uraRequestId || `retry-${Date.now()}`,
+        uraRequestId: validUraRequestId,
         retryCount: (job.data.retryCount || 0) + 1
       },
       {
@@ -147,6 +202,14 @@ async function processWorkOrderFeedback(job) {
       technicianName: technicianName || 'Não atribuído',
       uraRequestId: validUraRequestId
     });
+
+    // Atualizar status na fila de espera
+    if (result.success) {
+      await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+        validUraRequestId,
+        'IN_PROGRESS'
+      );
+    }
 
     console.log(`✅ Feedback processado com sucesso para ordem ${orderId}`);
     return result;

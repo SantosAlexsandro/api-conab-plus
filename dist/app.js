@@ -33,6 +33,7 @@ var _authRoutes = require('./routes/authRoutes'); var _authRoutes2 = _interopReq
 var _addressRoutes = require('./routes/addressRoutes'); var _addressRoutes2 = _interopRequireDefault(_addressRoutes);
 
 var _gupshupRoutes = require('./routes/gupshupRoutes'); var _gupshupRoutes2 = _interopRequireDefault(_gupshupRoutes);
+var _workOrderWaitingQueue = require('./routes/workOrderWaitingQueue'); var _workOrderWaitingQueue2 = _interopRequireDefault(_workOrderWaitingQueue);
 
 // G4Flex
 var _contractRoutes = require('./integrations/g4flex/routes/contractRoutes'); var _contractRoutes2 = _interopRequireDefault(_contractRoutes);
@@ -91,6 +92,7 @@ class App {
     this.app.use('/auth/', _authRoutes2.default);
     this.app.use('/api/', _addressRoutes2.default);
     this.app.use('/user-groups/', _userGroupRoutes2.default);
+    this.app.use('/work-order-queue/', _workOrderWaitingQueue2.default);
     //this.app.use('/gupshup/', gupshupRoutes);
 
     // G4Flex

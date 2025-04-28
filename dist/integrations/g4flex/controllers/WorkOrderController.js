@@ -1,6 +1,7 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// src/integrations/g4flex/controllers/WorkOrderController.js
 
 var _WorkOrderService = require('../services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
+var _EntityService = require('../services/EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
 
 
 
@@ -216,6 +217,7 @@ class WorkOrderController {
         cpf,
         cnpj,
         customerId,
+        customerName: (await _EntityService2.default.getCustomerDataById(customerId)).nome,
         productId,
         requesterNameAndPosition,
         IncidentAndReceiverName,

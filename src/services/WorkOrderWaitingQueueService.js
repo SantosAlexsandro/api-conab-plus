@@ -32,6 +32,7 @@ export async function updateTechnicianAssigned(uraRequestId, technicianName) {
   );
 }
 
+/*
 export async function findByOrderNumber(orderNumber) {
   return await WorkOrderWaitingQueue.findOne({
     where: { orderNumber }
@@ -47,6 +48,7 @@ export async function findByUraRequestId(uraRequestId) {
 export async function findById(id) {
   return await WorkOrderWaitingQueue.findByPk(id);
 }
+*/
 
 export async function findByStatus(status) {
   return await WorkOrderWaitingQueue.findAll({
@@ -65,9 +67,6 @@ export default {
   updateQueueStatus,
   updateQueueOrderNumber,
   updateTechnicianAssigned,
-  findByOrderNumber,
   findByStatus,
-  findByUraRequestId,
-  findById,
   findAll
 };

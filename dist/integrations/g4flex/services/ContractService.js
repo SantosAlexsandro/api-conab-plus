@@ -1,5 +1,6 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// src/integrations/g4flex/services/ContractService.js
 var _BaseG4FlexService = require('./BaseG4FlexService'); var _BaseG4FlexService2 = _interopRequireDefault(_BaseG4FlexService);
+var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
 
 class ContractService extends _BaseG4FlexService2.default {
@@ -14,12 +15,12 @@ class ContractService extends _BaseG4FlexService2.default {
 
       if (!finalCustomerId) {
         const document = cpf || cnpj;
-        const customerData = await this.getCustomerData(document);
+        const customerData = await _EntityService2.default.getCustomerData(document);
         finalCustomerId = customerData.codigo;
         customerName = customerData.nome;
       } else {
         // Se já temos o customerId, buscamos o nome
-        const customerData = await this.getCustomerDataById(finalCustomerId);
+        const customerData = await _EntityService2.default.getCustomerDataById(finalCustomerId);
         customerName = customerData.nome;
       }
 
