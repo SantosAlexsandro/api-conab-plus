@@ -193,7 +193,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       _logEvent2.default.call(void 0, {
         uraRequestId,
         source: 'system',
-        action: 'check_open_orders_by_customer_id',
+        action: 'get_open_orders_by_customer_id',
         payload: { customerId },
         response: { orders }
       });
@@ -229,12 +229,12 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       await _logEvent2.default.call(void 0, {
         uraRequestId,
         source: 'system',
-        action: 'check_open_orders_by_customer_id_error',
+        action: 'get_open_orders_by_customer_id_error',
         payload: { customerId },
         response: { error: error.message }
       });
       this.handleError(error);
-      throw new Error(`Error checking work orders status: ${error.message}`);
+      throw new Error(`Error getting open work orders: ${error.message}`);
     }
   }
 
