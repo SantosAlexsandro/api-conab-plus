@@ -98,7 +98,7 @@
 
 /**
  * @swagger
- * /g4flex/work-orders/open:
+ * /api/integrations/g4flex/work-orders/open:
  *  get:
  *    tags:
  *      - G4Flex - Ordens de Serviço
@@ -146,7 +146,7 @@
  *            schema:
  *              $ref: '#/components/schemas/Error'
  *
- * /g4flex/work-orders/requests:
+ * /api/integrations/g4flex/work-orders/requests:
  *  post:
  *    tags:
  *      - G4Flex - Ordens de Serviço
@@ -199,7 +199,7 @@
  *            schema:
  *              $ref: '#/components/schemas/Error'
  *
- * /g4flex/work-orders/close:
+ * /api/integrations/g4flex/work-orders/close:
  *  post:
  *    tags:
  *      - G4Flex - Ordens de Serviço
