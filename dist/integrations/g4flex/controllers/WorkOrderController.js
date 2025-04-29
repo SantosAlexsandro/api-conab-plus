@@ -11,7 +11,7 @@ var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopReq
 var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
 
 class WorkOrderController {
-  async checkWorkOrder(req, res) {
+  async getOpenOrders(req, res) {
     console.log("req.query", req.query);
     const validationError = _uraValidator.validateURAQuery.call(void 0, req.query);
 
@@ -21,7 +21,7 @@ class WorkOrderController {
       if (validationError) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
-          source: "controller_g4flex",
+          source: "g4flex",
           action: "work_order_check_validation_error",
           payload: req.query,
           response: { error: validationError },
@@ -33,16 +33,16 @@ class WorkOrderController {
 
       const { cpf, cnpj, customerId } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
 
-      const result = await _WorkOrderService2.default.checkWorkOrdersByCustomerId({
+      const result = await _WorkOrderService2.default.getOpenOrdersByCustomerId({
         cpf,
         cnpj,
         customerId,
-        uraRequestId,
+        uraRequestId
       });
 
       await _logEvent2.default.call(void 0, {
         uraRequestId,
-        source: "controller_g4flex",
+        source: "g4flex",
         action: "work_order_check_success",
         payload: {
           customerIdentifier,
@@ -57,7 +57,7 @@ class WorkOrderController {
     } catch (error) {
       await _logEvent2.default.call(void 0, {
         uraRequestId,
-        source: "controller_g4flex",
+        source: "g4flex",
         action: "work_order_check_error",
         payload: req.query,
         response: { error: error.message },

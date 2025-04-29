@@ -4,7 +4,7 @@ import authG4Flex from '../middlewares/authG4Flex';
 
 const router = new Router();
 
-router.get('/check-open', authG4Flex, workOrderController.checkWorkOrder);
+router.get('/open', authG4Flex, workOrderController.getOpenOrders);
 
 router.post('/requests', authG4Flex, workOrderController.requestWorkOrder);
 

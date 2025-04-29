@@ -8,12 +8,14 @@ var _formatUtils = require('../../../utils/string/formatUtils');
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
 var _TechnicianService = require('./TechnicianService'); var _TechnicianService2 = _interopRequireDefault(_TechnicianService);
 var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
+
+
 class WorkOrderService extends _BaseG4FlexService2.default {
   constructor() {
     super();
     // Constants for date range
     this.DATE_RANGE = {
-      DAYS_BEFORE: 1,
+      DAYS_BEFORE: 7,
       DAYS_AFTER: 1,
       PAGE_SIZE: 10,
       PAGE_INDEX: 1
@@ -162,7 +164,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     }
   }
 
-  async checkWorkOrdersByCustomerId({ cpf, cnpj, customerId }) {
+  async getOpenOrdersByCustomerId({ cpf, cnpj, customerId, uraRequestId }) {
     try {
       let finalCustomerCode = customerId;
 
@@ -171,7 +173,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         if (!document) {
           throw new Error('CPF or CNPJ not provided');
         }
-        const customerData = await entityService.getCustomerData(document);
+        const customerData = await _EntityService2.default.getCustomerData(document);
         finalCustomerCode = customerData.codigo;
         console.log('[G4Flex] Customer code:', finalCustomerCode);
       }
@@ -179,7 +181,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
       const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
 
-      const filter = `ISNULL(DataEncerramento) AND CodigoEntidade=${finalCustomerCode} AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
+      const filter = `ISNULL(DataEncerramento) AND CodigoEntidade=${finalCustomerCode} AND CodigoTipoOrdServ=007 AND ISNULL(NumeroOrdServReferencia) AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
       const queryParams = `filter=${filter}&order=&pageSize=${this.DATE_RANGE.PAGE_SIZE}&pageIndex=${this.DATE_RANGE.PAGE_INDEX}`;
 
       const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
@@ -187,10 +189,18 @@ class WorkOrderService extends _BaseG4FlexService2.default {
 
       console.log('[G4Flex] Found', orders.length, 'orders for customer', finalCustomerCode);
 
+
+      _logEvent2.default.call(void 0, {
+        uraRequestId,
+        source: 'system',
+        action: 'check_open_orders_by_customer_id',
+        payload: { customerId },
+        response: { orders }
+      });
+
       if (!orders || orders.length === 0) {
         return {
           customerHasOpenOrders: false,
-          quantityOrders: 0,
           orders: []
         };
       }
@@ -210,13 +220,19 @@ class WorkOrderService extends _BaseG4FlexService2.default {
 
       return {
         customerHasOpenOrders: openOrders.length > 0,
-        quantityOrders: openOrders.length,
         orders: openOrders.map(order => ({
           number: order.Numero,
           registrationDate: order.DataCadastro
         }))
       };
     } catch (error) {
+      await _logEvent2.default.call(void 0, {
+        uraRequestId,
+        source: 'system',
+        action: 'check_open_orders_by_customer_id_error',
+        payload: { customerId },
+        response: { error: error.message }
+      });
       this.handleError(error);
       throw new Error(`Error checking work orders status: ${error.message}`);
     }
@@ -231,7 +247,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         if (!document) {
           throw new Error('CPF or CNPJ not provided');
         }
-        const customerData = await entityService.getCustomerData(document);
+        const customerData = await _EntityService2.default.getCustomerData(document);
         finalCustomerCode = customerData.codigo;
         console.log('[G4Flex] Customer code:', finalCustomerCode);
       }
@@ -282,13 +298,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
   // Atribuir técnico à OS
   // TODO: Criar outra tabela para armazenar as tentativas de atribuição de técnico
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
-    await _logEvent2.default.call(void 0, {
-      uraRequestId,
-      source: 'service_g4flex',
-      action: 'work_order_assign_technician_init',
-      payload: { workOrderId, uraRequestId }
-    });
-
     try {
       const technician = await _TechnicianService2.default.getAvailableTechnician();
 
@@ -323,13 +332,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
           }
         );
 
-        await _logEvent2.default.call(void 0, {
-          uraRequestId,
-          source: 'service_g4flex',
-          action: 'work_order_assign_technician_success',
-          payload: { workOrderId, technicianId: technician.id }
-        });
-
         // Adicionar na fila de feedback para notificar sobre a atribuição do técnico
         try {
           await _workOrderqueue2.default.add('processWorkOrderFeedback', {
@@ -346,12 +348,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         return { success: true, orderId: workOrderId, technicianId: technician.id };
       } else {
         // Sem técnico disponível, o reagendamento será feito pelo worker
-        await _logEvent2.default.call(void 0, {
-          uraRequestId,
-          source: 'service_g4flex',
-          action: 'work_order_assign_technician_no_tech',
-          payload: { workOrderId }
-        });
 
         return { success: false, noTechnician: true };
       }

@@ -97,7 +97,7 @@ class App {
 
     // G4Flex
     this.app.use('/api/integrations/g4flex/contracts/', _contractRoutes2.default);
-    this.app.use('/g4flex/work-orders/', _workOrderRoutes4.default);
+    this.app.use('/api/integrations/g4flex/work-orders/', _workOrderRoutes4.default);
     this.app.use('/api/integrations/g4flex/token', _tokenRoutes4.default);
 
     //this.app.use('/transactions/', transactionRoutes);

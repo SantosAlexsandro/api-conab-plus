@@ -11,7 +11,7 @@ import logEvent from "../../../utils/logEvent";
 import workOrderQueue from "../queues/workOrder.queue";
 
 class WorkOrderController {
-  async checkWorkOrder(req, res) {
+  async getOpenOrders(req, res) {
     console.log("req.query", req.query);
     const validationError = validateURAQuery(req.query);
 
@@ -21,8 +21,8 @@ class WorkOrderController {
       if (validationError) {
         await logEvent({
           uraRequestId,
-          source: "controller_g4flex",
-          action: "work_order_check_validation_error",
+          source: "g4flex",
+          action: "work_order_get_validation_error",
           payload: req.query,
           response: { error: validationError },
           statusCode: 400,
@@ -33,17 +33,17 @@ class WorkOrderController {
 
       const { cpf, cnpj, customerId } = resolveNumericIdentifier(customerIdentifier);
 
-      const result = await WorkOrderService.checkWorkOrdersByCustomerId({
+      const result = await WorkOrderService.getOpenOrdersByCustomerId({
         cpf,
         cnpj,
         customerId,
-        uraRequestId,
+        uraRequestId
       });
 
       await logEvent({
         uraRequestId,
-        source: "controller_g4flex",
-        action: "work_order_check_success",
+        source: "g4flex",
+        action: "work_order_get_success",
         payload: {
           customerIdentifier,
           identifierType: determineIdentifierType(customerIdentifier),
@@ -57,17 +57,17 @@ class WorkOrderController {
     } catch (error) {
       await logEvent({
         uraRequestId,
-        source: "controller_g4flex",
-        action: "work_order_check_error",
+        source: "g4flex",
+        action: "work_order_get_error",
         payload: req.query,
         response: { error: error.message },
         statusCode: 500,
         error: error.message,
       });
 
-      console.error("Error checking work orders:", error);
+      console.error("Error getting open work orders:", error);
       return res.status(500).json({
-        error: error.message || "Error checking work orders",
+        error: error.message || "Error getting open work orders",
       });
     }
   }

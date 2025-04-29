@@ -8,12 +8,14 @@ import { formatCustomerId } from '../../../utils/string/formatUtils';
 import logEvent from '../../../utils/logEvent';
 import technicianService from './TechnicianService';
 import workOrderQueue from '../queues/workOrder.queue';
+import entityService from './EntityService';
+
 class WorkOrderService extends BaseG4FlexService {
   constructor() {
     super();
     // Constants for date range
     this.DATE_RANGE = {
-      DAYS_BEFORE: 1,
+      DAYS_BEFORE: 7,
       DAYS_AFTER: 1,
       PAGE_SIZE: 10,
       PAGE_INDEX: 1
@@ -162,7 +164,7 @@ class WorkOrderService extends BaseG4FlexService {
     }
   }
 
-  async checkWorkOrdersByCustomerId({ cpf, cnpj, customerId }) {
+  async getOpenOrdersByCustomerId({ cpf, cnpj, customerId, uraRequestId }) {
     try {
       let finalCustomerCode = customerId;
 
@@ -179,7 +181,7 @@ class WorkOrderService extends BaseG4FlexService {
       const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
       const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
 
-      const filter = `ISNULL(DataEncerramento) AND CodigoEntidade=${finalCustomerCode} AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
+      const filter = `ISNULL(DataEncerramento) AND CodigoEntidade=${finalCustomerCode} AND CodigoTipoOrdServ=007 AND ISNULL(NumeroOrdServReferencia) AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
       const queryParams = `filter=${filter}&order=&pageSize=${this.DATE_RANGE.PAGE_SIZE}&pageIndex=${this.DATE_RANGE.PAGE_INDEX}`;
 
       const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
@@ -187,10 +189,18 @@ class WorkOrderService extends BaseG4FlexService {
 
       console.log('[G4Flex] Found', orders.length, 'orders for customer', finalCustomerCode);
 
+
+      logEvent({
+        uraRequestId,
+        source: 'system',
+        action: 'get_open_orders_by_customer_id',
+        payload: { customerId },
+        response: { orders }
+      });
+
       if (!orders || orders.length === 0) {
         return {
           customerHasOpenOrders: false,
-          quantityOrders: 0,
           orders: []
         };
       }
@@ -210,15 +220,21 @@ class WorkOrderService extends BaseG4FlexService {
 
       return {
         customerHasOpenOrders: openOrders.length > 0,
-        quantityOrders: openOrders.length,
         orders: openOrders.map(order => ({
           number: order.Numero,
           registrationDate: order.DataCadastro
         }))
       };
     } catch (error) {
+      await logEvent({
+        uraRequestId,
+        source: 'system',
+        action: 'get_open_orders_by_customer_id_error',
+        payload: { customerId },
+        response: { error: error.message }
+      });
       this.handleError(error);
-      throw new Error(`Error checking work orders status: ${error.message}`);
+      throw new Error(`Error getting open work orders: ${error.message}`);
     }
   }
 
@@ -282,13 +298,6 @@ class WorkOrderService extends BaseG4FlexService {
   // Atribuir técnico à OS
   // TODO: Criar outra tabela para armazenar as tentativas de atribuição de técnico
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
-    await logEvent({
-      uraRequestId,
-      source: 'service_g4flex',
-      action: 'work_order_assign_technician_init',
-      payload: { workOrderId, uraRequestId }
-    });
-
     try {
       const technician = await technicianService.getAvailableTechnician();
 
@@ -323,13 +332,6 @@ class WorkOrderService extends BaseG4FlexService {
           }
         );
 
-        await logEvent({
-          uraRequestId,
-          source: 'service_g4flex',
-          action: 'work_order_assign_technician_success',
-          payload: { workOrderId, technicianId: technician.id }
-        });
-
         // Adicionar na fila de feedback para notificar sobre a atribuição do técnico
         try {
           await workOrderQueue.add('processWorkOrderFeedback', {
@@ -346,12 +348,6 @@ class WorkOrderService extends BaseG4FlexService {
         return { success: true, orderId: workOrderId, technicianId: technician.id };
       } else {
         // Sem técnico disponível, o reagendamento será feito pelo worker
-        await logEvent({
-          uraRequestId,
-          source: 'service_g4flex',
-          action: 'work_order_assign_technician_no_tech',
-          payload: { workOrderId }
-        });
 
         return { success: false, noTechnician: true };
       }

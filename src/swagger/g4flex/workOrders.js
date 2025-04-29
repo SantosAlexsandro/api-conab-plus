@@ -2,16 +2,12 @@
  * @swagger
  * components:
  *  schemas:
- *    WorkOrderCheckResponse:
+ *    WorkOrderResponse:
  *      type: object
  *      properties:
  *        customerHasOpenOrders:
  *          type: boolean
  *          description: Indica se o cliente possui ordens de serviço abertas
- *        quantityOrders:
- *          type: integer
- *          description: Quantidade de ordens de serviço abertas
- *          default: 1
  *        orders:
  *          type: array
  *          items:
@@ -102,12 +98,13 @@
 
 /**
  * @swagger
- * /g4flex/work-orders/check-open:
+ * /g4flex/work-orders/open:
  *  get:
  *    tags:
  *      - G4Flex - Ordens de Serviço
- *    summary: Verifica se o cliente possui ordens de serviço abertas
- *    description: Verifica na Conab+ se o cliente possui ordens de serviço abertas baseado no CPF, CNPJ ou ID do cliente
+ *    x-public: true
+ *    summary: Lista ordens de serviço abertas do cliente
+ *    description: Recupera da Conab+ as ordens de serviço abertas do cliente baseado no CPF, CNPJ ou ID do cliente
  *    security:
  *      - bearerAuth: []
  *    parameters:
@@ -115,11 +112,11 @@
  *      - $ref: '#/components/parameters/uraRequestIdParam'
  *    responses:
  *      '200':
- *        description: Informações sobre as ordens de serviço abertas do cliente
+ *        description: Lista de ordens de serviço abertas do cliente
  *        content:
  *          application/json:
  *            schema:
- *              $ref: '#/components/schemas/WorkOrderCheckResponse'
+ *              $ref: '#/components/schemas/WorkOrderResponse'
  *      '400':
  *        description: Erro de validação dos parâmetros
  *        content:

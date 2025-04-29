@@ -10,11 +10,11 @@ async function logEvent({ uraRequestId, source, action, payload, response, statu
       source,
       action,
       payloadSnapshot: payload || null,
-        responseSnapshot: response || null,
-        statusCode: statusCode || null,
-        error: error || null,
-        timestamp: new Date()
-      }, { connection });
+      responseSnapshot: response || null,
+      statusCode: statusCode || null,
+      error: error || null,
+      timestamp: new Date()
+    }, { connection });
     return log.id;
   } catch (e) {
     console.error('[logEvent] Failed to register log:', e.message);

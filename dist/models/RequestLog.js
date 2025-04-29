@@ -12,7 +12,7 @@ var _sequelize = require('sequelize'); var _sequelize2 = _interopRequireDefault(
         },
         uraRequestId: {
           type: _sequelize2.default.UUID,
-          allowNull: false,
+          allowNull: true,
           field: 'ura_request_id'
         },
         source: {

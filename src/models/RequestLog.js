@@ -12,7 +12,7 @@ export default class RequestLog extends Model {
         },
         uraRequestId: {
           type: Sequelize.UUID,
-          allowNull: false,
+          allowNull: true,
           field: 'ura_request_id'
         },
         source: {
