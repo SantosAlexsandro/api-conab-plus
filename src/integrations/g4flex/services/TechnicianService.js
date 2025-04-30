@@ -2,7 +2,7 @@ import BaseG4FlexService from './BaseG4FlexService';
 import logEvent from '../../../utils/logEvent';
 import WorkShift from '../../../models/WorkShift';
 import { Op } from 'sequelize';
-
+import WorkOrderService from './WorkOrderService';
 class TechnicianService extends BaseG4FlexService {
   constructor() {
     super();
@@ -25,11 +25,21 @@ class TechnicianService extends BaseG4FlexService {
         return null;
       }
 
+      const openOrders = await WorkOrderService.getOpenOrders();
+      console.log(`[TechnicianService] Ordens abertas: ${openOrders.length}`);
+
+
+      /*
       // Extrair códigos dos técnicos em turnos ativos
       const activeTechnicianCodes = activeShifts.map(shift => shift.user_code);
       console.log(`[TechnicianService] Técnicos em turno ativo: ${activeTechnicianCodes.join(', ')}`);
 
-      /*
+
+      const openOrders = await WorkOrderService.getOpenOrders();
+      console.log(`[TechnicianService] Ordens abertas: ${openOrders.length}`);
+
+
+
       // Buscar técnicos disponíveis no G4Flex
       const response = await this.axiosInstance.get('/api/Tecnicos/RetrievePage?filter=Disponivel=true&pageSize=20');
       const allAvailableTechnicians = response.data;
@@ -69,6 +79,10 @@ class TechnicianService extends BaseG4FlexService {
       throw new Error(`Erro ao buscar técnicos disponíveis: ${error.message}`);
     }
   }
+
+
+
+
 }
 
 const technicianService = new TechnicianService();

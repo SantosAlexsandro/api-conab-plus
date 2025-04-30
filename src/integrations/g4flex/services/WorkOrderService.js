@@ -1,10 +1,6 @@
 // src/integrations/g4flex/services/WorkOrderService.js
 
 import BaseG4FlexService from './BaseG4FlexService';
-import EntityService from './EntityService';
-import webhookService from './WebhookService';
-import { determineIdentifierType } from '../utils/uraValidator';
-import { formatCustomerId } from '../../../utils/string/formatUtils';
 import logEvent from '../../../utils/logEvent';
 import technicianService from './TechnicianService';
 import workOrderQueue from '../queues/workOrder.queue';
@@ -28,7 +24,6 @@ class WorkOrderService extends BaseG4FlexService {
     uraRequestId,
     identifierType,
     identifierValue,
-    customerName,
     productId,
     requesterNameAndPosition,
     IncidentAndReceiverName,
@@ -40,9 +35,6 @@ class WorkOrderService extends BaseG4FlexService {
       // Busca dados do cliente usando o método otimizado
       const customerData = await entityService.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerId = customerData.codigo;
-
-      // Usa o nome do cliente passado ou o obtido da busca
-      const finalCustomerName = customerName || customerData.nome;
 
       const workOrderData = {
         CodigoEntidade: finalCustomerId,
@@ -69,7 +61,7 @@ class WorkOrderService extends BaseG4FlexService {
       };
 
       // 1. Create work order
-      console.log('[WorkOrderService] Creating work order in G4Flex');
+      console.log('[WorkOrderService] Creating work order in ERP by');
       const response = await this.axiosInstance.post(
         '/api/OrdServ/InserirAlterarOrdServ',
         workOrderData
@@ -163,6 +155,49 @@ class WorkOrderService extends BaseG4FlexService {
     }
   }
 
+  // Buscar todas as ordens abertas
+  async getOpenOrders() {
+    try {
+      const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
+      const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
+
+      const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?filter=ISNULL(DataEncerramento) AND CodigoTipoOrdServ=007 AND ISNULL(NumeroOrdServReferencia) AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`);
+      const orders = response.data;
+
+      if (!orders || orders.length === 0) {
+        return {
+          customerHasOpenOrders: false,
+          orders: []
+        };
+      }
+
+      // 2. Verificar o status de cada ordem
+      const orderStatuses = await Promise.all(
+        orders.map(async order => ({
+          order,
+          isFinished: await this.isOrderFinished(order.Numero)
+        }))
+      );
+
+      // 3. Filtrar apenas ordens não finalizadas
+      const openOrders = orderStatuses
+        .filter(status => !status.isFinished)
+        .map(status => status.order);
+
+      return {
+        customerHasOpenOrders: openOrders.length > 0,
+        orders: openOrders.map(order => ({
+          number: order.Numero,
+          registrationDate: order.DataCadastro
+        }))
+      };
+    } catch (error) {
+      this.handleError(error);
+      throw new Error(`Error getting open orders: ${error.message}`);
+    }
+  }
+
+  // Buscar todas as ordens abertas por cliente
   async getOpenOrdersByCustomerId({ identifierType, identifierValue, uraRequestId }) {
     try {
       // Busca dados do cliente usando o método otimizado
@@ -179,7 +214,6 @@ class WorkOrderService extends BaseG4FlexService {
       const orders = response.data;
 
       console.log('[G4Flex] Found', orders.length, 'orders for customer', finalCustomerCode);
-
 
       logEvent({
         uraRequestId,
@@ -279,7 +313,6 @@ class WorkOrderService extends BaseG4FlexService {
 
 
   // Atribuir técnico à OS
-  // TODO: Criar outra tabela para armazenar as tentativas de atribuição de técnico
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
     try {
       const technician = await technicianService.getAvailableTechnician();
