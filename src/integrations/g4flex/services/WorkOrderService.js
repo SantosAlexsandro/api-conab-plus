@@ -155,6 +155,12 @@ class WorkOrderService extends BaseG4FlexService {
     }
   }
 
+  async getAssignedTechnicianToOpenOrders() {
+    const orders = await this.getOpenOrders();
+    const technician = await technicianService.getAvailableTechnician();
+    console.log(`[WorkOrderService] Técnico atribuído à ordem ${orders.number}: ${technician.technicianId}`);
+  }
+
   // Buscar todas as ordens abertas
   async getOpenOrders() {
     try {
@@ -184,13 +190,10 @@ class WorkOrderService extends BaseG4FlexService {
         .filter(status => !status.isFinished)
         .map(status => status.order);
 
-      return {
-        customerHasOpenOrders: openOrders.length > 0,
-        orders: openOrders.map(order => ({
-          number: order.Numero,
-          registrationDate: order.DataCadastro
-        }))
-      };
+      return openOrders.map(order => ({
+        number: order.Numero,
+        registrationDate: order.DataCadastro
+      }));
     } catch (error) {
       this.handleError(error);
       throw new Error(`Error getting open orders: ${error.message}`);
