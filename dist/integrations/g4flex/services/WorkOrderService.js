@@ -78,7 +78,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       if (!response.data || response.data.error) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
-          source: 'service_g4flex',
+          source: 'g4flex',
           action: 'work_order_create_error',
           payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
           response: { error: _optionalChain([response, 'access', _ => _.data, 'optionalAccess', _2 => _2.error]) || 'Failed to create work order' }
@@ -88,7 +88,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
 
       await _logEvent2.default.call(void 0, {
         uraRequestId,
-        source: 'service_g4flex',
+        source: 'g4flex',
         action: 'work_order_create_success',
         payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
         response: { workOrder: _optionalChain([response, 'optionalAccess', _5 => _5.data, 'optionalAccess', _6 => _6.Numero]) }
@@ -109,7 +109,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       } catch (webhookError) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
-          source: 'service_g4flex',
+          source: 'g4flex',
           action: 'work_order_create_webhook_error',
           payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
           response: { error: webhookError.message },
@@ -130,7 +130,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     } catch (error) {
       await _logEvent2.default.call(void 0, {
         uraRequestId,
-        source: 'service_g4flex',
+        source: 'g4flex',
         action: 'work_order_create_error',
         payload: { identifierType, identifierValue, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
         response: { error: error.message },
@@ -337,7 +337,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     } catch (error) {
       await _logEvent2.default.call(void 0, {
         uraRequestId,
-        source: 'service_g4flex',
+        source: 'g4flex',
         action: 'work_order_assign_technician_error',
         payload: { workOrderId },
         response: { error: error.message }

@@ -80,7 +80,7 @@ class WorkOrderController {
       if (validationError) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
-          source: "controller_g4flex",
+          source: "g4flex",
           action: "work_order_close_validation_error",
           payload: req.query,
           response: { error: validationError },
@@ -100,7 +100,7 @@ class WorkOrderController {
 
       await _logEvent2.default.call(void 0, {
         uraRequestId,
-        source: "controller_g4flex",
+        source: "g4flex",
         action: "work_order_close_success",
         payload: {
           customerIdentifier,
@@ -115,7 +115,7 @@ class WorkOrderController {
     } catch (error) {
       await _logEvent2.default.call(void 0, {
         uraRequestId,
-        source: "controller_g4flex",
+        source: "g4flex",
         action: "work_order_close_controller_error",
         payload: req.query,
         response: { error: error.message },
@@ -146,7 +146,7 @@ class WorkOrderController {
       if (validationError) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
-          source: "controller_g4flex",
+          source: "g4flex",
           action: "work_order_create_validation_error",
           payload: req.query,
           response: { error: validationError },
@@ -175,7 +175,7 @@ class WorkOrderController {
       if (missingFields.length > 0) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
-          source: "controller_g4flex",
+          source: "g4flex",
           action: "work_order_create_validation_error",
           payload: { ...req.body, ...req.query },
           response: {
@@ -215,7 +215,7 @@ class WorkOrderController {
 
       await _logEvent2.default.call(void 0, {
         uraRequestId,
-        source: "controller_g4flex",
+        source: "g4flex",
         action: "work_order_request_success",
         payload: {
           customerIdentifier,
@@ -231,7 +231,7 @@ class WorkOrderController {
     } catch (error) {
       await _logEvent2.default.call(void 0, {
         uraRequestId,
-        source: "controller_g4flex",
+        source: "g4flex",
         action: "work_order_create_controller_error",
         payload: { ...req.query, ...req.body },
         response: { error: error.message },

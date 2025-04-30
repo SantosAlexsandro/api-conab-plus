@@ -78,7 +78,7 @@ class WorkOrderService extends BaseG4FlexService {
       if (!response.data || response.data.error) {
         await logEvent({
           uraRequestId,
-          source: 'service_g4flex',
+          source: 'g4flex',
           action: 'work_order_create_error',
           payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
           response: { error: response.data?.error || 'Failed to create work order' }
@@ -88,7 +88,7 @@ class WorkOrderService extends BaseG4FlexService {
 
       await logEvent({
         uraRequestId,
-        source: 'service_g4flex',
+        source: 'g4flex',
         action: 'work_order_create_success',
         payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
         response: { workOrder: response?.data?.Numero }
@@ -109,7 +109,7 @@ class WorkOrderService extends BaseG4FlexService {
       } catch (webhookError) {
         await logEvent({
           uraRequestId,
-          source: 'service_g4flex',
+          source: 'g4flex',
           action: 'work_order_create_webhook_error',
           payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
           response: { error: webhookError.message },
@@ -130,7 +130,7 @@ class WorkOrderService extends BaseG4FlexService {
     } catch (error) {
       await logEvent({
         uraRequestId,
-        source: 'service_g4flex',
+        source: 'g4flex',
         action: 'work_order_create_error',
         payload: { identifierType, identifierValue, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
         response: { error: error.message },
@@ -337,7 +337,7 @@ class WorkOrderService extends BaseG4FlexService {
     } catch (error) {
       await logEvent({
         uraRequestId,
-        source: 'service_g4flex',
+        source: 'g4flex',
         action: 'work_order_assign_technician_error',
         payload: { workOrderId },
         response: { error: error.message }
