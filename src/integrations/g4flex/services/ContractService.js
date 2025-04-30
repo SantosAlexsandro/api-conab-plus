@@ -2,6 +2,7 @@
 import BaseG4FlexService from './BaseG4FlexService';
 import entityService from './EntityService';
 import logEvent from '../../../utils/logEvent';
+import { resolveNumericIdentifier } from '../utils/resolveNumericIdentifier';
 
 class ContractService extends BaseG4FlexService {
   constructor() {
@@ -10,19 +11,26 @@ class ContractService extends BaseG4FlexService {
 
   async checkActiveContract(cpf, cnpj, customerId, uraRequestId) {
     try {
-      let finalCustomerId = customerId;
-      let customerName = null;
+      // Determina o tipo e valor do identificador
+      let identifierType, identifierValue;
 
-      if (!finalCustomerId) {
-        const document = cpf || cnpj;
-        const customerData = await entityService.getCustomerData(document);
-        finalCustomerId = customerData.codigo;
-        customerName = customerData.nome;
+      if (customerId) {
+        identifierType = 'customerId';
+        identifierValue = customerId;
+      } else if (cpf) {
+        identifierType = 'cpf';
+        identifierValue = cpf;
+      } else if (cnpj) {
+        identifierType = 'cnpj';
+        identifierValue = cnpj;
       } else {
-        // Se já temos o customerId, buscamos o nome
-        const customerData = await entityService.getCustomerDataById(finalCustomerId);
-        customerName = customerData.nome;
+        throw new Error('Nenhum identificador fornecido (CPF, CNPJ ou customerId)');
       }
+
+      // Busca dados do cliente usando o método unificado
+      const customerData = await entityService.getCustomerByIdentifier(identifierType, identifierValue);
+      const finalCustomerId = customerData.codigo;
+      const customerName = customerData.nome;
 
       const contractResponse = await this.axiosInstance.get(
         `/api/Contrato/RetrievePage?filter=(Status='Ativo'or Status='Suspenso Faturamento') and ContratoPagRec='REC' and CodigoEntidade='${finalCustomerId}'&order&pageSize=200&pageIndex=1`
@@ -36,7 +44,6 @@ class ContractService extends BaseG4FlexService {
 
       return responseData;
     } catch (error) {
-
       // Propaga o erro original com status code
       throw error;
     }

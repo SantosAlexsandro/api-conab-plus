@@ -31,12 +31,11 @@ class WorkOrderController {
         return res.status(400).json({ error: validationError });
       }
 
-      const { cpf, cnpj, customerId } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
+      const { identifierType, identifierValue } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
 
       const result = await _WorkOrderService2.default.getOpenOrdersByCustomerId({
-        cpf,
-        cnpj,
-        customerId,
+        identifierType,
+        identifierValue,
         uraRequestId
       });
 
@@ -46,7 +45,7 @@ class WorkOrderController {
         action: "work_order_get_success",
         payload: {
           customerIdentifier,
-          identifierType: _uraValidator.determineIdentifierType.call(void 0, customerIdentifier),
+          identifierType,
         },
         response: result,
         statusCode: 200,
@@ -91,12 +90,12 @@ class WorkOrderController {
         return res.status(400).json({ error: validationError });
       }
 
-      const { cpf, cnpj, customerId } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
+      const { identifierType, identifierValue } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
 
       const result = await _WorkOrderService2.default.closeWorkOrderByCustomerId({
-        cpf,
-        cnpj,
-        customerId,
+        identifierType,
+        identifierValue,
+        uraRequestId
       });
 
       await _logEvent2.default.call(void 0, {
@@ -105,7 +104,7 @@ class WorkOrderController {
         action: "work_order_close_success",
         payload: {
           customerIdentifier,
-          identifierType: _uraValidator.determineIdentifierType.call(void 0, customerIdentifier),
+          identifierType,
         },
         response: result,
         statusCode: 200,
@@ -157,7 +156,9 @@ class WorkOrderController {
         return res.status(400).json({ error: validationError });
       }
 
-      const { cpf, cnpj, customerId } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
+      const { identifierType, identifierValue } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
+      console.log("identifierType", identifierType);
+      console.log("identifierValue", identifierValue);
 
       // Validate required fields
       const requiredFields = {
@@ -188,11 +189,28 @@ class WorkOrderController {
         });
       }
 
-      // Return success response
+      // Busca dados do cliente usando o método otimizado
+      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerName = customerData.nome;
+
+      // Adicionar à fila de criação de ordem de serviço
+      await _workOrderqueue2.default.add('createWorkOrder', {
+        uraRequestId,
+        identifierType,
+        identifierValue,
+        customerName,
+        productId,
+        requesterNameAndPosition,
+        IncidentAndReceiverName,
+        requesterWhatsApp,
+      });
+
+      console.log('[WorkOrderController] Ordem adicionada à fila para processamento');
+
+      // Preparar e enviar resposta após a lógica completa
       const response = {
         success: true,
-        message:
-          "Solicitação de criação de Ordem de Serviço realizada com sucessso.",
+        message: "Solicitação de criação de Ordem de Serviço realizada com sucesso.",
       };
 
       await _logEvent2.default.call(void 0, {
@@ -201,7 +219,7 @@ class WorkOrderController {
         action: "work_order_request_success",
         payload: {
           customerIdentifier,
-          identifierType: _uraValidator.determineIdentifierType.call(void 0, customerIdentifier),
+          identifierType,
           ...req.body,
         },
         response,
@@ -209,22 +227,7 @@ class WorkOrderController {
         error: null,
       });
 
-      res.status(200).json(response);
-
-      // Adicionar à fila de criação de ordem de serviço
-      await _workOrderqueue2.default.add('createWorkOrder', {
-        uraRequestId,
-        cpf,
-        cnpj,
-        customerId,
-        customerName: (await _EntityService2.default.getCustomerDataById(customerId)).nome,
-        productId,
-        requesterNameAndPosition,
-        IncidentAndReceiverName,
-        requesterWhatsApp,
-      });
-
-      console.log('[WorkOrderController] Ordem adicionada à fila para processamento');
+      return res.status(200).json(response);
     } catch (error) {
       await _logEvent2.default.call(void 0, {
         uraRequestId,

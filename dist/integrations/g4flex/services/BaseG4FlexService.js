@@ -16,8 +16,7 @@ class BaseG4FlexService {
   }
 
   /**
-   * Handles API errors
-   * @param {Error} error - Error occurred
+   * Trata erros da API
    */
   handleError(error) {
     if (error.response) {

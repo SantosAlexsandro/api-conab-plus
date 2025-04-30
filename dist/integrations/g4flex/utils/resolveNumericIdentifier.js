@@ -1,13 +1,28 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true});// utils/g4flex/resolveNumericIdentifier.ts
 var _uraValidator = require('./uraValidator');
 
- function resolveNumericIdentifier(identifier) {
-  const type = _uraValidator.determineIdentifierType.call(void 0, identifier);
-  const numeric = identifier.replace(/\D/g, '');
+ function resolveNumericIdentifier(identifier = "") {
+  // Remove caracteres não numéricos
+  const numericValue = identifier.replace(/\D/g, '');
 
-  if (type === 'CPF') return { cpf: numeric };
-  if (type === 'CNPJ') return { cnpj: numeric };
-  if (type === 'CUSTOMER_ID') return { customerId: numeric.padStart(7, '0') };
+  // Valida CPF (11 dígitos)
+  if (/^\d{11}$/.test(numericValue)) {
+    return { identifierType: 'cpf', identifierValue: numericValue };
+  }
 
-  throw new Error('Invalid customer identifier format');
+  // Valida CNPJ (14 dígitos)
+  if (/^\d{14}$/.test(numericValue)) {
+    return { identifierType: 'cnpj', identifierValue: numericValue };
+  }
+
+  // Valida ID do cliente (entre 1 e 7 dígitos)
+  if (/^\d{1,7}$/.test(numericValue)) {
+    return {
+      identifierType: 'customerId',
+      identifierValue: numericValue.padStart(7, '0')
+    };
+  }
+
+  // Caso nenhum padrão seja identificado
+  throw new Error('Formato de identificador inválido');
 } exports.resolveNumericIdentifier = resolveNumericIdentifier;

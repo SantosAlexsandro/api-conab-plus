@@ -31,12 +31,11 @@ class WorkOrderController {
         return res.status(400).json({ error: validationError });
       }
 
-      const { cpf, cnpj, customerId } = resolveNumericIdentifier(customerIdentifier);
+      const { identifierType, identifierValue } = resolveNumericIdentifier(customerIdentifier);
 
       const result = await WorkOrderService.getOpenOrdersByCustomerId({
-        cpf,
-        cnpj,
-        customerId,
+        identifierType,
+        identifierValue,
         uraRequestId
       });
 
@@ -46,7 +45,7 @@ class WorkOrderController {
         action: "work_order_get_success",
         payload: {
           customerIdentifier,
-          identifierType: determineIdentifierType(customerIdentifier),
+          identifierType,
         },
         response: result,
         statusCode: 200,
@@ -91,12 +90,12 @@ class WorkOrderController {
         return res.status(400).json({ error: validationError });
       }
 
-      const { cpf, cnpj, customerId } = resolveNumericIdentifier(customerIdentifier);
+      const { identifierType, identifierValue } = resolveNumericIdentifier(customerIdentifier);
 
       const result = await WorkOrderService.closeWorkOrderByCustomerId({
-        cpf,
-        cnpj,
-        customerId,
+        identifierType,
+        identifierValue,
+        uraRequestId
       });
 
       await logEvent({
@@ -105,7 +104,7 @@ class WorkOrderController {
         action: "work_order_close_success",
         payload: {
           customerIdentifier,
-          identifierType: determineIdentifierType(customerIdentifier),
+          identifierType,
         },
         response: result,
         statusCode: 200,
@@ -157,7 +156,9 @@ class WorkOrderController {
         return res.status(400).json({ error: validationError });
       }
 
-      const { cpf, cnpj, customerId } = resolveNumericIdentifier(customerIdentifier);
+      const { identifierType, identifierValue } = resolveNumericIdentifier(customerIdentifier);
+      console.log("identifierType", identifierType);
+      console.log("identifierValue", identifierValue);
 
       // Validate required fields
       const requiredFields = {
@@ -188,11 +189,28 @@ class WorkOrderController {
         });
       }
 
-      // Return success response
+      // Busca dados do cliente usando o método otimizado
+      const customerData = await EntityService.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerName = customerData.nome;
+
+      // Adicionar à fila de criação de ordem de serviço
+      await workOrderQueue.add('createWorkOrder', {
+        uraRequestId,
+        identifierType,
+        identifierValue,
+        customerName,
+        productId,
+        requesterNameAndPosition,
+        IncidentAndReceiverName,
+        requesterWhatsApp,
+      });
+
+      console.log('[WorkOrderController] Ordem adicionada à fila para processamento');
+
+      // Preparar e enviar resposta após a lógica completa
       const response = {
         success: true,
-        message:
-          "Solicitação de criação de Ordem de Serviço realizada com sucessso.",
+        message: "Solicitação de criação de Ordem de Serviço realizada com sucesso.",
       };
 
       await logEvent({
@@ -201,7 +219,7 @@ class WorkOrderController {
         action: "work_order_request_success",
         payload: {
           customerIdentifier,
-          identifierType: determineIdentifierType(customerIdentifier),
+          identifierType,
           ...req.body,
         },
         response,
@@ -209,22 +227,7 @@ class WorkOrderController {
         error: null,
       });
 
-      res.status(200).json(response);
-
-      // Adicionar à fila de criação de ordem de serviço
-      await workOrderQueue.add('createWorkOrder', {
-        uraRequestId,
-        cpf,
-        cnpj,
-        customerId,
-        customerName: (await EntityService.getCustomerDataById(customerId)).nome,
-        productId,
-        requesterNameAndPosition,
-        IncidentAndReceiverName,
-        requesterWhatsApp,
-      });
-
-      console.log('[WorkOrderController] Ordem adicionada à fila para processamento');
+      return res.status(200).json(response);
     } catch (error) {
       await logEvent({
         uraRequestId,

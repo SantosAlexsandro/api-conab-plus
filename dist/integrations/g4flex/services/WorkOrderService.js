@@ -26,9 +26,9 @@ class WorkOrderService extends _BaseG4FlexService2.default {
    // Criar Ordem de Serviço
    async createWorkOrder({
     uraRequestId,
-    cpf,
-    cnpj,
-    customerId,
+    identifierType,
+    identifierValue,
+    customerName,
     productId,
     requesterNameAndPosition,
     IncidentAndReceiverName,
@@ -37,13 +37,12 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     try {
       console.log('[WorkOrderService] Starting work order creation process');
 
-      let finalCustomerId = customerId;
+      // Busca dados do cliente usando o método otimizado
+      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const finalCustomerId = customerData.codigo;
 
-      if (!finalCustomerId) {
-        const document = cpf || cnpj;
-        const customerData = await _EntityService2.default.getCustomerData(document);
-        finalCustomerId = customerData.codigo;
-      }
+      // Usa o nome do cliente passado ou o obtido da busca
+      const finalCustomerName = customerName || customerData.nome;
 
       const workOrderData = {
         CodigoEntidade: finalCustomerId,
@@ -133,7 +132,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         uraRequestId,
         source: 'service_g4flex',
         action: 'work_order_create_error',
-        payload: { cpf, cnpj, customerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+        payload: { identifierType, identifierValue, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
         response: { error: error.message },
         statusCode: 500,
         error: error.message
@@ -164,19 +163,11 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     }
   }
 
-  async getOpenOrdersByCustomerId({ cpf, cnpj, customerId, uraRequestId }) {
+  async getOpenOrdersByCustomerId({ identifierType, identifierValue, uraRequestId }) {
     try {
-      let finalCustomerCode = customerId;
-
-      if (!finalCustomerCode) {
-        const document = cpf || cnpj;
-        if (!document) {
-          throw new Error('CPF or CNPJ not provided');
-        }
-        const customerData = await _EntityService2.default.getCustomerData(document);
-        finalCustomerCode = customerData.codigo;
-        console.log('[G4Flex] Customer code:', finalCustomerCode);
-      }
+      // Busca dados do cliente usando o método otimizado
+      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const finalCustomerCode = customerData.codigo;
 
       const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
       const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
@@ -194,7 +185,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         uraRequestId,
         source: 'system',
         action: 'get_open_orders_by_customer_id',
-        payload: { customerId },
+        payload: { identifierType, identifierValue },
         response: { orders }
       });
 
@@ -230,7 +221,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         uraRequestId,
         source: 'system',
         action: 'get_open_orders_by_customer_id_error',
-        payload: { customerId },
+        payload: { identifierType, identifierValue },
         response: { error: error.message }
       });
       this.handleError(error);
@@ -238,19 +229,11 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     }
   }
 
-  async closeWorkOrderByCustomerId({ cpf, cnpj, customerId }) {
+  async closeWorkOrderByCustomerId({ identifierType, identifierValue, uraRequestId }) {
     try {
-      let finalCustomerCode = customerId;
-
-      if (!finalCustomerCode) {
-        const document = cpf || cnpj;
-        if (!document) {
-          throw new Error('CPF or CNPJ not provided');
-        }
-        const customerData = await _EntityService2.default.getCustomerData(document);
-        finalCustomerCode = customerData.codigo;
-        console.log('[G4Flex] Customer code:', finalCustomerCode);
-      }
+      // Busca dados do cliente usando o método otimizado
+      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const finalCustomerCode = customerData.codigo;
 
       const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
       const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();

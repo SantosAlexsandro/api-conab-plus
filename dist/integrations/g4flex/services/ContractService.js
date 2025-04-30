@@ -2,6 +2,7 @@
 var _BaseG4FlexService = require('./BaseG4FlexService'); var _BaseG4FlexService2 = _interopRequireDefault(_BaseG4FlexService);
 var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
+var _resolveNumericIdentifier = require('../utils/resolveNumericIdentifier');
 
 class ContractService extends _BaseG4FlexService2.default {
   constructor() {
@@ -10,19 +11,26 @@ class ContractService extends _BaseG4FlexService2.default {
 
   async checkActiveContract(cpf, cnpj, customerId, uraRequestId) {
     try {
-      let finalCustomerId = customerId;
-      let customerName = null;
+      // Determina o tipo e valor do identificador
+      let identifierType, identifierValue;
 
-      if (!finalCustomerId) {
-        const document = cpf || cnpj;
-        const customerData = await _EntityService2.default.getCustomerData(document);
-        finalCustomerId = customerData.codigo;
-        customerName = customerData.nome;
+      if (customerId) {
+        identifierType = 'customerId';
+        identifierValue = customerId;
+      } else if (cpf) {
+        identifierType = 'cpf';
+        identifierValue = cpf;
+      } else if (cnpj) {
+        identifierType = 'cnpj';
+        identifierValue = cnpj;
       } else {
-        // Se já temos o customerId, buscamos o nome
-        const customerData = await _EntityService2.default.getCustomerDataById(finalCustomerId);
-        customerName = customerData.nome;
+        throw new Error('Nenhum identificador fornecido (CPF, CNPJ ou customerId)');
       }
+
+      // Busca dados do cliente usando o método unificado
+      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const finalCustomerId = customerData.codigo;
+      const customerName = customerData.nome;
 
       const contractResponse = await this.axiosInstance.get(
         `/api/Contrato/RetrievePage?filter=(Status='Ativo'or Status='Suspenso Faturamento') and ContratoPagRec='REC' and CodigoEntidade='${finalCustomerId}'&order&pageSize=200&pageIndex=1`
@@ -36,7 +44,6 @@ class ContractService extends _BaseG4FlexService2.default {
 
       return responseData;
     } catch (error) {
-
       // Propaga o erro original com status code
       throw error;
     }
