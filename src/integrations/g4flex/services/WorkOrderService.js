@@ -13,7 +13,7 @@ class WorkOrderService extends BaseG4FlexService {
     this.DATE_RANGE = {
       DAYS_BEFORE: 7,
       DAYS_AFTER: 1,
-      PAGE_SIZE: 10,
+      PAGE_SIZE: 20,
       PAGE_INDEX: 1
     };
 
@@ -155,24 +155,19 @@ class WorkOrderService extends BaseG4FlexService {
     }
   }
 
-  async getAssignedTechnicianToOpenOrders() {
-    const orders = await this.getOpenOrders();
-    const technician = await technicianService.getAvailableTechnician();
-    console.log(`[WorkOrderService] Técnico atribuído à ordem ${orders.number}: ${technician.technicianId}`);
-  }
-
   // Buscar todas as ordens abertas
   async getOpenOrders() {
     try {
       const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
       const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
 
-      const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?filter=ISNULL(DataEncerramento) AND CodigoTipoOrdServ=007 AND ISNULL(NumeroOrdServReferencia) AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`);
+      const filter = `ISNULL(DataEncerramento) AND CodigoTipoOrdServ=007 AND ISNULL(NumeroOrdServReferencia) AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
+      const queryParams = `filter=${filter}&order=&pageSize=${this.DATE_RANGE.PAGE_SIZE}&pageIndex=${this.DATE_RANGE.PAGE_INDEX}`;
+      const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
       const orders = response.data;
 
       if (!orders || orders.length === 0) {
         return {
-          customerHasOpenOrders: false,
           orders: []
         };
       }
@@ -193,7 +188,8 @@ class WorkOrderService extends BaseG4FlexService {
       return openOrders.map(order => ({
         number: order.Numero,
         registrationDate: order.DataCadastro
-      }));
+      }))
+
     } catch (error) {
       this.handleError(error);
       throw new Error(`Error getting open orders: ${error.message}`);

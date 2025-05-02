@@ -1,14 +1,10 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// src/integrations/g4flex/services/WorkOrderService.js
 
 var _BaseG4FlexService = require('./BaseG4FlexService'); var _BaseG4FlexService2 = _interopRequireDefault(_BaseG4FlexService);
-var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
-var _WebhookService = require('./WebhookService'); var _WebhookService2 = _interopRequireDefault(_WebhookService);
-var _uraValidator = require('../utils/uraValidator');
-var _formatUtils = require('../../../utils/string/formatUtils');
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
 var _TechnicianService = require('./TechnicianService'); var _TechnicianService2 = _interopRequireDefault(_TechnicianService);
 var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
-
+var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
 
 class WorkOrderService extends _BaseG4FlexService2.default {
   constructor() {
@@ -17,7 +13,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     this.DATE_RANGE = {
       DAYS_BEFORE: 7,
       DAYS_AFTER: 1,
-      PAGE_SIZE: 10,
+      PAGE_SIZE: 20,
       PAGE_INDEX: 1
     };
 
@@ -28,7 +24,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     uraRequestId,
     identifierType,
     identifierValue,
-    customerName,
     productId,
     requesterNameAndPosition,
     IncidentAndReceiverName,
@@ -40,9 +35,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       // Busca dados do cliente usando o método otimizado
       const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerId = customerData.codigo;
-
-      // Usa o nome do cliente passado ou o obtido da busca
-      const finalCustomerName = customerName || customerData.nome;
 
       const workOrderData = {
         CodigoEntidade: finalCustomerId,
@@ -69,7 +61,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       };
 
       // 1. Create work order
-      console.log('[WorkOrderService] Creating work order in G4Flex');
+      console.log('[WorkOrderService] Creating work order in ERP by');
       const response = await this.axiosInstance.post(
         '/api/OrdServ/InserirAlterarOrdServ',
         workOrderData
@@ -163,6 +155,48 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     }
   }
 
+  // Buscar todas as ordens abertas
+  async getOpenOrders() {
+    try {
+      const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
+      const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
+
+      const filter = `ISNULL(DataEncerramento) AND CodigoTipoOrdServ=007 AND ISNULL(NumeroOrdServReferencia) AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
+      const queryParams = `filter=${filter}&order=&pageSize=${this.DATE_RANGE.PAGE_SIZE}&pageIndex=${this.DATE_RANGE.PAGE_INDEX}`;
+      const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
+      const orders = response.data;
+
+      if (!orders || orders.length === 0) {
+        return {
+          orders: []
+        };
+      }
+
+      // 2. Verificar o status de cada ordem
+      const orderStatuses = await Promise.all(
+        orders.map(async order => ({
+          order,
+          isFinished: await this.isOrderFinished(order.Numero)
+        }))
+      );
+
+      // 3. Filtrar apenas ordens não finalizadas
+      const openOrders = orderStatuses
+        .filter(status => !status.isFinished)
+        .map(status => status.order);
+
+      return openOrders.map(order => ({
+        number: order.Numero,
+        registrationDate: order.DataCadastro
+      }))
+
+    } catch (error) {
+      this.handleError(error);
+      throw new Error(`Error getting open orders: ${error.message}`);
+    }
+  }
+
+  // Buscar todas as ordens abertas por cliente
   async getOpenOrdersByCustomerId({ identifierType, identifierValue, uraRequestId }) {
     try {
       // Busca dados do cliente usando o método otimizado
@@ -179,7 +213,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       const orders = response.data;
 
       console.log('[G4Flex] Found', orders.length, 'orders for customer', finalCustomerCode);
-
 
       _logEvent2.default.call(void 0, {
         uraRequestId,
@@ -279,7 +312,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
 
 
   // Atribuir técnico à OS
-  // TODO: Criar outra tabela para armazenar as tentativas de atribuição de técnico
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
     try {
       const technician = await _TechnicianService2.default.getAvailableTechnician();
