@@ -40,6 +40,9 @@ import g4flexContractRoutes from './integrations/g4flex/routes/contractRoutes'
 import g4flexWorkOrderRoutes from './integrations/g4flex/routes/workOrderRoutes'
 import g4flexTokenRoutes from './integrations/g4flex/routes/tokenRoutes'
 
+// ERP Integration
+import erpTechnicianRoutes from './integrations/erp/routes/technicianRoutes'
+
 const whiteList = [
   'http://localhost:8080',
   'https://app.conabplus.com.br',
@@ -99,6 +102,9 @@ class App {
     this.app.use('/api/integrations/g4flex/contracts/', g4flexContractRoutes);
     this.app.use('/api/integrations/g4flex/work-orders/', g4flexWorkOrderRoutes);
     this.app.use('/api/integrations/g4flex/token', g4flexTokenRoutes);
+
+    // ERP Integration
+    this.app.use('/api/integrations/erp/technicians', erpTechnicianRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);
