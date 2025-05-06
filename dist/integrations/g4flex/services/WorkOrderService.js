@@ -5,7 +5,7 @@ var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopReq
 var _TechnicianService = require('./TechnicianService'); var _TechnicianService2 = _interopRequireDefault(_TechnicianService);
 var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
 var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
-
+var _ContractService = require('./ContractService'); var _ContractService2 = _interopRequireDefault(_ContractService);
 class WorkOrderService extends _BaseG4FlexService2.default {
   constructor() {
     super();
@@ -36,13 +36,16 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerId = customerData.codigo;
 
+      const contractData = await _ContractService2.default.getActiveContract(finalCustomerId);
+      console.log(contractData, 'contractData');
+
       const workOrderData = {
         CodigoEntidade: finalCustomerId,
         CodigoEntidadeAtendida: finalCustomerId,
         CodigoTipoOrdServ: '007',
         CodigoTipoAtendContrato: '0000002',
         CodigoProduto: productId,
-        //NumeroContrato: '0017693',
+        NumeroContrato: contractData.Numero,
         EtapaOrdServChildList: [
           {
             CodigoEmpresaFilial: '1',

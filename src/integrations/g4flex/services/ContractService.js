@@ -52,6 +52,13 @@ class ContractService extends BaseG4FlexService {
   validateActiveContract(contractData) {
     return contractData && contractData.length > 0;
   }
+
+  async getActiveContract(customerId) {
+    const response = await this.axiosInstance.get(`/api/Contrato/RetrievePage?filter=(Status='Ativo' or Status='Suspenso Faturamento') and ContratoPagRec='REC' and CodigoEntidade='${customerId}'&order&pageSize=200&pageIndex=1`);
+    console.log(response.data);
+    return response.data[0];
+  }
+
 }
 
 export default new ContractService();

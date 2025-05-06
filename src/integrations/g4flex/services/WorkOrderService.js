@@ -5,7 +5,7 @@ import logEvent from '../../../utils/logEvent';
 import technicianService from './TechnicianService';
 import workOrderQueue from '../queues/workOrder.queue';
 import entityService from './EntityService';
-
+import contractService from './ContractService';
 class WorkOrderService extends BaseG4FlexService {
   constructor() {
     super();
@@ -36,13 +36,16 @@ class WorkOrderService extends BaseG4FlexService {
       const customerData = await entityService.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerId = customerData.codigo;
 
+      const contractData = await contractService.getActiveContract(finalCustomerId);
+      console.log(contractData, 'contractData');
+
       const workOrderData = {
         CodigoEntidade: finalCustomerId,
         CodigoEntidadeAtendida: finalCustomerId,
         CodigoTipoOrdServ: '007',
         CodigoTipoAtendContrato: '0000002',
         CodigoProduto: productId,
-        //NumeroContrato: '0017693',
+        NumeroContrato: contractData.Numero,
         EtapaOrdServChildList: [
           {
             CodigoEmpresaFilial: '1',

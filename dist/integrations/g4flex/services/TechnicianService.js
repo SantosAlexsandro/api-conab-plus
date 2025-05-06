@@ -3,9 +3,12 @@ var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopReq
 var _WorkShift = require('../../../models/WorkShift'); var _WorkShift2 = _interopRequireDefault(_WorkShift);
 var _sequelize = require('sequelize');
 var _WorkOrderService = require('./WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
+var _TechnicianERPService = require('../../erp/services/TechnicianERPService'); var _TechnicianERPService2 = _interopRequireDefault(_TechnicianERPService);
+
 class TechnicianService extends _BaseG4FlexService2.default {
   constructor() {
     super();
+    this.erp = new (0, _TechnicianERPService2.default)();
   }
 
   async getAvailableTechnician() {
@@ -33,40 +36,23 @@ class TechnicianService extends _BaseG4FlexService2.default {
       console.log(`[TechnicianService] Ordens abertas: ${openOrders.length}`);
 
       // Obter os técnicos que estão trabalhando em ordens abertas
-      const workingTechnicians = [];
+      const workingTechs = [];
 
       for (const order of openOrders) {
         try {
-          const response = await this.axiosInstance.get(
-            `/api/OrdServ/Load?codigoEmpresaFilial=1&numero=${order.number}&loadChild=EtapaOrdServChildList`
-          );
-
-          if (response.data && response.data.EtapaOrdServChildList && response.data.EtapaOrdServChildList.length > 0) {
-            // Encontrar o objeto com o maior número de sequência
-            const etapas = response.data.EtapaOrdServChildList;
-            const etapaAtual = etapas.reduce((prev, current) =>
-              (prev.Sequencia > current.Sequencia) ? prev : current
-            );
-
-            // Obter o CodigoUsuario dessa etapa (técnico atual)
-            const technicianCode = etapaAtual.CodigoUsuario;
-            console.log(`[TechnicianService] Técnico atribuído à ordem ${order.number}: ${technicianCode}`);
-
-            // Adicionar à lista de técnicos trabalhando
-            if (technicianCode && !workingTechnicians.includes(technicianCode)) {
-              workingTechnicians.push(technicianCode);
-            }
-          }
-        } catch (error) {
-          console.error(`[TechnicianService] Erro ao obter dados da ordem ${order.number}:`, error.message);
+          console.log(`[TechnicianService] Buscando técnico para ordem ${order.number}`);
+          const tech = await this.erp.getTechnicianFromOrder(order.number);
+          if (tech && !workingTechs.includes(tech)) workingTechs.push(tech);
+        } catch (err) {
+          console.error(`[TechnicianService] Erro em ordem ${order.number}: ${err.message}`);
         }
       }
 
-      console.log(`[TechnicianService] Técnicos trabalhando: ${workingTechnicians.join(', ')}`);
+      console.log(`[TechnicianService] Técnicos trabalhando: ${workingTechs.join(', ')}`);
 
       // Filtrar técnicos que estão em turno ativo mas não estão trabalhando
       const availableTechnicians = activeTechnicianCodes.filter(techCode =>
-        !workingTechnicians.includes(techCode)
+        !workingTechs.includes(techCode)
       );
 
       console.log(`[TechnicianService] Técnicos disponíveis: ${availableTechnicians.join(', ')}`);
@@ -81,52 +67,15 @@ class TechnicianService extends _BaseG4FlexService2.default {
       }
 
       return null;
-
- /*
-      // Buscar técnicos disponíveis no G4Flex
-      const response = await this.axiosInstance.get('/api/Tecnicos/RetrievePage?filter=Disponivel=true&pageSize=20');
-      const allAvailableTechnicians = response.data;
-
-      if (!allAvailableTechnicians || allAvailableTechnicians.length === 0) {
-        console.log('[TechnicianService] Nenhum técnico disponível no G4Flex');
-        return null;
-      }
-
-      // Filtrar técnicos que estão disponíveis no G4Flex E em turno ativo
-      const availableTechnicians = allAvailableTechnicians.filter(tech =>
-        activeTechnicianCodes.includes(tech.Codigo)
-      );
-      console.log(`[TechnicianService] ${availableTechnicians.length} técnicos disponíveis e em turno ativo`);
-
-      // Retorna o primeiro técnico disponível ou null
-      if (availableTechnicians.length > 0) {
-        const selectedTechnician = availableTechnicians[0];
-        return {
-          id: selectedTechnician.Codigo,
-          nome: selectedTechnician.Nome,
-          disponivel: true
-        };
-      }
-
-      if (activeTechnicianCodes.length > 0) {
-        const selectedTechnician = activeTechnicianCodes[0];
-        return {
-          id: selectedTechnician,
-          nome: selectedTechnician,
-          disponivel: true
-        };
-      }
-      return null;
-      */
     } catch (error) {
       this.handleError(error);
       throw new Error(`Erro ao buscar técnicos disponíveis: ${error.message}`);
     }
   }
 
-
-
-
+  async activeTechniciansFromERP() {
+    return this.erp.getActiveTechsFromEmployeeList();
+  }
 }
 
 const technicianService = new TechnicianService();
