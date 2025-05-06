@@ -5,12 +5,12 @@ class TechnicianERPController {
     this.technicianService = new (0, _TechnicianERPService2.default)();
   }
 
-
   async getActiveTechnicians(req, res, next) {
     try {
       const technicians = await this.technicianService.getActiveTechsFromEmployeeList();
       return res.json(technicians);
     } catch (error) {
+      console.error('[TechnicianERPController] Erro ao buscar técnicos:', error);
       next(error);
     }
   }

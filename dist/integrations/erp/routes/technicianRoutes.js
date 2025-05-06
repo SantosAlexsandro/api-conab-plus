@@ -3,6 +3,7 @@ var _TechnicianERPController = require('../controllers/TechnicianERPController')
 
 const router = new (0, _express.Router)();
 
-router.get('/active', _TechnicianERPController2.default.getActiveTechnicians);
+// Usando função anônima como wrapper para preservar o contexto this
+router.get('/active', (req, res, next) => _TechnicianERPController2.default.getActiveTechnicians(req, res, next));
 
 exports. default = router;

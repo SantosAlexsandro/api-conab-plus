@@ -3,6 +3,7 @@ import technicianController from '../controllers/TechnicianERPController';
 
 const router = new Router();
 
-router.get('/active', technicianController.getActiveTechnicians);
+// Usando função anônima como wrapper para preservar o contexto this
+router.get('/active', (req, res, next) => technicianController.getActiveTechnicians(req, res, next));
 
 export default router;

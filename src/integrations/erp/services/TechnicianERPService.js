@@ -25,7 +25,7 @@ class TechnicianERPService {
   }
 
   async getActiveTechsFromEmployeeList() {
-    const { data } = await this.axios.get('/api/Funcionario/RetrievePage?filter=Status=Trabalhando AND (CodigoCargo=04.26 OR CodigoCargo=04.27)&order&pageSize=200&pageIndex=1');
+    const { data } = await this.axios.get("/api/Funcionario/RetrievePage?filter=Status='Trabalhando' AND (CodigoCargo='04.26' OR CodigoCargo='04.27')&order&pageSize=200&pageIndex=1");
     return data;
   }
 }
