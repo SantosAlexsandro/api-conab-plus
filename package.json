@@ -11,7 +11,8 @@
     "dev:dashboard": "nodemon src/integrations/g4flex/queues/bull-dashboard.js",
     "dev:queue": "concurrently \"nodemon src/integrations/g4flex/queues/workOrder.worker.js\" \"nodemon src/integrations/g4flex/queues/bull-dashboard.js\"",
     "build": "sucrase ./src -d ./dist --transforms imports",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "generate-vapid-keys": "sucrase-node src/utils/generateVapidKeys.js"
   },
   "keywords": [],
   "author": "",
@@ -41,6 +42,7 @@
     "multer": "^1.4.5-lts.1",
     "sequelize": "^6.26.0",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "web-push": "^3.6.7"
   }
 }
