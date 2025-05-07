@@ -34,6 +34,7 @@ var _addressRoutes = require('./routes/addressRoutes'); var _addressRoutes2 = _i
 
 var _gupshupRoutes = require('./routes/gupshupRoutes'); var _gupshupRoutes2 = _interopRequireDefault(_gupshupRoutes);
 var _workOrderWaitingQueue = require('./routes/workOrderWaitingQueue'); var _workOrderWaitingQueue2 = _interopRequireDefault(_workOrderWaitingQueue);
+var _pushNotificationRoutes = require('./routes/pushNotificationRoutes'); var _pushNotificationRoutes2 = _interopRequireDefault(_pushNotificationRoutes);
 
 // G4Flex
 var _contractRoutes = require('./integrations/g4flex/routes/contractRoutes'); var _contractRoutes2 = _interopRequireDefault(_contractRoutes);
@@ -96,6 +97,7 @@ class App {
     this.app.use('/api/', _addressRoutes2.default);
     this.app.use('/user-groups/', _userGroupRoutes2.default);
     this.app.use('/work-order-queue/', _workOrderWaitingQueue2.default);
+    this.app.use('/notifications/', _pushNotificationRoutes2.default);
     //this.app.use('/gupshup/', gupshupRoutes);
 
     // G4Flex

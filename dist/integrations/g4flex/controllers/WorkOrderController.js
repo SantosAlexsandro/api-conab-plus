@@ -74,6 +74,7 @@ class WorkOrderController {
   // Fechar Ordem de Serviço
   async closeWorkOrder(req, res) {
     let { customerIdentifier = "", uraRequestId = "" } = req.query;
+    const { requesterName, requesterPosition, cancellationReason } = req.body;
 
     try {
       const validationError = _uraValidator.validateURAQuery.call(void 0, req.query);
@@ -90,12 +91,34 @@ class WorkOrderController {
         return res.status(400).json({ error: validationError });
       }
 
+      // Validação dos campos obrigatórios do body
+      if (!requesterName || !requesterPosition || !cancellationReason) {
+        const missingFields = [];
+        if (!requesterName) missingFields.push('requesterName');
+        if (!requesterPosition) missingFields.push('requesterPosition');
+        if (!cancellationReason) missingFields.push('cancellationReason');
+        const errorMsg = `Missing required fields: ${missingFields.join(', ')}`;
+        await _logEvent2.default.call(void 0, {
+          uraRequestId,
+          source: "g4flex",
+          action: "work_order_close_validation_error",
+          payload: { ...req.query, ...req.body },
+          response: { error: errorMsg },
+          statusCode: 400,
+          error: errorMsg,
+        });
+        return res.status(400).json({ error: errorMsg });
+      }
+
       const { identifierType, identifierValue } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
 
       const result = await _WorkOrderService2.default.closeWorkOrderByCustomerId({
         identifierType,
         identifierValue,
-        uraRequestId
+        uraRequestId,
+        requesterName,
+        requesterPosition,
+        cancellationReason
       });
 
       await _logEvent2.default.call(void 0, {
@@ -105,6 +128,9 @@ class WorkOrderController {
         payload: {
           customerIdentifier,
           identifierType,
+          requesterName,
+          requesterPosition,
+          cancellationReason
         },
         response: result,
         statusCode: 200,
@@ -117,7 +143,7 @@ class WorkOrderController {
         uraRequestId,
         source: "g4flex",
         action: "work_order_close_controller_error",
-        payload: req.query,
+        payload: { ...req.query, ...req.body },
         response: { error: error.message },
         statusCode: 500,
         error: error.message,

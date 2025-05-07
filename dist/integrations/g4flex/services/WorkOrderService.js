@@ -265,7 +265,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     }
   }
 
-  async closeWorkOrderByCustomerId({ identifierType, identifierValue, uraRequestId }) {
+  async closeWorkOrderByCustomerId({ identifierType, identifierValue, uraRequestId, requesterName, requesterPosition, cancellationReason }) {
     try {
       // Busca dados do cliente usando o método otimizado
       const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
@@ -292,7 +292,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
             CodigoEmpresaFilial: '1',
             Numero: order.Numero,
             codigoEntidade: finalCustomerCode,
-            Contato: "ORDEM CANCELADA X2"
+            Contato: `ORDEM CANCELADA X2`
           }
         );
 
@@ -305,7 +305,10 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       return {
         success: true,
         message: 'Work orders closed successfully',
-        orders: orders.map(order => order.Numero)
+        orders: orders.map(order => order.Numero),
+        requesterName,
+        requesterPosition,
+        cancellationReason
       };
     } catch (error) {
       this.handleError(error);

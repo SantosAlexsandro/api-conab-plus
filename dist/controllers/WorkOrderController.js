@@ -1,11 +1,29 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// import Entity from '../models/Entity';
 var _WorkOrderService = require('../services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
+var _PushNotificationService = require('../services/PushNotificationService'); var _PushNotificationService2 = _interopRequireDefault(_PushNotificationService);
 
 class WorkOrderController {
   async create(req, res) {
     try {
       const newEntity = await _WorkOrderService2.default.create(req.body);
       const { data } = newEntity;
+
+      // Envia notificação de nova ordem de serviço para todos os usuários
+      try {
+        await _PushNotificationService2.default.sendToAll({
+          title: 'Nova Ordem de Serviço',
+          body: `Uma nova OS foi criada: ${data.id || 'Sem ID'}`,
+          data: {
+            type: 'new_work_order',
+            workOrderId: data.id,
+            url: `/work-orders/${data.id}`
+          }
+        });
+      } catch (notificationError) {
+        console.error('Erro ao enviar notificação push:', notificationError);
+        // Não interrompe o fluxo em caso de erro na notificação
+      }
+
       return res.json( data );
     } catch (e) {
       return res.status(400).json({ errors: e.errors.map((err) => err.message) });
@@ -39,6 +57,28 @@ class WorkOrderController {
     try {
       console.log("updateOrderStage");
       const response = await _WorkOrderService2.default.updateOrderStage(req.body);
+
+      // Envia notificação sobre a atualização da etapa da OS
+      try {
+        const { ordem_id, etapa_atual } = req.body;
+
+        if (ordem_id) {
+          await _PushNotificationService2.default.sendToAll({
+            title: 'Atualização de Ordem de Serviço',
+            body: `A OS #${ordem_id} foi atualizada para a etapa: ${etapa_atual || 'Nova etapa'}`,
+            data: {
+              type: 'work_order_stage_update',
+              workOrderId: ordem_id,
+              stage: etapa_atual,
+              url: `/work-orders/${ordem_id}`
+            }
+          });
+        }
+      } catch (notificationError) {
+        console.error('Erro ao enviar notificação push:', notificationError);
+        // Não interrompe o fluxo em caso de erro na notificação
+      }
+
       return res.json(response);
     } catch (error) {
       console.log("error", error);

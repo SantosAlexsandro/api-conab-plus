@@ -203,8 +203,9 @@
  *  post:
  *    tags:
  *      - G4Flex - Ordens de Serviço
- *    summary: Fecha uma ordem de serviço
- *    description: Fecha uma ordem de serviço na Conab+ para o cliente especificado
+ *    x-public: true
+ *    summary: Fecha todas as ordens de serviço abertas do cliente
+ *    description: Fecha todas as ordens de serviço abertas na Conab+ para o cliente especificado, registrando o solicitante e motivo do cancelamento
  *    security:
  *      - bearerAuth: []
  *    parameters:
@@ -218,7 +219,7 @@
  *            $ref: '#/components/schemas/WorkOrderCloseRequest'
  *    responses:
  *      '200':
- *        description: Ordem de serviço fechada com sucesso
+ *        description: Ordens de serviço fechadas com sucesso
  *        content:
  *          application/json:
  *            schema:
