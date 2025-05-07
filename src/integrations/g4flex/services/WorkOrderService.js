@@ -147,7 +147,7 @@ class WorkOrderService extends BaseG4FlexService {
       );
 
       const finishedStage = response.data.EtapaOrdServChildList.find(
-        stage => stage.CodigoTipoEtapa === '007.007'
+        stage => stage.CodigoTipoEtapa === '007.007' || stage.CodigoTipoEtapa === '007.003' || stage.CodigoTipoEtapa === '007.021'
       );
 
       console.log(`[G4Flex] Order ${orderNumber} finished stage: ${finishedStage ? 'Yes' : 'No'}`);
@@ -285,37 +285,91 @@ class WorkOrderService extends BaseG4FlexService {
         throw new Error('No orders found for customer');
       }
 
-      await Promise.all(orders.map(async order => {
-        await this.axiosInstance.post(
-          `/api/OrdServ/InserirAlterarOrdServ`,
-          {
-            CodigoEmpresaFilial: '1',
-            Numero: order.Numero,
-            codigoEntidade: finalCustomerCode,
-            Contato: `ORDEM CANCELADA X2`
-          }
-        );
 
-        console.log(`[G4Flex] Closed work order ${order.Numero}`);
+
+      await Promise.all(orders.map(async order => {
+        const { currentStageCode, lastSequence, oldStageData } = await this.getCurrentStage(order.Numero);
+        console.log(`[G4Flex] Current stage : ${currentStageCode}`);
+
+        if (currentStageCode === '007.003' || currentStageCode === '007.021') {
+          console.log(`[G4Flex] Order ${order.Numero} is already closed`);
+          return;
+        }
+
+        if (currentStageCode === '007.002') {
+          await this.axiosInstance.post(
+            '/api/OrdServ/SavePartial?action=Update',
+            {
+              CodigoEmpresaFilial: '1',
+              Numero: order.Numero,
+              EtapaOrdServChildList: [
+                ...oldStageData,
+                { CodigoEmpresaFilial: '1', NumeroOrdServ: order.Numero, Sequencia: lastSequence + 1, CodigoTipoEtapa: '007.003', CodigoUsuario: 'CONAB+' }
+              ]
+            }
+          );
+          console.log(`[G4Flex] Closed work order ${order.Numero}`);
+          return;
+        } else if (currentStageCode === '007.004') {
+          await this.axiosInstance.post(
+            '/api/OrdServ/SavePartial?action=Update',
+            {
+              CodigoEmpresaFilial: '1',
+              Numero: order.Numero,
+              EtapaOrdServChildList: [
+                ...oldStageData,
+                { CodigoEmpresaFilial: '1', NumeroOrdServ: order.Numero, Sequencia: lastSequence + 1, CodigoTipoEtapa: '007.021', CodigoUsuario: 'CONAB+' }
+              ]
+            }
+          );
+          console.log(`[G4Flex] Closed work order ${order.Numero}`);
+          return;
+        } else {
+          console.log(`[G4Flex] Order ${order.Numero} is in an unknown stage`);
+        }
       }));
 
-      // TODO: Enviar SMS para o técnico
-      // TODO: Concluir cancelamento da OS
+      await logEvent({
+        uraRequestId,
+        source: 'g4flex',
+        action: 'work_order_close_success',
+        payload: { identifierType, identifierValue },
+        response: { orders: orders.map(order => order.Numero) }
+      });
 
       return {
         success: true,
         message: 'Work orders closed successfully',
-        orders: orders.map(order => order.Numero),
-        requesterName,
-        requesterPosition,
-        cancellationReason
+        orders: orders.map(order => order.Numero)
       };
     } catch (error) {
+      await logEvent({
+        uraRequestId,
+        source: 'g4flex',
+        action: 'work_order_close_error',
+        payload: { identifierType, identifierValue },
+        response: { error: error.message }
+      });
       this.handleError(error);
       throw new Error(`Error closing work order: ${error.message}`);
     }
   }
 
+  async getCurrentStage(workOrderId) {
+    const response = await this.axiosInstance.get(`/api/OrdServ/GetEtapaOrdServ?codigoEmpresaFilial=1&numeroOrdServ=${workOrderId}`);
+
+    const lastStage = response.data.reduce((lastStage, currentStage) => {
+      return currentStage.Sequencia > lastStage.Sequencia ? currentStage : lastStage;
+    }, { Sequencia: 0, CodigoTipoEtapa: '', Nome: '' });
+
+    const oldStageData = response.data.map(stage => ({
+      ...stage,
+      CodigoEmpresaFilial: '1',
+      NumeroOrdServ: workOrderId
+    }));
+
+    return { currentStageCode: lastStage.CodigoTipoEtapa, lastSequence: lastStage.Sequencia, oldStageData };
+  }
 
   // Atribuir técnico à OS
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
