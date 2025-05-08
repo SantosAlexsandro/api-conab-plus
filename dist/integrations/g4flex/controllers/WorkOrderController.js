@@ -74,7 +74,7 @@ class WorkOrderController {
   // Fechar Ordem de Serviço
   async closeWorkOrder(req, res) {
     let { customerIdentifier = "", uraRequestId = "" } = req.query;
-    const { requesterName, requesterPosition, cancellationReason } = req.body;
+    const { cancellationRequesterInfo } = req.body;
 
     try {
       const validationError = _uraValidator.validateURAQuery.call(void 0, req.query);
@@ -91,13 +91,9 @@ class WorkOrderController {
         return res.status(400).json({ error: validationError });
       }
 
-      // Validação dos campos obrigatórios do body
-      if (!requesterName || !requesterPosition || !cancellationReason) {
-        const missingFields = [];
-        if (!requesterName) missingFields.push('requesterName');
-        if (!requesterPosition) missingFields.push('requesterPosition');
-        if (!cancellationReason) missingFields.push('cancellationReason');
-        const errorMsg = `Missing required fields: ${missingFields.join(', ')}`;
+      // Validação do campo obrigatório do body
+      if (!cancellationRequesterInfo) {
+        const errorMsg = 'Missing required field: cancellationRequesterInfo';
         await _logEvent2.default.call(void 0, {
           uraRequestId,
           source: "g4flex",
@@ -116,9 +112,7 @@ class WorkOrderController {
         identifierType,
         identifierValue,
         uraRequestId,
-        requesterName,
-        requesterPosition,
-        cancellationReason
+        cancellationRequesterInfo
       });
 
       await _logEvent2.default.call(void 0, {
@@ -128,9 +122,7 @@ class WorkOrderController {
         payload: {
           customerIdentifier,
           identifierType,
-          requesterName,
-          requesterPosition,
-          cancellationReason
+          cancellationRequesterInfo
         },
         response: result,
         statusCode: 200,

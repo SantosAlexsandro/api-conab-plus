@@ -265,7 +265,7 @@ class WorkOrderService extends BaseG4FlexService {
     }
   }
 
-  async closeWorkOrderByCustomerId({ identifierType, identifierValue, uraRequestId, requesterName, requesterPosition, cancellationReason }) {
+  async closeWorkOrderByCustomerId({ identifierType, identifierValue, uraRequestId, cancellationRequesterInfo }) {
     try {
       // Busca dados do cliente usando o método otimizado
       const customerData = await entityService.getCustomerByIdentifier(identifierType, identifierValue);

@@ -66,19 +66,11 @@
  *    WorkOrderCloseRequest:
  *      type: object
  *      required:
- *        - requesterName
- *        - requesterPosition
- *        - cancellationReason
+ *        - cancellationRequesterInfo
  *      properties:
- *        requesterName:
+ *        cancellationRequesterInfo:
  *          type: string
- *          description: Nome do solicitante
- *        requesterPosition:
- *          type: string
- *          description: Cargo/função do solicitante
- *        cancellationReason:
- *          type: string
- *          description: Motivo do cancelamento
+ *          description: Informações do solicitante e motivo do cancelamento
  *  parameters:
  *    customerIdentifierParam:
  *      in: query
