@@ -142,6 +142,7 @@
  *  post:
  *    tags:
  *      - G4Flex - Ordens de Serviço
+ *    x-public: true
  *    summary: Solicita uma nova ordem de serviço
  *    description: Solicita uma nova ordem de serviço na Conab+ para o cliente especificado
  *    security:
