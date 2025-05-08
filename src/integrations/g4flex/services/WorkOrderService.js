@@ -27,7 +27,7 @@ class WorkOrderService extends BaseG4FlexService {
     productId,
     requesterNameAndPosition,
     IncidentAndReceiverName,
-    requesterWhatsApp
+    requesterContact
   }) {
     try {
       console.log('[WorkOrderService] Starting work order creation process');
@@ -75,7 +75,7 @@ class WorkOrderService extends BaseG4FlexService {
           uraRequestId,
           source: 'g4flex',
           action: 'work_order_create_error',
-          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
           response: { error: response.data?.error || 'Failed to create work order' }
         });
         throw new Error(response.data?.error || 'Failed to create work order');
@@ -85,7 +85,7 @@ class WorkOrderService extends BaseG4FlexService {
         uraRequestId,
         source: 'g4flex',
         action: 'work_order_create_success',
-        payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+        payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
         response: { workOrder: response?.data?.Numero }
       });
 
@@ -106,7 +106,7 @@ class WorkOrderService extends BaseG4FlexService {
           uraRequestId,
           source: 'g4flex',
           action: 'work_order_create_webhook_error',
-          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
           response: { error: webhookError.message },
           statusCode: 500,
           error: webhookError.message
@@ -127,7 +127,7 @@ class WorkOrderService extends BaseG4FlexService {
         uraRequestId,
         source: 'g4flex',
         action: 'work_order_create_error',
-        payload: { identifierType, identifierValue, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+        payload: { identifierType, identifierValue, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
         response: { error: error.message },
         statusCode: 500,
         error: error.message

@@ -26,7 +26,7 @@
  *        - productId
  *        - requesterNameAndPosition
  *        - IncidentAndReceiverName
- *        - requesterWhatsApp
+ *        - requesterContact
  *      properties:
  *        productId:
  *          type: string
@@ -37,9 +37,9 @@
  *        IncidentAndReceiverName:
  *          type: string
  *          description: Descrição do incidente e nome da pessoa responsável que estará no local
- *        requesterWhatsApp:
+ *        requesterContact:
  *          type: string
- *          description: Número do WhatsApp do solicitante
+ *          description: Número de contato do solicitante (fixo ou celular/WhatsApp)
  *    WorkOrderCreateResponse:
  *      type: object
  *      properties:
@@ -157,7 +157,7 @@
  *            $ref: '#/components/schemas/WorkOrderCreateRequest'
  *    responses:
  *      '200':
- *        description: Solicitação de criação de Ordem de Serviço realizada com sucesso.
+ *        description: Work order creation request successfully submitted.
  *        content:
  *          application/json:
  *            schema:

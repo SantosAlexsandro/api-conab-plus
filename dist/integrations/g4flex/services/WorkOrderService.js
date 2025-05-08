@@ -27,7 +27,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     productId,
     requesterNameAndPosition,
     IncidentAndReceiverName,
-    requesterWhatsApp
+    requesterContact
   }) {
     try {
       console.log('[WorkOrderService] Starting work order creation process');
@@ -75,7 +75,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
           uraRequestId,
           source: 'g4flex',
           action: 'work_order_create_error',
-          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
           response: { error: _optionalChain([response, 'access', _ => _.data, 'optionalAccess', _2 => _2.error]) || 'Failed to create work order' }
         });
         throw new Error(_optionalChain([response, 'access', _3 => _3.data, 'optionalAccess', _4 => _4.error]) || 'Failed to create work order');
@@ -85,7 +85,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         uraRequestId,
         source: 'g4flex',
         action: 'work_order_create_success',
-        payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+        payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
         response: { workOrder: _optionalChain([response, 'optionalAccess', _5 => _5.data, 'optionalAccess', _6 => _6.Numero]) }
       });
 
@@ -106,7 +106,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
           uraRequestId,
           source: 'g4flex',
           action: 'work_order_create_webhook_error',
-          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
           response: { error: webhookError.message },
           statusCode: 500,
           error: webhookError.message
@@ -127,7 +127,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         uraRequestId,
         source: 'g4flex',
         action: 'work_order_create_error',
-        payload: { identifierType, identifierValue, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterWhatsApp },
+        payload: { identifierType, identifierValue, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
         response: { error: error.message },
         statusCode: 500,
         error: error.message

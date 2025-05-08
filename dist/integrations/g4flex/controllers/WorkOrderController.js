@@ -157,7 +157,7 @@ class WorkOrderController {
         productId,
         requesterNameAndPosition,
         IncidentAndReceiverName,
-        requesterWhatsApp,
+        requesterContact,
       } = req.body;
 
       const validationError = _uraValidator.validateURAQuery.call(void 0, req.query);
@@ -183,7 +183,7 @@ class WorkOrderController {
         productId,
         requesterNameAndPosition,
         IncidentAndReceiverName,
-        requesterWhatsApp,
+        requesterContact,
       };
 
       const missingFields = Object.entries(requiredFields)
@@ -220,7 +220,7 @@ class WorkOrderController {
         productId,
         requesterNameAndPosition,
         IncidentAndReceiverName,
-        requesterWhatsApp,
+        requesterContact,
       });
 
       console.log('[WorkOrderController] Ordem adicionada à fila para processamento');
@@ -228,7 +228,7 @@ class WorkOrderController {
       // Preparar e enviar resposta após a lógica completa
       const response = {
         success: true,
-        message: "Solicitação de criação de Ordem de Serviço realizada com sucesso.",
+        message: "Work order creation request successfully submitted.",
       };
 
       await _logEvent2.default.call(void 0, {
