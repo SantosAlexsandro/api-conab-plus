@@ -217,14 +217,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
 
       console.log('[G4Flex] Found', orders.length, 'orders for customer', finalCustomerCode);
 
-      _logEvent2.default.call(void 0, {
-        uraRequestId,
-        source: 'system',
-        action: 'get_open_orders_by_customer_id',
-        payload: { identifierType, identifierValue },
-        response: { orders }
-      });
-
       if (!orders || orders.length === 0) {
         return {
           customerHasOpenOrders: false,

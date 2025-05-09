@@ -41,7 +41,7 @@ class WorkOrderController {
       await _logEvent2.default.call(void 0, {
         uraRequestId,
         source: "g4flex",
-        action: "work_order_get_success",
+        action: "get_open_orders_by_customer_id",
         payload: {
           customerIdentifier,
           identifierType,
