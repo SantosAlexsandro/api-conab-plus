@@ -80,7 +80,7 @@ async function processCreateWorkOrder(job) {
     // Adicionar na fila de atribuição de técnico
     await _workOrderqueue2.default.add("assignTechnician", {
       orderId: result.workOrder,
-      uraRequestId: orderData.uraRequestId || `auto-creation-${Date.now()}`
+      uraRequestId: orderData.uraRequestId
     });
     // TODO: Adicionar na fila Ordens geradas manualmente.
     console.log(

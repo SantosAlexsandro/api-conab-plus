@@ -6,6 +6,7 @@ var _TechnicianService = require('./TechnicianService'); var _TechnicianService2
 var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
 var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
 var _ContractService = require('./ContractService'); var _ContractService2 = _interopRequireDefault(_ContractService);
+var _WorkOrderService = require('../../../integrations/erp/services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
 class WorkOrderService extends _BaseG4FlexService2.default {
   constructor() {
     super();
@@ -16,6 +17,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       PAGE_SIZE: 20,
       PAGE_INDEX: 1
     };
+    this.ERP_SERVICE = new (0, _WorkOrderService2.default)();
 
   }
 
@@ -330,23 +332,13 @@ class WorkOrderService extends _BaseG4FlexService2.default {
   }
 
   async getCurrentStage(workOrderId) {
-    const response = await this.axiosInstance.get(`/api/OrdServ/GetEtapaOrdServ?codigoEmpresaFilial=1&numeroOrdServ=${workOrderId}`);
-
-    const lastStage = response.data.reduce((lastStage, currentStage) => {
-      return currentStage.Sequencia > lastStage.Sequencia ? currentStage : lastStage;
-    }, { Sequencia: 0, CodigoTipoEtapa: '', Nome: '' });
-
-    const oldStageData = response.data.map(stage => ({
-      ...stage,
-      CodigoEmpresaFilial: '1',
-      NumeroOrdServ: workOrderId
-    }));
-
-    return { currentStageCode: lastStage.CodigoTipoEtapa, lastSequence: lastStage.Sequencia, oldStageData };
+    const { currentStageCode, lastSequence, oldStageData } = await this.ERP_SERVICE.getCurrentStage(workOrderId);
+    return { currentStageCode, lastSequence, oldStageData };
   }
 
   // Atribuir técnico à OS
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
+
     try {
       const technician = await _TechnicianService2.default.getAvailableTechnician();
 

@@ -6,6 +6,7 @@ import technicianService from './TechnicianService';
 import workOrderQueue from '../queues/workOrder.queue';
 import entityService from './EntityService';
 import contractService from './ContractService';
+import WorkOrderERPService from '../../../integrations/erp/services/WorkOrderService';
 class WorkOrderService extends BaseG4FlexService {
   constructor() {
     super();
@@ -16,6 +17,7 @@ class WorkOrderService extends BaseG4FlexService {
       PAGE_SIZE: 20,
       PAGE_INDEX: 1
     };
+    this.ERP_SERVICE = new WorkOrderERPService();
 
   }
 
@@ -330,23 +332,13 @@ class WorkOrderService extends BaseG4FlexService {
   }
 
   async getCurrentStage(workOrderId) {
-    const response = await this.axiosInstance.get(`/api/OrdServ/GetEtapaOrdServ?codigoEmpresaFilial=1&numeroOrdServ=${workOrderId}`);
-
-    const lastStage = response.data.reduce((lastStage, currentStage) => {
-      return currentStage.Sequencia > lastStage.Sequencia ? currentStage : lastStage;
-    }, { Sequencia: 0, CodigoTipoEtapa: '', Nome: '' });
-
-    const oldStageData = response.data.map(stage => ({
-      ...stage,
-      CodigoEmpresaFilial: '1',
-      NumeroOrdServ: workOrderId
-    }));
-
-    return { currentStageCode: lastStage.CodigoTipoEtapa, lastSequence: lastStage.Sequencia, oldStageData };
+    const { currentStageCode, lastSequence, oldStageData } = await this.ERP_SERVICE.getCurrentStage(workOrderId);
+    return { currentStageCode, lastSequence, oldStageData };
   }
 
   // Atribuir técnico à OS
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
+
     try {
       const technician = await technicianService.getAvailableTechnician();
 
