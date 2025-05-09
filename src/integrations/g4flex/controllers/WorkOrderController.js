@@ -11,8 +11,7 @@ import logEvent from "../../../utils/logEvent";
 import workOrderQueue from "../queues/workOrder.queue";
 
 class WorkOrderController {
-  async getOpenOrders(req, res) {
-    console.log("req.query", req.query);
+  async getOpenOrdersByCustomerId(req, res) {
     const validationError = validateURAQuery(req.query);
 
     let { customerIdentifier = "", uraRequestId = "" } = req.query;
@@ -175,8 +174,6 @@ class WorkOrderController {
       }
 
       const { identifierType, identifierValue } = resolveNumericIdentifier(customerIdentifier);
-      console.log("identifierType", identifierType);
-      console.log("identifierValue", identifierValue);
 
       // Validate required fields
       const requiredFields = {
@@ -210,6 +207,27 @@ class WorkOrderController {
       // Busca dados do cliente usando o método otimizado
       const customerData = await EntityService.getCustomerByIdentifier(identifierType, identifierValue);
       const customerName = customerData.nome;
+
+      const openOrders = await WorkOrderService.getOpenOrdersByCustomerId({
+        identifierType,
+        identifierValue,
+        uraRequestId
+      });
+
+      console.log("openOrders", openOrders);
+
+      if (openOrders.orders.length > 0) {
+        await logEvent({
+          uraRequestId,
+          source: "g4flex",
+          action: "work_order_create_validation_error",
+          payload: { ...req.body, ...req.query },
+          response: { error: "Customer already has open work orders", openOrders: openOrders.orders },
+          statusCode: 400,
+          error: "Customer already has open work orders",
+        });
+        return res.status(400).json({ error: "Customer already has open work orders" });
+      }
 
       // Adicionar à fila de criação de ordem de serviço
       await workOrderQueue.add('createWorkOrder', {

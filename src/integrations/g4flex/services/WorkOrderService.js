@@ -159,7 +159,7 @@ class WorkOrderService extends BaseG4FlexService {
   }
 
   // Buscar todas as ordens abertas
-  async getOpenOrders() {
+  async getAllOpenOrders() {
     try {
       const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
       const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();

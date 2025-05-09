@@ -32,7 +32,7 @@ class TechnicianService extends BaseG4FlexService {
       const activeTechnicianCodes = activeShifts.map(shift => shift.user_code);
       console.log(`[TechnicianService] Técnicos em turno ativo: ${activeTechnicianCodes.join(', ')}`);
 
-      const openOrders = await WorkOrderService.getOpenOrders();
+      const openOrders = await WorkOrderService.getAllOpenOrders();
       console.log(`[TechnicianService] Ordens abertas: ${openOrders.length}`);
 
       // Obter os técnicos que estão trabalhando em ordens abertas

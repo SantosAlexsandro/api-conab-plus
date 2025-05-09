@@ -4,7 +4,7 @@ var _authG4Flex = require('../middlewares/authG4Flex'); var _authG4Flex2 = _inte
 
 const router = new (0, _express.Router)();
 
-router.get('/open', _authG4Flex2.default, _WorkOrderController2.default.getOpenOrders);
+router.get('/open', _authG4Flex2.default, _WorkOrderController2.default.getOpenOrdersByCustomerId);
 
 router.post('/requests', _authG4Flex2.default, _WorkOrderController2.default.requestWorkOrder);
 
