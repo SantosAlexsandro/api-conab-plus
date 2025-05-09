@@ -37,7 +37,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       const finalCustomerId = customerData.codigo;
 
       const contractData = await _ContractService2.default.getActiveContract(finalCustomerId);
-      console.log(contractData, 'contractData');
 
       const workOrderData = {
         CodigoEntidade: finalCustomerId,
@@ -263,24 +262,15 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerCode = customerData.codigo;
 
-      const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
-      const endDate = new Date(new Date().setDate(new Date().getDate() + this.DATE_RANGE.DAYS_AFTER)).toISOString();
+      const openOrders = await this.getOpenOrdersByCustomerId({ identifierType, identifierValue, uraRequestId });
 
-      const filter = `ISNULL(DataEncerramento) AND CodigoEntidade=${finalCustomerCode} AND (DataCadastro >= %23${startDate}%23 AND DataCadastro < %23${endDate}%23)`;
-      const queryParams = `filter=${filter}&order=&pageSize=${this.DATE_RANGE.PAGE_SIZE}&pageIndex=${this.DATE_RANGE.PAGE_INDEX}`;
-
-      const response = await this.axiosInstance.get(`/api/OrdServ/RetrievePage?${queryParams}`);
-      const orders = response.data;
-
-      console.log(`[G4Flex] Found ${orders.length} orders for customer ${finalCustomerCode}`);
-      if (!orders || orders.length === 0) {
+      console.log(`[G4Flex] Found ${openOrders.orders.length} orders for customer ${finalCustomerCode}`);
+      if (!openOrders || openOrders.orders.length === 0) {
         throw new Error('No orders found for customer');
       }
 
-
-
-      await Promise.all(orders.map(async order => {
-        const { currentStageCode, lastSequence, oldStageData } = await this.getCurrentStage(order.Numero);
+      await Promise.all(openOrders.orders.map(async order => {
+        const { currentStageCode, lastSequence, oldStageData } = await this.getCurrentStage(order.number);
         console.log(`[G4Flex] Current stage : ${currentStageCode}`);
 
         if (currentStageCode === '007.003' || currentStageCode === '007.021') {
@@ -293,46 +283,38 @@ class WorkOrderService extends _BaseG4FlexService2.default {
             '/api/OrdServ/SavePartial?action=Update',
             {
               CodigoEmpresaFilial: '1',
-              Numero: order.Numero,
+              Numero: order.number,
               EtapaOrdServChildList: [
                 ...oldStageData,
-                { CodigoEmpresaFilial: '1', NumeroOrdServ: order.Numero, Sequencia: lastSequence + 1, CodigoTipoEtapa: '007.003', CodigoUsuario: 'CONAB+' }
+                { CodigoEmpresaFilial: '1', NumeroOrdServ: order.number, Sequencia: lastSequence + 1, CodigoTipoEtapa: '007.003', CodigoUsuario: 'CONAB+' }
               ]
             }
           );
-          console.log(`[G4Flex] Closed work order ${order.Numero}`);
+          console.log(`[G4Flex] Closed work order ${order.number}`);
           return;
         } else if (currentStageCode === '007.004') {
           await this.axiosInstance.post(
             '/api/OrdServ/SavePartial?action=Update',
             {
               CodigoEmpresaFilial: '1',
-              Numero: order.Numero,
+              Numero: order.number,
               EtapaOrdServChildList: [
                 ...oldStageData,
-                { CodigoEmpresaFilial: '1', NumeroOrdServ: order.Numero, Sequencia: lastSequence + 1, CodigoTipoEtapa: '007.021', CodigoUsuario: 'CONAB+' }
+                { CodigoEmpresaFilial: '1', NumeroOrdServ: order.number, Sequencia: lastSequence + 1, CodigoTipoEtapa: '007.021', CodigoUsuario: 'CONAB+' }
               ]
             }
           );
-          console.log(`[G4Flex] Closed work order ${order.Numero}`);
+          console.log(`[G4Flex] Closed work order ${order.number}`);
           return;
         } else {
-          console.log(`[G4Flex] Order ${order.Numero} is in an unknown stage`);
+          console.log(`[G4Flex] Order ${order.number} is in an unknown stage`);
         }
       }));
-
-      await _logEvent2.default.call(void 0, {
-        uraRequestId,
-        source: 'g4flex',
-        action: 'work_order_close_success',
-        payload: { identifierType, identifierValue },
-        response: { orders: orders.map(order => order.Numero) }
-      });
 
       return {
         success: true,
         message: 'Work orders closed successfully',
-        orders: orders.map(order => order.Numero)
+        orders: openOrders.orders.map(order => order.number)
       };
     } catch (error) {
       await _logEvent2.default.call(void 0, {
