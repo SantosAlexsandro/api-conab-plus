@@ -116,19 +116,28 @@ async function processAssignTechnician(job) {
     // Garantir que temos um uraRequestId válido
     const validUraRequestId = uraRequestId;
 
+    const orderStatus = await workOrderService.isOrderFulfilledORCancelled(orderId);
+
+    if (orderStatus.isCancelled) {
+      console.log(`⚠️ Ordem ${orderId} já foi cancelada`);
+      await WorkOrderWaitingQueueService.updateQueueStatus(
+        validUraRequestId,
+        'CANCELED'
+      );
+      return { success: false, orderCancelled: true };
+    } else if (orderStatus.isFulfilled) {
+      console.log(`⚠️ Ordem ${orderId} já foi concluída`);
+      await WorkOrderWaitingQueueService.updateQueueStatus(
+        validUraRequestId,
+        'FULFILLED'
+      );
+      return { success: false, orderFulfilled: true };
+    }
+
     const result = await workOrderService.assignTechnicianToWorkOrder(
       orderId,
       validUraRequestId
     );
-
-    if (result.orderFinishedOrCancelled) {
-      console.log(`⚠️ Ordem ${orderId} já foi finalizada ou cancelada`);
-      await WorkOrderWaitingQueueService.updateQueueStatus(
-        validUraRequestId,
-        'FAILED'
-      );
-      return { success: false, orderFinishedOrCancelled: true };
-    }
 
     // Verificar se não há técnicos disponíveis e reagendar
     if (result.noTechnician) {

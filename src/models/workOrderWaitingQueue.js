@@ -21,7 +21,9 @@ export default class WorkOrderWaitingQueue extends Model {
           'WAITING_ARRIVAL',
           'IN_PROGRESS',
           'FINISHED',
-          'FAILED'
+          'FAILED',
+          'CANCELED',
+          'FULFILLED'
         ),
         source: {
           type: Sequelize.STRING,

@@ -12,7 +12,7 @@ class WorkOrderService extends BaseG4FlexService {
     super();
     // Constants for date range
     this.DATE_RANGE = {
-      DAYS_BEFORE: 7,
+      DAYS_BEFORE: 1,
       DAYS_AFTER: 1,
       PAGE_SIZE: 20,
       PAGE_INDEX: 1
@@ -98,7 +98,7 @@ class WorkOrderService extends BaseG4FlexService {
         await workOrderQueue.add('processWorkOrderFeedback', {
           orderId: response?.data?.Numero,
           feedback: 'work_order_created',
-          uraRequestId: uraRequestId || `auto-creation-${Date.now()}`
+          uraRequestId: uraRequestId
         });
 
         console.log('[WorkOrderService] Webhook notification scheduled successfully');
@@ -351,12 +351,6 @@ class WorkOrderService extends BaseG4FlexService {
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
 
     try {
-
-      const orderStatus = await this.isOrderFulfilledORCancelled(workOrderId);
-      if (orderStatus.isFinished) {
-        return { success: false, orderFinishedOrCancelled: true };
-      }
-
       const technician = await technicianService.getAvailableTechnician();
 
       if (technician) {
