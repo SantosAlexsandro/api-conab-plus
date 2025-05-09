@@ -114,12 +114,21 @@ async function processAssignTechnician(job) {
 
   try {
     // Garantir que temos um uraRequestId válido
-    const validUraRequestId = uraRequestId || `tech-assign-${Date.now()}`;
+    const validUraRequestId = uraRequestId;
 
     const result = await _WorkOrderService2.default.assignTechnicianToWorkOrder(
       orderId,
       validUraRequestId
     );
+
+    if (result.orderFinishedOrCancelled) {
+      console.log(`⚠️ Ordem ${orderId} já foi finalizada ou cancelada`);
+      await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+        validUraRequestId,
+        'FAILED'
+      );
+      return { success: false, orderFinishedOrCancelled: true };
+    }
 
     // Verificar se não há técnicos disponíveis e reagendar
     if (result.noTechnician) {

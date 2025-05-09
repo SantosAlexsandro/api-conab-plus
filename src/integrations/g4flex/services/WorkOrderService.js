@@ -141,18 +141,29 @@ class WorkOrderService extends BaseG4FlexService {
   }
 
 
-  async isOrderFinished(orderNumber) {
+  async isOrderFulfilledORCancelled(orderNumber) {
     try {
       const response = await this.axiosInstance.get(
         `/api/OrdServ/Load?codigoEmpresaFilial=1&numero=${orderNumber}&loadChild=EtapaOrdServChildList`
       );
 
-      const finishedStage = response.data.EtapaOrdServChildList.find(
-        stage => stage.CodigoTipoEtapa === '007.007' || stage.CodigoTipoEtapa === '007.003' || stage.CodigoTipoEtapa === '007.021'
+      const cancelledStage = response.data.EtapaOrdServChildList.find(
+        stage => stage.CodigoTipoEtapa === '007.003' || stage.CodigoTipoEtapa === '007.021'
       );
 
-      console.log(`[G4Flex] Order ${orderNumber} finished stage: ${finishedStage ? 'Yes' : 'No'}`);
-      return !!finishedStage;
+      const fulfilledStage = response.data.EtapaOrdServChildList.find(
+        stage => stage.CodigoTipoEtapa === '007.007'
+      );
+
+      const isFinished = !!cancelledStage || !!fulfilledStage;
+      const status = {
+        isFinished,
+        isCancelled: !!cancelledStage,
+        isFulfilled: !!fulfilledStage
+      };
+
+      console.log(`[G4Flex] Order ${orderNumber} status: ${isFinished ? (cancelledStage ? 'Cancelled' : 'Fulfilled') : 'Not Finished'}`);
+      return status;
     } catch (error) {
       this.handleError(error);
       throw new Error(`Error checking if order is finished: ${error.message}`);
@@ -180,7 +191,7 @@ class WorkOrderService extends BaseG4FlexService {
       const orderStatuses = await Promise.all(
         orders.map(async order => ({
           order,
-          isFinished: await this.isOrderFinished(order.Numero)
+          ...(await this.isOrderFulfilledORCancelled(order.Numero))
         }))
       );
 
@@ -229,7 +240,7 @@ class WorkOrderService extends BaseG4FlexService {
       const orderStatuses = await Promise.all(
         orders.map(async order => ({
           order,
-          isFinished: await this.isOrderFinished(order.Numero)
+          ...(await this.isOrderFulfilledORCancelled(order.Numero))
         }))
       );
 
@@ -276,7 +287,7 @@ class WorkOrderService extends BaseG4FlexService {
         console.log(`[G4Flex] Current stage : ${currentStageCode}`);
 
         if (currentStageCode === '007.003' || currentStageCode === '007.021') {
-          console.log(`[G4Flex] Order ${order.Numero} is already closed`);
+          console.log(`[G4Flex] Order ${order.number} is already closed`);
           return;
         }
 
@@ -340,6 +351,12 @@ class WorkOrderService extends BaseG4FlexService {
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
 
     try {
+
+      const orderStatus = await this.isOrderFulfilledORCancelled(workOrderId);
+      if (orderStatus.isFinished) {
+        return { success: false, orderFinishedOrCancelled: true };
+      }
+
       const technician = await technicianService.getAvailableTechnician();
 
       if (technician) {
