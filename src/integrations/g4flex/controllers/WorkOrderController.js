@@ -178,7 +178,7 @@ class WorkOrderController {
       const {
         productId,
         requesterNameAndPosition,
-        IncidentAndReceiverName,
+        incidentAndReceiverName,
         requesterContact,
       } = req.body;
 
@@ -202,7 +202,7 @@ class WorkOrderController {
       const requiredFields = {
         productId,
         requesterNameAndPosition,
-        IncidentAndReceiverName,
+        incidentAndReceiverName,
         requesterContact,
       };
 
@@ -260,7 +260,7 @@ class WorkOrderController {
         customerName,
         productId,
         requesterNameAndPosition,
-        IncidentAndReceiverName,
+        incidentAndReceiverName,
         requesterContact,
       });
 

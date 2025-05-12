@@ -12,11 +12,18 @@ var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2
 
 class WorkOrderController {
   async getOpenOrdersByCustomerId(req, res) {
-    const validationError = _uraValidator.validateURAQuery.call(void 0, req.query);
-
     let { customerIdentifier = "", uraRequestId = "" } = req.query;
 
+    // Em ambiente de desenvolvimento, gerar automaticamente uraRequestId se não fornecido
+    if (!uraRequestId && process.env.NODE_ENV === 'development') {
+      // Gerando um ID aleatório usando random
+      uraRequestId = `dev-${Math.floor(Math.random() * 1000000)}`;
+      req.query.uraRequestId = uraRequestId;
+      console.log(`[DESENVOLVIMENTO] Gerado ID URA aleatório: ${uraRequestId}`);
+    }
+
     try {
+      const validationError = _uraValidator.validateURAQuery.call(void 0, req.query);
       if (validationError) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
@@ -70,10 +77,18 @@ class WorkOrderController {
     }
   }
 
-  // Fechar Ordem de Serviço
+  // Encerra Ordem de Serviço
   async closeWorkOrder(req, res) {
     let { customerIdentifier = "", uraRequestId = "" } = req.query;
     const { cancellationRequesterInfo } = req.body;
+
+    // Em ambiente de desenvolvimento, gerar automaticamente uraRequestId se não fornecido
+    if (!uraRequestId && process.env.NODE_ENV === 'development') {
+      // Gerando um ID aleatório usando random
+      uraRequestId = `dev-${Math.floor(Math.random() * 1000000)}`;
+      req.query.uraRequestId = uraRequestId;
+      console.log(`[DESENVOLVIMENTO] Gerado ID URA aleatório: ${uraRequestId}`);
+    }
 
     try {
       const validationError = _uraValidator.validateURAQuery.call(void 0, req.query);
@@ -151,11 +166,19 @@ class WorkOrderController {
   async requestWorkOrder(req, res) {
     let { customerIdentifier = "", uraRequestId = "" } = req.query;
 
+    // Em ambiente de desenvolvimento, gerar automaticamente uraRequestId se não fornecido
+    if (!uraRequestId && process.env.NODE_ENV === 'development') {
+      // Gerando um ID aleatório usando random
+      uraRequestId = `dev-${Math.floor(Math.random() * 1000000)}`;
+      req.query.uraRequestId = uraRequestId;
+      console.log(`[DESENVOLVIMENTO] Gerado ID URA aleatório: ${uraRequestId}`);
+    }
+
     try {
       const {
         productId,
         requesterNameAndPosition,
-        IncidentAndReceiverName,
+        incidentAndReceiverName,
         requesterContact,
       } = req.body;
 
@@ -179,7 +202,7 @@ class WorkOrderController {
       const requiredFields = {
         productId,
         requesterNameAndPosition,
-        IncidentAndReceiverName,
+        incidentAndReceiverName,
         requesterContact,
       };
 
@@ -237,7 +260,7 @@ class WorkOrderController {
         customerName,
         productId,
         requesterNameAndPosition,
-        IncidentAndReceiverName,
+        incidentAndReceiverName,
         requesterContact,
       });
 

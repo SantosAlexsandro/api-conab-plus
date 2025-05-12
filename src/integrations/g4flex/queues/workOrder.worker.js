@@ -11,7 +11,7 @@ import workOrderQueue from "./workOrder.queue";
 import WebhookService from "../services/WebhookService";
 import WorkOrderWaitingQueueService from "../../../services/WorkOrderWaitingQueueService";
 
-const RETRY_INTERVAL_MS = 3 * 60 * 1000;
+const RETRY_INTERVAL_MS = 1 * 60 * 1000;
 const TIMEZONE_BRASILIA = 'America/Sao_Paulo';
 
 // Function to generate date in Brazil timezone

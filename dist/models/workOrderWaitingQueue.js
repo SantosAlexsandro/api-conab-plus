@@ -21,7 +21,9 @@
           'WAITING_ARRIVAL',
           'IN_PROGRESS',
           'FINISHED',
-          'FAILED'
+          'FAILED',
+          'CANCELED',
+          'FULFILLED'
         ),
         source: {
           type: _sequelize2.default.STRING,

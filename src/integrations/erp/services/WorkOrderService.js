@@ -32,6 +32,34 @@ class WorkOrderService extends BaseERPService {
     }
   }
 
+  async insertHistoryStage(workOrderId, stageData) {
+    try {
+      if (!stageData?.text || typeof stageData.text !== 'string') {
+        throw new Error('Texto do histórico é obrigatório e deve ser uma string');
+      }
+
+      const response = await this.axiosInstance.post(`/api/OrdServ/SalvarHistoricoEtapa`, {
+        CodigoEmpresaFilial: '1',
+        Numero: workOrderId,
+        EtapaOrdServChildList: [
+          {
+            NumeroOrdServ: workOrderId,
+            HistEtapaOrdServChildList: [
+              {
+                Texto: stageData?.text
+              }
+            ]
+          }
+        ]
+      });
+
+      return response.data;
+    } catch (error) {
+      this.handleError(error);
+      throw new Error(`Error inserting stage historic: ${error.message}`);
+    }
+  }
 }
+
 
 export default WorkOrderService;

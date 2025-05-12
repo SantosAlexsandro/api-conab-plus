@@ -11,7 +11,7 @@ var _workOrderqueue = require('./workOrder.queue'); var _workOrderqueue2 = _inte
 var _WebhookService = require('../services/WebhookService'); var _WebhookService2 = _interopRequireDefault(_WebhookService);
 var _WorkOrderWaitingQueueService = require('../../../services/WorkOrderWaitingQueueService'); var _WorkOrderWaitingQueueService2 = _interopRequireDefault(_WorkOrderWaitingQueueService);
 
-const RETRY_INTERVAL_MS = 3 * 60 * 1000;
+const RETRY_INTERVAL_MS = 1 * 60 * 1000;
 const TIMEZONE_BRASILIA = 'America/Sao_Paulo';
 
 // Function to generate date in Brazil timezone
@@ -116,19 +116,28 @@ async function processAssignTechnician(job) {
     // Garantir que temos um uraRequestId válido
     const validUraRequestId = uraRequestId;
 
+    const orderStatus = await _WorkOrderService2.default.isOrderFulfilledORCancelled(orderId);
+
+    if (orderStatus.isCancelled) {
+      console.log(`⚠️ Ordem ${orderId} já foi cancelada`);
+      await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+        validUraRequestId,
+        'CANCELED'
+      );
+      return { success: false, orderCancelled: true };
+    } else if (orderStatus.isFulfilled) {
+      console.log(`⚠️ Ordem ${orderId} já foi concluída`);
+      await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+        validUraRequestId,
+        'FULFILLED'
+      );
+      return { success: false, orderFulfilled: true };
+    }
+
     const result = await _WorkOrderService2.default.assignTechnicianToWorkOrder(
       orderId,
       validUraRequestId
     );
-
-    if (result.orderFinishedOrCancelled) {
-      console.log(`⚠️ Ordem ${orderId} já foi finalizada ou cancelada`);
-      await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
-        validUraRequestId,
-        'FAILED'
-      );
-      return { success: false, orderFinishedOrCancelled: true };
-    }
 
     // Verificar se não há técnicos disponíveis e reagendar
     if (result.noTechnician) {

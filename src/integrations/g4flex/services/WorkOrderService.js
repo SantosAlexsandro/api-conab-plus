@@ -28,7 +28,7 @@ class WorkOrderService extends BaseG4FlexService {
     identifierValue,
     productId,
     requesterNameAndPosition,
-    IncidentAndReceiverName,
+    incidentAndReceiverName,
     requesterContact
   }) {
     try {
@@ -71,12 +71,17 @@ class WorkOrderService extends BaseG4FlexService {
         workOrderData
       );
 
+      // Insert history stage
+      await this.ERP_SERVICE.insertHistoryStage(response.data.Numero, {
+        text: `OS gerada por CONAB+ (FASE BETA)\nNOME SOLICITANTE: ${requesterNameAndPosition}\nPROBLEMA RELATADO: ${incidentAndReceiverName}\nCONTATO: ${requesterContact}`
+      });
+
       if (!response.data || response.data.error) {
         await logEvent({
           uraRequestId,
           source: 'g4flex',
           action: 'work_order_create_error',
-          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
+          payload: { finalCustomerId, productId, requesterNameAndPosition, incidentAndReceiverName, requesterContact },
           response: { error: response.data?.error || 'Failed to create work order' }
         });
         throw new Error(response.data?.error || 'Failed to create work order');
@@ -86,7 +91,7 @@ class WorkOrderService extends BaseG4FlexService {
         uraRequestId,
         source: 'g4flex',
         action: 'work_order_create_success',
-        payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
+        payload: { finalCustomerId, productId, requesterNameAndPosition, incidentAndReceiverName, requesterContact },
         response: { workOrder: response?.data?.Numero }
       });
 
@@ -107,7 +112,7 @@ class WorkOrderService extends BaseG4FlexService {
           uraRequestId,
           source: 'g4flex',
           action: 'work_order_create_webhook_error',
-          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
+          payload: { finalCustomerId, productId, requesterNameAndPosition, incidentAndReceiverName, requesterContact },
           response: { error: webhookError.message },
           statusCode: 500,
           error: webhookError.message
@@ -128,7 +133,7 @@ class WorkOrderService extends BaseG4FlexService {
         uraRequestId,
         source: 'g4flex',
         action: 'work_order_create_error',
-        payload: { identifierType, identifierValue, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
+        payload: { identifierType, identifierValue, productId, requesterNameAndPosition, incidentAndReceiverName, requesterContact },
         response: { error: error.message },
         statusCode: 500,
         error: error.message
@@ -303,6 +308,11 @@ class WorkOrderService extends BaseG4FlexService {
               ]
             }
           );
+
+          await this.ERP_SERVICE.insertHistoryStage(order.number, {
+            text: `DETALHES DO CANCELAMENTO: ${cancellationRequesterInfo}`
+          });
+
           console.log(`[G4Flex] Closed work order ${order.number}`);
           return;
         } else if (currentStageCode === '007.004') {

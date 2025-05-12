@@ -12,7 +12,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     super();
     // Constants for date range
     this.DATE_RANGE = {
-      DAYS_BEFORE: 7,
+      DAYS_BEFORE: 1,
       DAYS_AFTER: 1,
       PAGE_SIZE: 20,
       PAGE_INDEX: 1
@@ -28,7 +28,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     identifierValue,
     productId,
     requesterNameAndPosition,
-    IncidentAndReceiverName,
+    incidentAndReceiverName,
     requesterContact
   }) {
     try {
@@ -71,12 +71,17 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         workOrderData
       );
 
+      // Insert history stage
+      await this.ERP_SERVICE.insertHistoryStage(response.data.Numero, {
+        text: `OS gerada por CONAB+ (FASE BETA)\nNOME SOLICITANTE: ${requesterNameAndPosition}\nPROBLEMA RELATADO: ${incidentAndReceiverName}\nCONTATO: ${requesterContact}`
+      });
+
       if (!response.data || response.data.error) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
           source: 'g4flex',
           action: 'work_order_create_error',
-          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
+          payload: { finalCustomerId, productId, requesterNameAndPosition, incidentAndReceiverName, requesterContact },
           response: { error: _optionalChain([response, 'access', _ => _.data, 'optionalAccess', _2 => _2.error]) || 'Failed to create work order' }
         });
         throw new Error(_optionalChain([response, 'access', _3 => _3.data, 'optionalAccess', _4 => _4.error]) || 'Failed to create work order');
@@ -86,7 +91,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         uraRequestId,
         source: 'g4flex',
         action: 'work_order_create_success',
-        payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
+        payload: { finalCustomerId, productId, requesterNameAndPosition, incidentAndReceiverName, requesterContact },
         response: { workOrder: _optionalChain([response, 'optionalAccess', _5 => _5.data, 'optionalAccess', _6 => _6.Numero]) }
       });
 
@@ -98,7 +103,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         await _workOrderqueue2.default.add('processWorkOrderFeedback', {
           orderId: _optionalChain([response, 'optionalAccess', _9 => _9.data, 'optionalAccess', _10 => _10.Numero]),
           feedback: 'work_order_created',
-          uraRequestId: uraRequestId || `auto-creation-${Date.now()}`
+          uraRequestId: uraRequestId
         });
 
         console.log('[WorkOrderService] Webhook notification scheduled successfully');
@@ -107,7 +112,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
           uraRequestId,
           source: 'g4flex',
           action: 'work_order_create_webhook_error',
-          payload: { finalCustomerId, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
+          payload: { finalCustomerId, productId, requesterNameAndPosition, incidentAndReceiverName, requesterContact },
           response: { error: webhookError.message },
           statusCode: 500,
           error: webhookError.message
@@ -128,7 +133,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         uraRequestId,
         source: 'g4flex',
         action: 'work_order_create_error',
-        payload: { identifierType, identifierValue, productId, requesterNameAndPosition, IncidentAndReceiverName, requesterContact },
+        payload: { identifierType, identifierValue, productId, requesterNameAndPosition, incidentAndReceiverName, requesterContact },
         response: { error: error.message },
         statusCode: 500,
         error: error.message
@@ -303,6 +308,11 @@ class WorkOrderService extends _BaseG4FlexService2.default {
               ]
             }
           );
+
+          await this.ERP_SERVICE.insertHistoryStage(order.number, {
+            text: `DETALHES DO CANCELAMENTO: ${cancellationRequesterInfo}`
+          });
+
           console.log(`[G4Flex] Closed work order ${order.number}`);
           return;
         } else if (currentStageCode === '007.004') {
@@ -351,12 +361,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
 
     try {
-
-      const orderStatus = await this.isOrderFulfilledORCancelled(workOrderId);
-      if (orderStatus.isFinished) {
-        return { success: false, orderFinishedOrCancelled: true };
-      }
-
       const technician = await _TechnicianService2.default.getAvailableTechnician();
 
       if (technician) {
