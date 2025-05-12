@@ -46,18 +46,23 @@ import erpTechnicianRoutes from './integrations/erp/routes/technicianRoutes'
 
 const whiteList = [
   'http://localhost:8080',
+  'http://localhost:3000',
+  'http://localhost:3002',
   'https://app.conabplus.com.br',
   'https://staging.conabplus.com.br'
 ];
 
+// Configuração CORS para desenvolvimento
 const corsOptions = {
-  origin(origin, callback) {
-    if (whiteList.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+  origin: function (origin, callback) {
+    // Permitir requisições sem origin (como mobile apps ou curl)
+    if (!origin) return callback(null, true);
+    // Para o ambiente de desenvolvimento, permitir qualquer origem
+    callback(null, true);
   },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 class App {

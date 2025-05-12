@@ -12,7 +12,8 @@
     "dev:queue": "concurrently \"nodemon src/integrations/g4flex/queues/workOrder.worker.js\" \"nodemon src/integrations/g4flex/queues/bull-dashboard.js\"",
     "build": "sucrase ./src -d ./dist --transforms imports",
     "start": "node dist/server.js",
-    "generate-vapid-keys": "sucrase-node src/utils/generateVapidKeys.js"
+    "generate-vapid-keys": "node scripts/generate-vapid-keys.js",
+    "clear-subscriptions": "node scripts/clear-subscriptions.js"
   },
   "keywords": [],
   "author": "",

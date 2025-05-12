@@ -50,15 +50,19 @@ class PushNotificationService {
       throw new Error('Título e corpo da notificação são obrigatórios');
     }
 
+    // Trata o payload para compatibilidade com todos os clientes
+    // Formato simplificado - mais direto e com menos aninhamento
     const payload = JSON.stringify({
-      notification: {
-        title,
-        body,
-        icon: icon || '/icon-192x192.png',
-        tag: tag || 'default',
-        data: data || {},
-      }
+      title,
+      body, 
+      icon: icon || '/icons/icon-192x192.png',
+      tag: tag || 'default',
+      data: data || {}
+      // IMPORTANTE: Removemos a estrutura aninhada "notification" 
+      // que estava causando confusão entre diferentes implementações
     });
+
+    console.log('Payload formatado para web-push:', payload);
 
     const query = { active: true, ...filters };
     const subscriptions = await _PushSubscription2.default.findAll({ where: query });
@@ -72,6 +76,8 @@ class PushNotificationService {
       };
     }
 
+    console.log(`Encontradas ${subscriptions.length} assinaturas para enviar notificação`);
+
     const results = {
       success: 0,
       failed: 0,
@@ -80,15 +86,20 @@ class PushNotificationService {
 
     for (const subscription of subscriptions) {
       try {
-        await _webpush2.default.sendNotification({
+        console.log(`Enviando para ${subscription.endpoint.substring(0, 30)}...`);
+        
+        // Formata a subscription para o formato esperado pelo web-push
+        const pushSubscription = {
           endpoint: subscription.endpoint,
           keys: {
             p256dh: subscription.p256dh,
             auth: subscription.auth,
           },
-          expirationTime: subscription.expirationTime,
-        }, payload);
-
+          expirationTime: subscription.expirationTime
+        };
+        
+        await _webpush2.default.sendNotification(pushSubscription, payload);
+        console.log('Notificação enviada com sucesso');
         results.success++;
       } catch (error) {
         console.error('Erro ao enviar notificação:', error);
@@ -171,6 +182,20 @@ class PushNotificationService {
    */
   getPublicKey() {
     return _pushNotifications2.default.vapidKeys.publicKey;
+  }
+
+  /**
+   * Retorna as assinaturas com base em filtros
+   * @param {Object} filters - Filtros para busca de assinaturas
+   * @returns {Promise<Array>} Lista de assinaturas
+   */
+  async getSubscriptions(filters = {}) {
+    const query = { ...filters };
+    
+    return _PushSubscription2.default.findAll({
+      where: query,
+      attributes: ['id', 'endpoint', 'expirationTime', 'p256dh', 'auth', 'user_id', 'active', 'created_at', 'updated_at'],
+    });
   }
 }
 

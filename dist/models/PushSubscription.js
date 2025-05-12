@@ -17,14 +17,24 @@
           type: _sequelize2.default.DATE,
           allowNull: true,
         },
-        keys: {
-          type: _sequelize2.default.JSON,
+        p256dh: {
+          type: _sequelize2.default.TEXT,
+          allowNull: false,
+        },
+        auth: {
+          type: _sequelize2.default.STRING,
           allowNull: false,
         },
         userId: {
           type: _sequelize2.default.INTEGER,
           allowNull: true,
+          field: 'user_id'
         },
+        active: {
+          type: _sequelize2.default.BOOLEAN,
+          allowNull: false,
+          defaultValue: true
+        }
       },
       {
         sequelize,

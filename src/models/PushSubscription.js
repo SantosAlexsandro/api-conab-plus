@@ -17,14 +17,24 @@ export default class PushSubscription extends Model {
           type: Sequelize.DATE,
           allowNull: true,
         },
-        keys: {
-          type: Sequelize.JSON,
+        p256dh: {
+          type: Sequelize.TEXT,
+          allowNull: false,
+        },
+        auth: {
+          type: Sequelize.STRING,
           allowNull: false,
         },
         userId: {
           type: Sequelize.INTEGER,
           allowNull: true,
+          field: 'user_id'
         },
+        active: {
+          type: Sequelize.BOOLEAN,
+          allowNull: false,
+          defaultValue: true
+        }
       },
       {
         sequelize,

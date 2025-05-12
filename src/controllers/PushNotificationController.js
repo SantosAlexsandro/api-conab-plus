@@ -1,20 +1,17 @@
-import webpush from 'web-push';
-import PushSubscription from '../models/PushSubscription';
-import pushConfig from '../config/pushNotifications';
+import PushNotificationService from '../services/PushNotificationService';
 
 class PushNotificationController {
-  constructor() {
-    webpush.setVapidDetails(
-      pushConfig.subject,
-      pushConfig.vapidKeys.publicKey,
-      pushConfig.vapidKeys.privateKey
-    );
-  }
-
   async getPublicKey(req, res) {
-    return res.json({
-      publicKey: pushConfig.vapidKeys.publicKey,
-    });
+    try {
+      const publicKey = PushNotificationService.getPublicKey();
+      
+      return res.json({ publicKey });
+    } catch (error) {
+      console.error('Erro ao obter chave pública VAPID:', error);
+      return res.status(500).json({
+        error: 'Erro ao obter chave pública',
+      });
+    }
   }
 
   async subscribe(req, res) {
@@ -27,30 +24,7 @@ class PushNotificationController {
         });
       }
 
-      const [subscriptionRecord, created] = await PushSubscription.findOrCreate({
-        where: {
-          endpoint: subscription.endpoint,
-        },
-        defaults: {
-          endpoint: subscription.endpoint,
-          expirationTime: subscription.expirationTime || null,
-          p256dh: subscription.keys.p256dh,
-          auth: subscription.keys.auth,
-          user_id: userId || null,
-          active: true,
-        },
-      });
-
-      if (!created) {
-        // Atualiza a assinatura existente
-        await subscriptionRecord.update({
-          expirationTime: subscription.expirationTime || null,
-          p256dh: subscription.keys.p256dh,
-          auth: subscription.keys.auth,
-          user_id: userId || subscriptionRecord.user_id,
-          active: true,
-        });
-      }
+      await PushNotificationService.saveSubscription(subscription, userId);
 
       return res.status(201).json({ message: 'Assinatura registrada com sucesso' });
     } catch (error) {
@@ -71,19 +45,17 @@ class PushNotificationController {
         });
       }
 
-      const subscription = await PushSubscription.findOne({
-        where: { endpoint },
-      });
-
-      if (!subscription) {
-        return res.status(404).json({
-          error: 'Assinatura não encontrada',
-        });
+      try {
+        await PushNotificationService.removeSubscription(endpoint);
+        return res.json({ message: 'Assinatura cancelada com sucesso' });
+      } catch (error) {
+        if (error.message === 'Assinatura não encontrada') {
+          return res.status(404).json({
+            error: 'Assinatura não encontrada',
+          });
+        }
+        throw error;
       }
-
-      await subscription.update({ active: false });
-
-      return res.json({ message: 'Assinatura cancelada com sucesso' });
     } catch (error) {
       console.error('Erro ao cancelar assinatura:', error);
       return res.status(500).json({
@@ -96,80 +68,56 @@ class PushNotificationController {
     try {
       const { title, body, icon, tag, data, userId, endpoint } = req.body;
 
+      console.log('Requisição de notificação recebida (Postman/API):', {
+        title, body, userId, endpoint
+      });
+
       if (!title || !body) {
         return res.status(400).json({
           error: 'Título e corpo da notificação são obrigatórios',
         });
       }
 
-      const payload = JSON.stringify({
-        notification: {
-          title,
-          body,
-          icon: icon || '/icon-192x192.png',
-          tag: tag || 'default',
-          data: data || {},
+      // Assegura que o formato de dados está consistente
+      const notificationData = { 
+        title, 
+        body, 
+        // Usa valores default se não forem fornecidos
+        icon: icon || '/icons/icon-192x192.png', 
+        tag: tag || 'default',
+        // Garante que data é um objeto
+        data: typeof data === 'object' && data !== null ? data : { message: data || '' }
+      };
+      
+      console.log('Dados normalizados para envio:', notificationData);
+
+      let result;
+      
+      try {
+        if (userId) {
+          console.log(`Enviando notificação para usuário: ${userId}`);
+          result = await PushNotificationService.sendToUser(userId, notificationData);
+        } else if (endpoint) {
+          console.log(`Enviando notificação para endpoint: ${endpoint.substr(0, 30)}...`);
+          result = await PushNotificationService.sendToEndpoint(endpoint, notificationData);
+        } else {
+          console.log('Enviando notificação para todos os usuários');
+          result = await PushNotificationService.sendToAll(notificationData);
         }
-      });
 
-      const query = { active: true };
-
-      if (userId) {
-        query.user_id = userId;
+        console.log('Resultado do envio:', result);
+      } catch (sendError) {
+        console.error('Erro durante o envio da notificação:', sendError);
+        throw sendError;
       }
 
-      if (endpoint) {
-        query.endpoint = endpoint;
-      }
-
-      const subscriptions = await PushSubscription.findAll({
-        where: query,
-      });
-
-      if (!subscriptions.length) {
+      if (result.success === 0 && result.failed === 0) {
         return res.status(404).json({
           error: 'Nenhuma assinatura encontrada para enviar notificação',
         });
       }
 
-      const results = {
-        success: 0,
-        failed: 0,
-        errors: [],
-      };
-
-      for (const subscription of subscriptions) {
-        try {
-          await webpush.sendNotification({
-            endpoint: subscription.endpoint,
-            keys: {
-              p256dh: subscription.p256dh,
-              auth: subscription.auth,
-            },
-            expirationTime: subscription.expirationTime,
-          }, payload);
-
-          results.success++;
-        } catch (error) {
-          console.error('Erro ao enviar notificação:', error);
-
-          results.failed++;
-          results.errors.push({
-            subscription: subscription.endpoint,
-            error: error.message,
-          });
-
-          // Se a assinatura não for mais válida, desative-a
-          if (error.statusCode === 410) {
-            await subscription.update({ active: false });
-          }
-        }
-      }
-
-      return res.json({
-        message: `Notificações enviadas: ${results.success} com sucesso, ${results.failed} falhas`,
-        results,
-      });
+      return res.json(result);
     } catch (error) {
       console.error('Erro ao enviar notificações:', error);
       return res.status(500).json({
@@ -181,17 +129,14 @@ class PushNotificationController {
   async listSubscriptions(req, res) {
     try {
       const { userId } = req.query;
-      const query = { active: true };
-
+      const filters = { active: true };
+      
       if (userId) {
-        query.user_id = userId;
+        filters.user_id = userId;
       }
-
-      const subscriptions = await PushSubscription.findAll({
-        where: query,
-        attributes: ['id', 'endpoint', 'expirationTime', 'user_id', 'active', 'created_at', 'updated_at'],
-      });
-
+      
+      const subscriptions = await PushNotificationService.getSubscriptions(filters);
+      
       return res.json(subscriptions);
     } catch (error) {
       console.error('Erro ao listar assinaturas:', error);
