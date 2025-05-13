@@ -375,7 +375,8 @@ class WorkOrderService extends BaseG4FlexService {
                 CodigoEmpresaFilial: "1",
                 NumeroOrdServ: workOrderId,
                 Sequencia: 2,
-                CodigoTipoEtapaProxima: "007.004"
+                CodigoTipoEtapaProxima: "007.004",
+                DataHoraFim: new Date().toISOString()
               },
               {
                 CodigoEmpresaFilial: "1",
