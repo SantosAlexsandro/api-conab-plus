@@ -38,7 +38,7 @@ class WorkOrderService extends BaseERPService {
         throw new Error('Texto do histórico é obrigatório e deve ser uma string');
       }
 
-      const response = await this.axiosInstance.post(`/api/OrdServ/SalvarHistoricoEtapa`, {
+      /*const response = await this.axiosInstance.post(`/api/OrdServ/SalvarHistoricoEtapa`, {
         CodigoEmpresaFilial: '1',
         Numero: workOrderId,
         EtapaOrdServChildList: [
@@ -51,7 +51,9 @@ class WorkOrderService extends BaseERPService {
             ]
           }
         ]
-      });
+      });*/
+
+      // TODO: Implement this
 
       return response.data;
     } catch (error) {
