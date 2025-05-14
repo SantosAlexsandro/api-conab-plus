@@ -3,6 +3,7 @@ import Permission from '../models/Permission';
 import UserRole from '../models/UserRole';
 import RolePermission from '../models/RolePermission';
 import { Op } from 'sequelize';
+import UserSession from '../models/UserSession';
 
 class RolePermissionService {
   async createRole({ name, description }) {
@@ -204,17 +205,29 @@ class RolePermissionService {
   }
 
   async getUserRoles(userName) {
-    const roles = await Role.findAll({
-      include: [{
-        model: UserRole,
-        as: 'userRoles',
+    try {
+      const userSession = await UserSession.findOne({
         where: { userName },
-        required: true,
-        attributes: [],
-      }],
-    });
+        include: {
+          model: Role,
+          as: 'roles',
+          include: {
+            model: Permission,
+            as: 'permissions',
+            through: { attributes: [] }
+          }
+        }
+      });
 
-    return roles;
+      if (!userSession) {
+        return [];
+      }
+
+      return userSession.roles || [];
+    } catch (error) {
+      console.error('Erro ao buscar perfis do usuário:', error);
+      throw error;
+    }
   }
 }
 

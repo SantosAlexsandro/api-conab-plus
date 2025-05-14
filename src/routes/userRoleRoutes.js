@@ -8,8 +8,8 @@ const routes = Router();
 // Rotas protegidas por autenticação e permissão
 routes.use(authUser);
 
-// Buscar perfis de um usuário
-routes.get('/:userName/roles', checkPermission('users.view_roles'), UserRoleController.getUserRoles);
+// Buscar perfis de um usuário - A verificação de permissão será feita no controller
+routes.get('/:userName/roles', UserRoleController.getUserRoles);
 
 // Atribuir perfil a um usuário
 routes.post('/:userName/roles', checkPermission('users.assign_roles'), UserRoleController.assignRole);

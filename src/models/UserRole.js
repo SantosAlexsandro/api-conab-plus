@@ -22,4 +22,17 @@ export default class UserRole extends Model {
     );
     return this;
   }
+
+  static associate(models) {
+    this.belongsTo(models.Role, {
+      foreignKey: 'role_id',
+      as: 'role'
+    });
+
+    this.belongsTo(models.UserSession, {
+      foreignKey: 'user_name',
+      as: 'user',
+      targetKey: 'userName'
+    });
+  }
 }

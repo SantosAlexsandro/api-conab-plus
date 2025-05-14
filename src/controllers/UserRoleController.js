@@ -1,4 +1,5 @@
 import RolePermissionService from '../services/RolePermissionService';
+import { checkPermissionHelper } from '../helpers/permissionHelper';
 
 class UserRoleController {
   async assignRole(req, res) {
@@ -35,6 +36,18 @@ class UserRoleController {
   async getUserRoles(req, res) {
     try {
       const { userName } = req.params;
+
+      // Verificar se o usuário está tentando ver seus próprios perfis
+      const isSelfRequest = req.userName === userName;
+
+      // Permitir visualização dos próprios perfis sem verificação de permissão
+      if (!isSelfRequest) {
+        // Verifica se tem permissão para ver perfis de outros usuários
+        const hasPermission = await checkPermissionHelper(req.userName, 'users.view_roles');
+        if (!hasPermission) {
+          return res.status(403).json({ message: 'Permissão negada para visualizar perfis de outros usuários' });
+        }
+      }
 
       const roles = await RolePermissionService.getUserRoles(userName);
 

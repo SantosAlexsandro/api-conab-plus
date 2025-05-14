@@ -3,6 +3,7 @@ var _Permission = require('../models/Permission'); var _Permission2 = _interopRe
 var _UserRole = require('../models/UserRole'); var _UserRole2 = _interopRequireDefault(_UserRole);
 var _RolePermission = require('../models/RolePermission'); var _RolePermission2 = _interopRequireDefault(_RolePermission);
 var _sequelize = require('sequelize');
+var _UserSession = require('../models/UserSession'); var _UserSession2 = _interopRequireDefault(_UserSession);
 
 class RolePermissionService {
   async createRole({ name, description }) {
@@ -204,17 +205,29 @@ class RolePermissionService {
   }
 
   async getUserRoles(userName) {
-    const roles = await _Role2.default.findAll({
-      include: [{
-        model: _UserRole2.default,
-        as: 'userRoles',
+    try {
+      const userSession = await _UserSession2.default.findOne({
         where: { userName },
-        required: true,
-        attributes: [],
-      }],
-    });
+        include: {
+          model: _Role2.default,
+          as: 'roles',
+          include: {
+            model: _Permission2.default,
+            as: 'permissions',
+            through: { attributes: [] }
+          }
+        }
+      });
 
-    return roles;
+      if (!userSession) {
+        return [];
+      }
+
+      return userSession.roles || [];
+    } catch (error) {
+      console.error('Erro ao buscar perfis do usuário:', error);
+      throw error;
+    }
   }
 }
 
