@@ -35,6 +35,9 @@ var _addressRoutes = require('./routes/addressRoutes'); var _addressRoutes2 = _i
 var _gupshupRoutes = require('./routes/gupshupRoutes'); var _gupshupRoutes2 = _interopRequireDefault(_gupshupRoutes);
 var _workOrderWaitingQueue = require('./routes/workOrderWaitingQueue'); var _workOrderWaitingQueue2 = _interopRequireDefault(_workOrderWaitingQueue);
 var _pushNotificationRoutes = require('./routes/pushNotificationRoutes'); var _pushNotificationRoutes2 = _interopRequireDefault(_pushNotificationRoutes);
+var _roleRoutes = require('./routes/roleRoutes'); var _roleRoutes2 = _interopRequireDefault(_roleRoutes);
+var _permissionRoutes = require('./routes/permissionRoutes'); var _permissionRoutes2 = _interopRequireDefault(_permissionRoutes);
+var _userRoleRoutes = require('./routes/userRoleRoutes'); var _userRoleRoutes2 = _interopRequireDefault(_userRoleRoutes);
 
 // G4Flex
 var _contractRoutes = require('./integrations/g4flex/routes/contractRoutes'); var _contractRoutes2 = _interopRequireDefault(_contractRoutes);
@@ -104,6 +107,11 @@ class App {
     this.app.use('/work-order-queue/', _workOrderWaitingQueue2.default);
     this.app.use('/notifications/', _pushNotificationRoutes2.default);
     //this.app.use('/gupshup/', gupshupRoutes);
+
+    // Novas rotas de permissões e perfis
+    this.app.use('/roles/', _roleRoutes2.default);
+    this.app.use('/permissions/', _permissionRoutes2.default);
+    this.app.use('/users/', _userRoleRoutes2.default);
 
     // G4Flex
     this.app.use('/api/integrations/g4flex/contracts/', _contractRoutes2.default);

@@ -1,5 +1,7 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// authRoutes.js
 
+// Para autenticação de usuários, não é necessário passar o token no header, apenas o username e password.
+
 var _express = require('express'); var _express2 = _interopRequireDefault(_express);
 var _AuthControllerjs = require('../controllers/AuthController.js'); var _AuthControllerjs2 = _interopRequireDefault(_AuthControllerjs);
 

@@ -6,6 +6,10 @@ import WorkShift from '../models/WorkShift';
 import RequestLog from '../models/RequestLog';
 import WorkOrderWaitingQueue from '../models/workOrderWaitingQueue';
 import PushSubscription from '../models/PushSubscription';
+import Role from '../models/Role';
+import Permission from '../models/Permission';
+import RolePermission from '../models/RolePermission';
+import UserRole from '../models/UserRole';
 
 const models = [
   City,
@@ -14,6 +18,10 @@ const models = [
   RequestLog,
   WorkOrderWaitingQueue,
   PushSubscription,
+  Role,
+  Permission,
+  RolePermission,
+  UserRole,
 ];
 
 const connection = new Sequelize(databaseConfig);

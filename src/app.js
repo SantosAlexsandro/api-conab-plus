@@ -35,6 +35,9 @@ import userGroupRoutes from './routes/userGroupRoutes'
 import gupshupRoutes from './routes/gupshupRoutes'
 import workOrderWaitingQueueRoutes from './routes/workOrderWaitingQueue'
 import pushNotificationRoutes from './routes/pushNotificationRoutes';
+import roleRoutes from './routes/roleRoutes';
+import permissionRoutes from './routes/permissionRoutes';
+import userRoleRoutes from './routes/userRoleRoutes';
 
 // G4Flex
 import g4flexContractRoutes from './integrations/g4flex/routes/contractRoutes'
@@ -104,6 +107,11 @@ class App {
     this.app.use('/work-order-queue/', workOrderWaitingQueueRoutes);
     this.app.use('/notifications/', pushNotificationRoutes);
     //this.app.use('/gupshup/', gupshupRoutes);
+
+    // Novas rotas de permissões e perfis
+    this.app.use('/roles/', roleRoutes);
+    this.app.use('/permissions/', permissionRoutes);
+    this.app.use('/users/', userRoleRoutes);
 
     // G4Flex
     this.app.use('/api/integrations/g4flex/contracts/', g4flexContractRoutes);

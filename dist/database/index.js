@@ -6,6 +6,10 @@ var _WorkShift = require('../models/WorkShift'); var _WorkShift2 = _interopRequi
 var _RequestLog = require('../models/RequestLog'); var _RequestLog2 = _interopRequireDefault(_RequestLog);
 var _workOrderWaitingQueue = require('../models/workOrderWaitingQueue'); var _workOrderWaitingQueue2 = _interopRequireDefault(_workOrderWaitingQueue);
 var _PushSubscription = require('../models/PushSubscription'); var _PushSubscription2 = _interopRequireDefault(_PushSubscription);
+var _Role = require('../models/Role'); var _Role2 = _interopRequireDefault(_Role);
+var _Permission = require('../models/Permission'); var _Permission2 = _interopRequireDefault(_Permission);
+var _RolePermission = require('../models/RolePermission'); var _RolePermission2 = _interopRequireDefault(_RolePermission);
+var _UserRole = require('../models/UserRole'); var _UserRole2 = _interopRequireDefault(_UserRole);
 
 const models = [
   _City2.default,
@@ -14,6 +18,10 @@ const models = [
   _RequestLog2.default,
   _workOrderWaitingQueue2.default,
   _PushSubscription2.default,
+  _Role2.default,
+  _Permission2.default,
+  _RolePermission2.default,
+  _UserRole2.default,
 ];
 
 const connection = new (0, _sequelize2.default)(_database2.default);

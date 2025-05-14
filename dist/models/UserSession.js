@@ -8,6 +8,7 @@
           type: _sequelize2.default.STRING,
           allowNull: false,
           field: 'user_name', // Nome da coluna no banco
+          primaryKey: true, // Definindo como chave primária para associação
         },
         encryptedPassword: {
           type: _sequelize2.default.TEXT,
@@ -31,5 +32,15 @@
       }
     );
     return this;
+  }
+
+  static associate(models) {
+    this.belongsToMany(models.Role, {
+      foreignKey: 'user_name',
+      otherKey: 'role_id',
+      through: 'user_roles',
+      as: 'roles',
+      sourceKey: 'userName', // Especifica que a chave fonte é userName
+    });
   }
 } exports.default = UserSession;

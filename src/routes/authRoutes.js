@@ -1,5 +1,7 @@
 // authRoutes.js
 
+// Para autenticação de usuários, não é necessário passar o token no header, apenas o username e password.
+
 import express from 'express';
 import AuthController from '../controllers/AuthController.js';
 
