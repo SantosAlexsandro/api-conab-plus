@@ -33,6 +33,7 @@ class WorkOrderService extends BaseERPService {
   }
 
   async insertHistoryStage(workOrderId, stageData) {
+    console.log('INIT insertHistoryStage', workOrderId, stageData);
     try {
       if (!stageData?.text || typeof stageData.text !== 'string') {
         throw new Error('Texto do histórico é obrigatório e deve ser uma string');
@@ -52,6 +53,8 @@ class WorkOrderService extends BaseERPService {
           }
         ]
       });
+
+      console.log('[WorkOrderService] Inserted stage historic', response.data);
 
       // TODO: Implement this
 

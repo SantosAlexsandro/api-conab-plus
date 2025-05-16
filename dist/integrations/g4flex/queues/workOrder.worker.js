@@ -8,7 +8,7 @@ var _bullmq = require('bullmq');
 var _redis = require('./redis'); var _redis2 = _interopRequireDefault(_redis);
 var _WorkOrderService = require('../services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
 var _workOrderqueue = require('./workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
-var _WebhookService = require('../services/WebhookService'); var _WebhookService2 = _interopRequireDefault(_WebhookService);
+var _WhatsAppService = require('../services/WhatsAppService'); var _WhatsAppService2 = _interopRequireDefault(_WhatsAppService);
 var _WorkOrderWaitingQueueService = require('../../../services/WorkOrderWaitingQueueService'); var _WorkOrderWaitingQueueService2 = _interopRequireDefault(_WorkOrderWaitingQueueService);
 
 const RETRY_INTERVAL_MS = 1 * 60 * 1000;
@@ -206,7 +206,7 @@ async function processAssignTechnician(job) {
 
 // Função para processar feedback de OS para a URA
 async function processWorkOrderFeedback(job) {
-  const { orderId, feedback, technicianName, uraRequestId } = job.data;
+  const { orderId, feedback, technicianName, uraRequestId, requesterContact, customerName } = job.data;
 
   // Garantir que uraRequestId tenha um valor válido (nunca nulo)
   const validUraRequestId = uraRequestId || `auto-feedback-${Date.now()}`;
@@ -214,11 +214,11 @@ async function processWorkOrderFeedback(job) {
   console.log(`🔄 Processando feedback de ordem ${orderId}, URA Request ID: ${validUraRequestId}`);
 
   try {
-    // Passar o objeto com os parâmetros nomeados conforme esperado pelo WebhookService
-    const result = await _WebhookService2.default.notifyWorkOrderCreated({
+    // Passar o objeto com os parâmetros nomeados conforme esperado pelo WhatsAppService
+    const result = await _WhatsAppService2.default.sendWhatsAppMessage({
+      phoneNumber: requesterContact,
       workOrderId: orderId,
-      technicianName: technicianName || 'Não atribuído',
-      uraRequestId: validUraRequestId
+      customerName: customerName
     });
 
     // Atualizar status na fila de espera

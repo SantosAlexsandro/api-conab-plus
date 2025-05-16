@@ -103,7 +103,9 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         await _workOrderqueue2.default.add('processWorkOrderFeedback', {
           orderId: _optionalChain([response, 'optionalAccess', _9 => _9.data, 'optionalAccess', _10 => _10.Numero]),
           feedback: 'work_order_created',
-          uraRequestId: uraRequestId
+          uraRequestId: uraRequestId,
+          customerName: customerData.nome,
+          requesterContact: requesterContact
         });
 
         console.log('[WorkOrderService] Webhook notification scheduled successfully');

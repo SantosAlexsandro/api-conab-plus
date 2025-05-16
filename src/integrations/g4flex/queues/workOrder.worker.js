@@ -8,7 +8,7 @@ import { Worker } from "bullmq";
 import redisConnection from "./redis";
 import workOrderService from "../services/WorkOrderService";
 import workOrderQueue from "./workOrder.queue";
-import WebhookService from "../services/WebhookService";
+import WhatsAppService from "../services/WhatsAppService";
 import WorkOrderWaitingQueueService from "../../../services/WorkOrderWaitingQueueService";
 
 const RETRY_INTERVAL_MS = 1 * 60 * 1000;
@@ -206,7 +206,7 @@ async function processAssignTechnician(job) {
 
 // Função para processar feedback de OS para a URA
 async function processWorkOrderFeedback(job) {
-  const { orderId, feedback, technicianName, uraRequestId } = job.data;
+  const { orderId, feedback, technicianName, uraRequestId, requesterContact, customerName } = job.data;
 
   // Garantir que uraRequestId tenha um valor válido (nunca nulo)
   const validUraRequestId = uraRequestId || `auto-feedback-${Date.now()}`;
@@ -214,11 +214,11 @@ async function processWorkOrderFeedback(job) {
   console.log(`🔄 Processando feedback de ordem ${orderId}, URA Request ID: ${validUraRequestId}`);
 
   try {
-    // Passar o objeto com os parâmetros nomeados conforme esperado pelo WebhookService
-    const result = await WebhookService.notifyWorkOrderCreated({
+    // Passar o objeto com os parâmetros nomeados conforme esperado pelo WhatsAppService
+    const result = await WhatsAppService.sendWhatsAppMessage({
+      phoneNumber: requesterContact,
       workOrderId: orderId,
-      technicianName: technicianName || 'Não atribuído',
-      uraRequestId: validUraRequestId
+      customerName: customerName
     });
 
     // Atualizar status na fila de espera
