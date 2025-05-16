@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.4.1",
     "concurrently": "^9.1.2",
     "globals": "^15.8.0",
     "nodemon": "^2.0.20",
