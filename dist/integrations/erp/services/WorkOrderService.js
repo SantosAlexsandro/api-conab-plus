@@ -38,7 +38,7 @@ class WorkOrderService extends _BaseERPServicejs2.default {
         throw new Error('Texto do histórico é obrigatório e deve ser uma string');
       }
 
-      /*const response = await this.axiosInstance.post(`/api/OrdServ/SalvarHistoricoEtapa`, {
+      const response = await this.axiosInstance.post(`/api/OrdServ/SalvarHistoricoEtapa`, {
         CodigoEmpresaFilial: '1',
         Numero: workOrderId,
         EtapaOrdServChildList: [
@@ -46,12 +46,12 @@ class WorkOrderService extends _BaseERPServicejs2.default {
             NumeroOrdServ: workOrderId,
             HistEtapaOrdServChildList: [
               {
-                Texto: stageData?.text
+                Texto: _optionalChain([stageData, 'optionalAccess', _2 => _2.text])
               }
             ]
           }
         ]
-      });*/
+      });
 
       // TODO: Implement this
 
