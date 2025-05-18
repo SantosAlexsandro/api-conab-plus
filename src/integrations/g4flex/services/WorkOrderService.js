@@ -53,13 +53,17 @@ class WorkOrderService extends BaseG4FlexService {
             Sequencia: 1,
             CodigoTipoEtapa: '007.008',
             CodigoTipoEtapaProxima: '007.002',
-            CodigoUsuario: 'CONAB+'
+            CodigoUsuario: 'CONAB+',
+            DataHoraInicio: new Date().toISOString(),
+            DataHoraFim: new Date().toISOString()
           },
           {
             CodigoEmpresaFilial: '1',
             Sequencia: 2,
             CodigoTipoEtapa: '007.002',
-            CodigoUsuario: 'CONAB+'
+            CodigoUsuario: 'CONAB+',
+            DataHoraInicio: new Date().toISOString(),
+            CodigoUsuarioAlteracao: "CONAB+"
           }
         ]
       };
@@ -368,22 +372,16 @@ class WorkOrderService extends BaseG4FlexService {
       if (technician) {
         console.log('[WorkOrderService] Atribuindo técnico à ordem de serviço');
         await this.axiosInstance.post(
-          `/api/OrdServ/SavePartial?action=Update`,
+          `/api/OrdServ/InserirAlterarOrdServ`,
           {
             CodigoEmpresaFilial: "1",
             Numero: workOrderId,
             EtapaOrdServChildList: [
               {
-                CodigoEmpresaFilial: "1",
-                NumeroOrdServ: workOrderId,
                 Sequencia: 2,
                 CodigoTipoEtapaProxima: "007.004",
-                DataHoraFim: new Date().toISOString()
-              },
-              {
-                CodigoEmpresaFilial: "1",
-                NumeroOrdServ: workOrderId,
-                Sequencia: 1
+                DataHoraFim: new Date().toISOString(),
+                CodigoUsuarioAlteracao: "CONAB+"
               },
               {
                 CodigoEmpresaFilial: "1",
@@ -391,7 +389,8 @@ class WorkOrderService extends BaseG4FlexService {
                 Sequencia: 3,
                 CodigoTipoEtapa: "007.004",
                 CodigoUsuario: technician.id,
-                CodigoUsuarioAlteracao: "CONAB+"
+                CodigoUsuarioAlteracao: "CONAB+",
+                DataHoraInicio: new Date().toISOString(),
               }
             ]
           }
