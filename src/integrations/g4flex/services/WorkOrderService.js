@@ -399,6 +399,8 @@ class WorkOrderService extends BaseG4FlexService {
             CodigoUsuario: "CONAB+",
             EtapaOrdServChildList: [
               {
+                CodigoEmpresaFilial: "1",
+                NumeroOrdServ: workOrderId,
                 Sequencia: 2,
                 CodigoTipoEtapaProxima: "007.004",
                 DataHoraFim: new Date().toISOString(),
