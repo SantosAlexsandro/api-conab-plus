@@ -42,12 +42,15 @@ class WorkOrderService extends BaseERPService {
       const response = await this.axiosInstance.post(`/api/OrdServ/SalvarHistoricoEtapa`, {
         CodigoEmpresaFilial: '1',
         Numero: workOrderId,
-        EtapaOrdServChildList: [
+        ListaEtapaOrdServ: [
           {
             NumeroOrdServ: workOrderId,
-            HistEtapaOrdServChildList: [
+            CodigoUsuario: 'CONAB+',
+            ListaHistoricoEtapaDTO: [
               {
-                Texto: stageData?.text
+                Texto: stageData?.text,
+                CodigoUsuario: 'CONAB+',
+                DataHora: new Date().toISOString()
               }
             ]
           }
@@ -55,8 +58,6 @@ class WorkOrderService extends BaseERPService {
       });
 
       console.log('[WorkOrderService] Inserted stage historic', response.data);
-
-      // TODO: Implement this
 
       return response.data;
     } catch (error) {
