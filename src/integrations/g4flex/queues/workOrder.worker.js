@@ -222,12 +222,12 @@ async function processWorkOrderFeedback(job) {
     });
 
     // Atualizar status na fila de espera
-    if (result.success) {
+    /*if (result.success) {
       await WorkOrderWaitingQueueService.updateQueueStatus(
         validUraRequestId,
         'IN_PROGRESS'
       );
-    }
+    }*/
 
     console.log(`✅ Feedback processado com sucesso para ordem ${orderId}`);
     return result;
