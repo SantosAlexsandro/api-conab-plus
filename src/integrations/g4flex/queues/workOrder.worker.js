@@ -215,7 +215,7 @@ async function processWorkOrderFeedback(job) {
     requesterContact = '',
     customerName = ''
   } = job.data || {};
-
+  console.log('INIT processWorkOrderFeedback', { orderId, feedback, technicianName, technicianId, uraRequestId, requesterContact, customerName });
   console.log(`🔄 Processando feedback de ordem ${orderId}, URA Request ID: ${uraRequestId}`);
 
   try {

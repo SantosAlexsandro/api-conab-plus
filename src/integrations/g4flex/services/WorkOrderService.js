@@ -7,6 +7,7 @@ import workOrderQueue from '../queues/workOrder.queue';
 import entityService from './EntityService';
 import contractService from './ContractService';
 import WorkOrderERPService from '../../../integrations/erp/services/WorkOrderService';
+import EmployeeERPService from '../../../integrations/erp/services/EmployeeERPService';
 class WorkOrderService extends BaseG4FlexService {
   constructor() {
     super();
@@ -18,7 +19,7 @@ class WorkOrderService extends BaseG4FlexService {
       PAGE_INDEX: 1
     };
     this.ERP_SERVICE = new WorkOrderERPService();
-
+    this.EMPLOYEE_SERVICE = new EmployeeERPService();
   }
 
    // Criar Ordem de Serviço
@@ -69,8 +70,6 @@ class WorkOrderService extends BaseG4FlexService {
           }
         ],
       };
-
-
 
       // 1. Create work order
       console.log('[WorkOrderService] Creating work order in ERP by');

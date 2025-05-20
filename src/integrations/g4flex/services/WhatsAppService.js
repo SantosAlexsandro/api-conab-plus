@@ -4,7 +4,7 @@ import axios from 'axios';
 import logEvent from '../../../utils/logEvent';
 import WorkOrderWaitingQueueService from '../../../services/WorkOrderWaitingQueueService';
 import { normalizeName } from '../../../utils/string/formatUtils';
-
+import EmployeeERPService from '../../../integrations/erp/services/EmployeeERPService';
 class WhatsAppService {
   constructor() {
     this.apiUrl = 'https://conab.g4flex.com.br:9090/integration-service';
@@ -18,9 +18,11 @@ class WhatsAppService {
     });
     this.isDevelopment = process.env.NODE_ENV === 'development';
     this.devPhoneNumber = '11945305889'; // Número para ambiente de desenvolvimento
+    this.ERP_EMPLOYEE_SERVICE = new EmployeeERPService();
   }
 
   async sendWhatsAppMessage({ phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId }) {
+    console.log('INIT sendWhatsAppMessage', { phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId });
     try {
       // Usar o número de desenvolvimento em ambiente de desenvolvimento
       const finalPhoneNumber = this.isDevelopment ? this.devPhoneNumber : phoneNumber;
@@ -51,6 +53,17 @@ class WhatsAppService {
       }
 
       if (feedback === 'technician_assigned') {
+
+        if (!technicianName || customerName === '' || !workOrderId) {
+          console.log('Não foi possível enviar feedback de atribuição de técnico, pois os dados necessários não foram encontrados');
+          return;
+        }
+        const employeeData = await this.ERP_EMPLOYEE_SERVICE.getEmployeeByUserCode(technicianName);
+        if (!employeeData?.length ) {
+          console.log(`Não foi possível obter dados do funcionário para o técnico ${technicianName}`);
+          return;
+        }
+
         response = await this.axiosInstance.post('/api/enviar-mensagem/texto', {
           clientPhone: finalPhoneNumber,
           clientName: customerName,
@@ -85,7 +98,6 @@ class WhatsAppService {
 
       return response.data;
     } catch (error) {
-
       logEvent({
         uraRequestId,
         source: 'system',
@@ -98,13 +110,17 @@ class WhatsAppService {
           technicianName: technicianName,
           uraRequestId: uraRequestId
         },
-        response: { error: error.message },
-        statusCode: error.response.status,
-        error: error.message
+        response: {
+          error: error.message,
+          apiError: error.response?.data?.error || null,
+          requestData: error.config?.data ? JSON.parse(error.config.data) : null
+        },
+        statusCode: error.response?.status || 500,
+        error: error.response?.data?.error || error.message
       });
 
       console.error('[WhatsAppService] Error sending WhatsApp message:', error);
-      throw new Error(`Failed to send WhatsApp message: ${error.message}`);
+      throw new Error(`Failed to send WhatsApp message: ${error.response?.data?.error || error.message}`);
     }
   }
 }
