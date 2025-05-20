@@ -206,31 +206,32 @@ async function processAssignTechnician(job) {
 
 // Função para processar feedback de OS para a URA
 async function processWorkOrderFeedback(job) {
-  const { orderId, feedback, technicianName, uraRequestId, requesterContact, customerName } = job.data;
+  const {
+    orderId = '',
+    feedback = '',
+    technicianName = '',
+    technicianId = '',
+    uraRequestId = '',
+    requesterContact = '',
+    customerName = ''
+  } = job.data || {};
 
-  // Garantir que uraRequestId tenha um valor válido (nunca nulo)
-  const validUraRequestId = uraRequestId || `auto-feedback-${Date.now()}`;
-
-  console.log(`🔄 Processando feedback de ordem ${orderId}, URA Request ID: ${validUraRequestId}`);
+  console.log(`🔄 Processando feedback de ordem ${orderId}, URA Request ID: ${uraRequestId}`);
 
   try {
     // Passar o objeto com os parâmetros nomeados conforme esperado pelo WhatsAppService
     const result = await _WhatsAppService2.default.sendWhatsAppMessage({
       phoneNumber: requesterContact,
       workOrderId: orderId,
-      customerName: customerName
+      customerName: customerName,
+      feedback: feedback,
+      technicianName: technicianName,
+      uraRequestId: uraRequestId
     });
-
-    // Atualizar status na fila de espera
-    /*if (result.success) {
-      await WorkOrderWaitingQueueService.updateQueueStatus(
-        validUraRequestId,
-        'IN_PROGRESS'
-      );
-    }*/
 
     console.log(`✅ Feedback processado com sucesso para ordem ${orderId}`);
     return result;
+
   } catch (error) {
     console.error(`❌ Erro ao processar feedback de ordem ${orderId}:`, error);
 
@@ -243,7 +244,7 @@ async function processWorkOrderFeedback(job) {
         orderId,
         feedback,
         technicianName,
-        uraRequestId: validUraRequestId,
+        uraRequestId: uraRequestId,
         retryCount: (job.data.retryCount || 0) + 1
       },
       {

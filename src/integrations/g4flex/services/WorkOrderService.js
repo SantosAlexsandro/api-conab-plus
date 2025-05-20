@@ -425,8 +425,9 @@ class WorkOrderService extends BaseG4FlexService {
           await workOrderQueue.add('processWorkOrderFeedback', {
             orderId: workOrderId,
             feedback: 'technician_assigned',
-            technicianName: technician.nome || technician.id,
-            uraRequestId: uraRequestId || `tech-assigned-${Date.now()}`
+            technicianName: technician.nome,
+            technicianId: technician.id,
+            uraRequestId: uraRequestId
           });
           console.log(`[WorkOrderService] Feedback de atribuição de técnico agendado para ordem ${workOrderId}`);
         } catch (feedbackError) {

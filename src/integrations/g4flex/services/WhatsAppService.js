@@ -2,6 +2,9 @@
 
 import axios from 'axios';
 import logEvent from '../../../utils/logEvent';
+import WorkOrderWaitingQueueService from '../../../services/WorkOrderWaitingQueueService';
+import { normalizeName } from '../../../utils/string/formatUtils';
+
 class WhatsAppService {
   constructor() {
     this.apiUrl = 'https://conab.g4flex.com.br:9090/integration-service';
@@ -14,41 +17,92 @@ class WhatsAppService {
       }
     });
     this.isDevelopment = process.env.NODE_ENV === 'development';
-    this.devPhoneNumber = '5511945305889'; // Número para ambiente de desenvolvimento
+    this.devPhoneNumber = '11945305889'; // Número para ambiente de desenvolvimento
   }
 
-  async sendWhatsAppMessage({ phoneNumber, workOrderId, customerName, requesterContact }) {
+  async sendWhatsAppMessage({ phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId }) {
     try {
       // Usar o número de desenvolvimento em ambiente de desenvolvimento
       const finalPhoneNumber = this.isDevelopment ? this.devPhoneNumber : phoneNumber;
 
-      const response = await this.axiosInstance.post('/api/enviar-mensagem/texto', {
-        clientPhone: finalPhoneNumber,
-        clientName: customerName,
-        canalWhatsapp: '1137323888',
-        queueId: 53,
+       // Se não tiver customerName, busca da fila de espera
+    if (customerName === '' && uraRequestId) {
+      const queueData = await WorkOrderWaitingQueueService.findByUraRequestId(uraRequestId);
+      if (queueData) {
+        customerName = queueData.entityName;
+          console.log(`📋 CustomerName obtido da fila de espera: ${customerName}`);
+        }
+      }
+
+      let response = null;
+
+      if (feedback === 'work_order_created') {
+        response = await this.axiosInstance.post('/api/enviar-mensagem/texto', {
+          clientPhone: finalPhoneNumber,
+          clientName: customerName,
+          canalWhatsapp: '1137323888',
+          queueId: 53,
         templateId: 'b9319a07-1329-4d22-a6cc-7b3ace20ba50',
         params: [
           workOrderId,
           customerName
         ]
       });
+      }
+
+      if (feedback === 'technician_assigned') {
+        response = await this.axiosInstance.post('/api/enviar-mensagem/texto', {
+          clientPhone: finalPhoneNumber,
+          clientName: customerName,
+          canalWhatsapp: '1137323888',
+          queueId: 53,
+          templateId: '36d39190-4b6c-40ca-b4ce-f346b3f647be',
+          params: [
+            normalizeName(technicianName),
+            workOrderId
+          ]
+        });
+      }
 
       // Logar a mensagem enviada
       logEvent({
-        source: 'g4flex',
-        action: 'SEND_WHATSAPP_MESSAGE',
-        type: 'WhatsApp Message Sent',
-        payloadSnapshot: {
+        uraRequestId,
+        source: 'system',
+        action: 'send_whatsapp_message',
+        payload: {
           phoneNumber: finalPhoneNumber,
           workOrderId,
           customerName,
+          feedback,
+          technicianName,
+          uraRequestId,
           environment: this.isDevelopment ? 'development' : 'production'
-        }
+        },
+        response: response?.data,
+        statusCode: response?.status,
+        error: response?.data?.error
       });
 
       return response.data;
     } catch (error) {
+
+      logEvent({
+        uraRequestId,
+        source: 'system',
+        action: 'send_whatsapp_message_error',
+        payload: {
+          phoneNumber: phoneNumber,
+          workOrderId: workOrderId,
+          customerName: customerName,
+          feedback: feedback,
+          technicianName: technicianName,
+          uraRequestId: uraRequestId
+        },
+        response: { error: error.message },
+        statusCode: error.response.status,
+        error: error.message
+      });
+
       console.error('[WhatsAppService] Error sending WhatsApp message:', error);
       throw new Error(`Failed to send WhatsApp message: ${error.message}`);
     }

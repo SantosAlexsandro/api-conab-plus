@@ -399,6 +399,8 @@ class WorkOrderService extends _BaseG4FlexService2.default {
             CodigoUsuario: "CONAB+",
             EtapaOrdServChildList: [
               {
+                CodigoEmpresaFilial: "1",
+                NumeroOrdServ: workOrderId,
                 Sequencia: 2,
                 CodigoTipoEtapaProxima: "007.004",
                 DataHoraFim: new Date().toISOString(),
@@ -423,8 +425,9 @@ class WorkOrderService extends _BaseG4FlexService2.default {
           await _workOrderqueue2.default.add('processWorkOrderFeedback', {
             orderId: workOrderId,
             feedback: 'technician_assigned',
-            technicianName: technician.nome || technician.id,
-            uraRequestId: uraRequestId || `tech-assigned-${Date.now()}`
+            technicianName: technician.nome,
+            technicianId: technician.id,
+            uraRequestId: uraRequestId
           });
           console.log(`[WorkOrderService] Feedback de atribuição de técnico agendado para ordem ${workOrderId}`);
         } catch (feedbackError) {

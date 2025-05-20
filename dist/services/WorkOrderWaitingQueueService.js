@@ -32,16 +32,16 @@
   );
 } exports.updateTechnicianAssigned = updateTechnicianAssigned;
 
+ async function findByUraRequestId(uraRequestId) {
+  return await _workOrderWaitingQueue2.default.findOne({
+    where: { uraRequestId }
+  });
+} exports.findByUraRequestId = findByUraRequestId;
+
 /*
 export async function findByOrderNumber(orderNumber) {
   return await WorkOrderWaitingQueue.findOne({
     where: { orderNumber }
-  });
-}
-
-export async function findByUraRequestId(uraRequestId) {
-  return await WorkOrderWaitingQueue.findOne({
-    where: { uraRequestId }
   });
 }
 
@@ -67,6 +67,7 @@ exports. default = {
   updateQueueStatus,
   updateQueueOrderNumber,
   updateTechnicianAssigned,
+  findByUraRequestId,
   findByStatus,
   findAll
 };

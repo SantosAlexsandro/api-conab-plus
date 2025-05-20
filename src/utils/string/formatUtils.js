@@ -4,6 +4,20 @@ function onlyDigits(value) {
   return value.toString().replace(/\D/g, '');
 }
 
+export function normalizeName(name) {
+  if (!name) return '';
+
+  // Substitui pontos por espaços e remove espaços extras
+  const cleanName = name.replace(/\./g, ' ').trim().replace(/\s+/g, ' ');
+
+  // Converte para lowercase e depois capitaliza cada palavra
+  return cleanName
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 export function formatCPF(cpfValue) {
   if (!cpfValue) return null;
 
