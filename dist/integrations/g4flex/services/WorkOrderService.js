@@ -7,6 +7,7 @@ var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2
 var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
 var _ContractService = require('./ContractService'); var _ContractService2 = _interopRequireDefault(_ContractService);
 var _WorkOrderService = require('../../../integrations/erp/services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
+var _EmployeeERPService = require('../../../integrations/erp/services/EmployeeERPService'); var _EmployeeERPService2 = _interopRequireDefault(_EmployeeERPService);
 class WorkOrderService extends _BaseG4FlexService2.default {
   constructor() {
     super();
@@ -18,7 +19,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       PAGE_INDEX: 1
     };
     this.ERP_SERVICE = new (0, _WorkOrderService2.default)();
-
+    this.EMPLOYEE_SERVICE = new (0, _EmployeeERPService2.default)();
   }
 
    // Criar Ordem de Serviço
@@ -49,6 +50,9 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         NumeroContrato: contractData.Numero,
         CodigoEmpresaFilialContrato: '1',
         CodigoUsuario: 'CONAB+',
+        OrdServ1Object: {
+          AtendimentoPrioritario: "Sim"
+        },
         EtapaOrdServChildList: [
           {
             CodigoEmpresaFilial: '1',
@@ -65,12 +69,10 @@ class WorkOrderService extends _BaseG4FlexService2.default {
             CodigoTipoEtapa: '007.002',
             CodigoUsuario: 'CONAB+',
             DataHoraInicial: new Date().toISOString(),
-            //CodigoUsuarioAlteracao: "CONAB+"
+            CodigoUsuarioAlteracao: 'CONAB+'
           }
         ],
       };
-
-
 
       // 1. Create work order
       console.log('[WorkOrderService] Creating work order in ERP by');
@@ -79,25 +81,16 @@ class WorkOrderService extends _BaseG4FlexService2.default {
         workOrderData
       );
 
-      // 1. update priority
-      console.log('[WorkOrderService] Updating priority in ERP by');
-      const responsePriority = await this.axiosInstance.post(
-        '/api/OrdServ/SavePartial?action=Update',
-        {
-          CodigoEmpresaFilial: '1',
-          Numero: response.data.Numero,
-          OrdServ1Object: {
-            CodigoEmpresaFilial: "1",
-            Numero: response.data.Numero,
-            AtendimentoPrioritario: "Sim"
-          }
-        }
-      );
-
-      // Insert history stage
-      await this.ERP_SERVICE.insertHistoryStage(response.data.Numero, {
-        text: `OS gerada por CONAB+ (FASE BETA)\n\nNOME SOLICITANTE: ${requesterNameAndPosition}\nPROBLEMA RELATADO: ${incidentAndReceiverName}\nCONTATO: ${requesterContact}`
-      });
+      try {
+        // Insert history stage
+        await this.ERP_SERVICE.insertHistoryStage(response.data.Numero, {
+          text: `OS gerada por CONAB+ (FASE BETA)\n\nNOME SOLICITANTE: ${requesterNameAndPosition}\nPROBLEMA RELATADO: ${incidentAndReceiverName}\nCONTATO: ${requesterContact}`
+        });
+      } catch (error) {
+        console.error('[WorkOrderService] Error in work order history stage process:', error);
+        this.handleError(error);
+        throw new Error(`Error creating work order history stage: ${error.message}`);
+      }
 
       if (!response.data || response.data.error) {
         await _logEvent2.default.call(void 0, {
@@ -381,7 +374,6 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     const { currentStageCode, lastSequence, oldStageData } = await this.ERP_SERVICE.getCurrentStage(workOrderId);
     return { currentStageCode, lastSequence, oldStageData };
   }
-
   // Atribuir técnico à OS
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
 
@@ -399,9 +391,8 @@ class WorkOrderService extends _BaseG4FlexService2.default {
             CodigoUsuario: "CONAB+",
             EtapaOrdServChildList: [
               {
-                CodigoEmpresaFilial: "1",
-                NumeroOrdServ: workOrderId,
                 Sequencia: 2,
+                NumeroOrdServ: workOrderId,
                 CodigoTipoEtapaProxima: "007.004",
                 DataHoraFim: new Date().toISOString(),
                 CodigoUsuario: "CONAB+",

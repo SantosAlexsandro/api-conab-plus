@@ -22,6 +22,9 @@ class WhatsAppService {
   }
 
   async sendWhatsAppMessage({ phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId }) {
+
+    if (this.isDevelopment) return
+
     console.log('INIT sendWhatsAppMessage', { phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId });
     try {
       // Usar o número de desenvolvimento em ambiente de desenvolvimento

@@ -50,6 +50,9 @@ class WorkOrderService extends BaseG4FlexService {
         NumeroContrato: contractData.Numero,
         CodigoEmpresaFilialContrato: '1',
         CodigoUsuario: 'CONAB+',
+        OrdServ1Object: {
+          AtendimentoPrioritario: "Sim"
+        },
         EtapaOrdServChildList: [
           {
             CodigoEmpresaFilial: '1',
@@ -66,7 +69,7 @@ class WorkOrderService extends BaseG4FlexService {
             CodigoTipoEtapa: '007.002',
             CodigoUsuario: 'CONAB+',
             DataHoraInicial: new Date().toISOString(),
-            //CodigoUsuarioAlteracao: "CONAB+"
+            CodigoUsuarioAlteracao: 'CONAB+'
           }
         ],
       };
@@ -78,25 +81,16 @@ class WorkOrderService extends BaseG4FlexService {
         workOrderData
       );
 
-      // 1. update priority
-      console.log('[WorkOrderService] Updating priority in ERP by');
-      const responsePriority = await this.axiosInstance.post(
-        '/api/OrdServ/SavePartial?action=Update',
-        {
-          CodigoEmpresaFilial: '1',
-          Numero: response.data.Numero,
-          OrdServ1Object: {
-            CodigoEmpresaFilial: "1",
-            Numero: response.data.Numero,
-            AtendimentoPrioritario: "Sim"
-          }
-        }
-      );
-
-      // Insert history stage
-      await this.ERP_SERVICE.insertHistoryStage(response.data.Numero, {
-        text: `OS gerada por CONAB+ (FASE BETA)\n\nNOME SOLICITANTE: ${requesterNameAndPosition}\nPROBLEMA RELATADO: ${incidentAndReceiverName}\nCONTATO: ${requesterContact}`
-      });
+      try {
+        // Insert history stage
+        await this.ERP_SERVICE.insertHistoryStage(response.data.Numero, {
+          text: `OS gerada por CONAB+ (FASE BETA)\n\nNOME SOLICITANTE: ${requesterNameAndPosition}\nPROBLEMA RELATADO: ${incidentAndReceiverName}\nCONTATO: ${requesterContact}`
+        });
+      } catch (error) {
+        console.error('[WorkOrderService] Error in work order history stage process:', error);
+        this.handleError(error);
+        throw new Error(`Error creating work order history stage: ${error.message}`);
+      }
 
       if (!response.data || response.data.error) {
         await logEvent({
@@ -380,7 +374,6 @@ class WorkOrderService extends BaseG4FlexService {
     const { currentStageCode, lastSequence, oldStageData } = await this.ERP_SERVICE.getCurrentStage(workOrderId);
     return { currentStageCode, lastSequence, oldStageData };
   }
-
   // Atribuir técnico à OS
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
 
@@ -398,9 +391,8 @@ class WorkOrderService extends BaseG4FlexService {
             CodigoUsuario: "CONAB+",
             EtapaOrdServChildList: [
               {
-                CodigoEmpresaFilial: "1",
-                NumeroOrdServ: workOrderId,
                 Sequencia: 2,
+                NumeroOrdServ: workOrderId,
                 CodigoTipoEtapaProxima: "007.004",
                 DataHoraFim: new Date().toISOString(),
                 CodigoUsuario: "CONAB+",

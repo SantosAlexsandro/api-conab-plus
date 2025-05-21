@@ -33,12 +33,10 @@ class WorkOrderService extends _BaseERPServicejs2.default {
   }
 
   async insertHistoryStage(workOrderId, stageData) {
-    console.log('INIT insertHistoryStage', workOrderId, stageData);
     try {
       if (!_optionalChain([stageData, 'optionalAccess', _ => _.text]) || typeof stageData.text !== 'string') {
         throw new Error('Texto do histórico é obrigatório e deve ser uma string');
       }
-
       const response = await this.axiosInstance.post(`/api/OrdServ/SalvarHistoricoEtapa`, {
         CodigoEmpresaFilial: '1',
         Numero: workOrderId,

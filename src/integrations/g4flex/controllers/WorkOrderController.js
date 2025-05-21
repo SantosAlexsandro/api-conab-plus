@@ -77,7 +77,7 @@ class WorkOrderController {
     }
   }
 
-  // Encerra Ordem de Serviço
+  // Cancela Ordem de Serviço
   async closeWorkOrder(req, res) {
     let { customerIdentifier = "", uraRequestId = "" } = req.query;
     const { cancellationRequesterInfo } = req.body;
@@ -122,12 +122,21 @@ class WorkOrderController {
 
       const { identifierType, identifierValue } = resolveNumericIdentifier(customerIdentifier);
 
-      const result = await WorkOrderService.closeWorkOrderByCustomerId({
+      // Adicionar à fila de cancelamento de ordem de serviço
+      await workOrderQueue.add('cancelWorkOrder', {
+        uraRequestId,
         identifierType,
         identifierValue,
-        uraRequestId,
         cancellationRequesterInfo
       });
+
+      console.log('[WorkOrderController] Cancelamento adicionado à fila para processamento');
+
+      // Preparar e enviar resposta
+      const response = {
+        success: true,
+        message: "Work order cancellation request successfully submitted.",
+      };
 
       await logEvent({
         uraRequestId,
@@ -138,12 +147,12 @@ class WorkOrderController {
           identifierType,
           cancellationRequesterInfo
         },
-        response: result,
+        response,
         statusCode: 200,
         error: null,
       });
 
-      return res.json(result);
+      return res.json(response);
     } catch (error) {
       await logEvent({
         uraRequestId,

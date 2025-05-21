@@ -4,7 +4,7 @@ var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
 var _WorkOrderWaitingQueueService = require('../../../services/WorkOrderWaitingQueueService'); var _WorkOrderWaitingQueueService2 = _interopRequireDefault(_WorkOrderWaitingQueueService);
 var _formatUtils = require('../../../utils/string/formatUtils');
-
+var _EmployeeERPService = require('../../../integrations/erp/services/EmployeeERPService'); var _EmployeeERPService2 = _interopRequireDefault(_EmployeeERPService);
 class WhatsAppService {
   constructor() {
     this.apiUrl = 'https://conab.g4flex.com.br:9090/integration-service';
@@ -18,9 +18,14 @@ class WhatsAppService {
     });
     this.isDevelopment = process.env.NODE_ENV === 'development';
     this.devPhoneNumber = '11945305889'; // Número para ambiente de desenvolvimento
+    this.ERP_EMPLOYEE_SERVICE = new (0, _EmployeeERPService2.default)();
   }
 
   async sendWhatsAppMessage({ phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId }) {
+
+    if (this.isDevelopment) return
+
+    console.log('INIT sendWhatsAppMessage', { phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId });
     try {
       // Usar o número de desenvolvimento em ambiente de desenvolvimento
       const finalPhoneNumber = this.isDevelopment ? this.devPhoneNumber : phoneNumber;
@@ -51,6 +56,17 @@ class WhatsAppService {
       }
 
       if (feedback === 'technician_assigned') {
+
+        if (!technicianName || customerName === '' || !workOrderId) {
+          console.log('Não foi possível enviar feedback de atribuição de técnico, pois os dados necessários não foram encontrados');
+          return;
+        }
+        const employeeData = await this.ERP_EMPLOYEE_SERVICE.getEmployeeByUserCode(technicianName);
+        if (!_optionalChain([employeeData, 'optionalAccess', _ => _.length]) ) {
+          console.log(`Não foi possível obter dados do funcionário para o técnico ${technicianName}`);
+          return;
+        }
+
         response = await this.axiosInstance.post('/api/enviar-mensagem/texto', {
           clientPhone: finalPhoneNumber,
           clientName: customerName,
@@ -78,14 +94,13 @@ class WhatsAppService {
           uraRequestId,
           environment: this.isDevelopment ? 'development' : 'production'
         },
-        response: _optionalChain([response, 'optionalAccess', _ => _.data]),
-        statusCode: _optionalChain([response, 'optionalAccess', _2 => _2.status]),
-        error: _optionalChain([response, 'optionalAccess', _3 => _3.data, 'optionalAccess', _4 => _4.error])
+        response: _optionalChain([response, 'optionalAccess', _2 => _2.data]),
+        statusCode: _optionalChain([response, 'optionalAccess', _3 => _3.status]),
+        error: _optionalChain([response, 'optionalAccess', _4 => _4.data, 'optionalAccess', _5 => _5.error])
       });
 
       return response.data;
     } catch (error) {
-
       _logEvent2.default.call(void 0, {
         uraRequestId,
         source: 'system',
@@ -98,13 +113,17 @@ class WhatsAppService {
           technicianName: technicianName,
           uraRequestId: uraRequestId
         },
-        response: { error: error.message },
-        statusCode: error.response.status,
-        error: error.message
+        response: {
+          error: error.message,
+          apiError: _optionalChain([error, 'access', _6 => _6.response, 'optionalAccess', _7 => _7.data, 'optionalAccess', _8 => _8.error]) || null,
+          requestData: _optionalChain([error, 'access', _9 => _9.config, 'optionalAccess', _10 => _10.data]) ? JSON.parse(error.config.data) : null
+        },
+        statusCode: _optionalChain([error, 'access', _11 => _11.response, 'optionalAccess', _12 => _12.status]) || 500,
+        error: _optionalChain([error, 'access', _13 => _13.response, 'optionalAccess', _14 => _14.data, 'optionalAccess', _15 => _15.error]) || error.message
       });
 
       console.error('[WhatsAppService] Error sending WhatsApp message:', error);
-      throw new Error(`Failed to send WhatsApp message: ${error.message}`);
+      throw new Error(`Failed to send WhatsApp message: ${_optionalChain([error, 'access', _16 => _16.response, 'optionalAccess', _17 => _17.data, 'optionalAccess', _18 => _18.error]) || error.message}`);
     }
   }
 }

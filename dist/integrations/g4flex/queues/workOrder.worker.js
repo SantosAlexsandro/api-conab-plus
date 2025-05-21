@@ -36,6 +36,8 @@ const workOrderWorker = new (0, _bullmq.Worker)(
       return await processAssignTechnician(job);
     } else if (jobType === "processWorkOrderFeedback") {
       return await processWorkOrderFeedback(job);
+    } else if (jobType === "cancelWorkOrder") {
+      return await processCancelWorkOrder(job);
     } else {
       console.log(`❓ Tipo de job não reconhecido: ${jobType}`);
       throw new Error(`Tipo de job não reconhecido: ${jobType}`);
@@ -215,8 +217,7 @@ async function processWorkOrderFeedback(job) {
     requesterContact = '',
     customerName = ''
   } = job.data || {};
-
-  console.log(`🔄 Processando feedback de ordem ${orderId}, URA Request ID: ${uraRequestId}`);
+  console.log(`🔄 INIT Processando feedback de ordem ${orderId}, URA Request ID: ${uraRequestId}`);
 
   try {
     // Passar o objeto com os parâmetros nomeados conforme esperado pelo WhatsAppService
@@ -260,6 +261,49 @@ async function processWorkOrderFeedback(job) {
       rescheduled: true,
       nextAttempt: nextAttemptDate
     };
+  }
+}
+
+// Função para processar cancelamento de ordem de serviço
+async function processCancelWorkOrder(job) {
+  const { identifierType, identifierValue, uraRequestId, cancellationRequesterInfo } = job.data;
+  console.log(`🔄 Processando cancelamento de ordem para cliente ${identifierValue}`);
+
+  try {
+    const result = await _WorkOrderService2.default.closeWorkOrderByCustomerId({
+      identifierType,
+      identifierValue,
+      uraRequestId,
+      cancellationRequesterInfo
+    });
+
+    // Atualizar status na fila de espera para todas as ordens canceladas
+    if (result.orders && result.orders.length > 0) {
+      await Promise.all(result.orders.map(async (orderNumber) => {
+        await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+          uraRequestId,
+          'CANCELED'
+        );
+      }));
+    }
+
+    console.log(`✅ Ordens canceladas com sucesso: ${result.orders.join(', ')}`);
+    return result;
+
+  } catch (error) {
+    console.error(`❌ Erro ao cancelar ordens:`, error);
+
+    // Registrar falha na fila de espera
+    try {
+      await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+        uraRequestId,
+        'FAILED'
+      );
+    } catch (queueError) {
+      console.error('Erro ao atualizar status na fila de espera:', queueError);
+    }
+
+    throw error;
   }
 }
 
