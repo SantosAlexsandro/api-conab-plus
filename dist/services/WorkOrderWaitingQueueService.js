@@ -11,10 +11,11 @@
   });
 } exports.createInQueue = createInQueue;
 
- async function updateQueueStatus(uraRequestId, newStatus) {
+ async function updateQueueStatus(uraRequestId, orderNumber, newStatus) {
+  console.log('INIT updateQueueStatus', { uraRequestId, orderNumber, newStatus });
   return await _workOrderWaitingQueue2.default.update(
     { status: newStatus },
-    { where: { uraRequestId } }
+    { where: { orderNumber } }
   );
 } exports.updateQueueStatus = updateQueueStatus;
 

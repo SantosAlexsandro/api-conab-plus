@@ -70,6 +70,7 @@ async function processCreateWorkOrder(job) {
     // Atualizar status na fila de espera
     await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
       orderData.uraRequestId,
+      result.workOrder,
       'WAITING_TECHNICIAN'
     );
 
@@ -98,6 +99,7 @@ async function processCreateWorkOrder(job) {
       try {
         await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
           orderData.uraRequestId,
+          orderData.orderId,
           'FAILED'
         );
       } catch (queueError) {
@@ -124,6 +126,7 @@ async function processAssignTechnician(job) {
       console.log(`⚠️ Ordem ${orderId} já foi cancelada`);
       await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
         validUraRequestId,
+        orderId,
         'CANCELED'
       );
       return { success: false, orderCancelled: true };
@@ -131,6 +134,7 @@ async function processAssignTechnician(job) {
       console.log(`⚠️ Ordem ${orderId} já foi concluída`);
       await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
         validUraRequestId,
+        orderId,
         'FULFILLED'
       );
       return { success: false, orderFulfilled: true };
@@ -168,6 +172,7 @@ async function processAssignTechnician(job) {
     // Atualizar status na fila de espera
     await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
       validUraRequestId,
+      orderId,
       'WAITING_ARRIVAL'
     );
 
@@ -278,10 +283,12 @@ async function processCancelWorkOrder(job) {
     });
 
     // Atualizar status na fila de espera para todas as ordens canceladas
+    // TODO: Analisar se não é melhor atualizar considerando o número da OS, em vez do ID da URA.
     if (result.orders && result.orders.length > 0) {
       await Promise.all(result.orders.map(async (orderNumber) => {
         await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
           uraRequestId,
+          orderNumber,
           'CANCELED'
         );
       }));
@@ -297,6 +304,7 @@ async function processCancelWorkOrder(job) {
     try {
       await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
         uraRequestId,
+        orderId,
         'FAILED'
       );
     } catch (queueError) {

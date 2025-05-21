@@ -11,10 +11,11 @@ export async function createInQueue(data) {
   });
 }
 
-export async function updateQueueStatus(uraRequestId, newStatus) {
+export async function updateQueueStatus(uraRequestId, orderNumber, newStatus) {
+  console.log('INIT updateQueueStatus', { uraRequestId, orderNumber, newStatus });
   return await WorkOrderWaitingQueue.update(
     { status: newStatus },
-    { where: { uraRequestId } }
+    { where: { orderNumber } }
   );
 }
 
