@@ -23,7 +23,7 @@ class WhatsAppService {
 
   async sendWhatsAppMessage({ phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId }) {
 
-    if (this.isDevelopment) return
+    //if (this.isDevelopment) return
 
     console.log('INIT sendWhatsAppMessage', { phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId });
     try {
@@ -72,9 +72,10 @@ class WhatsAppService {
           clientName: customerName,
           canalWhatsapp: '1137323888',
           queueId: 53,
-          templateId: '36d39190-4b6c-40ca-b4ce-f346b3f647be',
+          templateId: '6dd02905-a664-4799-969c-4455918ebad9',
           params: [
             normalizeName(technicianName),
+            employeeData[0]?.Codigo,
             workOrderId
           ]
         });

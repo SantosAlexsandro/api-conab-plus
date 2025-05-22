@@ -23,7 +23,7 @@ class WhatsAppService {
 
   async sendWhatsAppMessage({ phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId }) {
 
-    if (this.isDevelopment) return
+    //if (this.isDevelopment) return
 
     console.log('INIT sendWhatsAppMessage', { phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId });
     try {
@@ -72,9 +72,10 @@ class WhatsAppService {
           clientName: customerName,
           canalWhatsapp: '1137323888',
           queueId: 53,
-          templateId: '36d39190-4b6c-40ca-b4ce-f346b3f647be',
+          templateId: '6dd02905-a664-4799-969c-4455918ebad9',
           params: [
             _formatUtils.normalizeName.call(void 0, technicianName),
+            _optionalChain([employeeData, 'access', _2 => _2[0], 'optionalAccess', _3 => _3.Codigo]),
             workOrderId
           ]
         });
@@ -94,9 +95,9 @@ class WhatsAppService {
           uraRequestId,
           environment: this.isDevelopment ? 'development' : 'production'
         },
-        response: _optionalChain([response, 'optionalAccess', _2 => _2.data]),
-        statusCode: _optionalChain([response, 'optionalAccess', _3 => _3.status]),
-        error: _optionalChain([response, 'optionalAccess', _4 => _4.data, 'optionalAccess', _5 => _5.error])
+        response: _optionalChain([response, 'optionalAccess', _4 => _4.data]),
+        statusCode: _optionalChain([response, 'optionalAccess', _5 => _5.status]),
+        error: _optionalChain([response, 'optionalAccess', _6 => _6.data, 'optionalAccess', _7 => _7.error])
       });
 
       return response.data;
@@ -115,15 +116,15 @@ class WhatsAppService {
         },
         response: {
           error: error.message,
-          apiError: _optionalChain([error, 'access', _6 => _6.response, 'optionalAccess', _7 => _7.data, 'optionalAccess', _8 => _8.error]) || null,
-          requestData: _optionalChain([error, 'access', _9 => _9.config, 'optionalAccess', _10 => _10.data]) ? JSON.parse(error.config.data) : null
+          apiError: _optionalChain([error, 'access', _8 => _8.response, 'optionalAccess', _9 => _9.data, 'optionalAccess', _10 => _10.error]) || null,
+          requestData: _optionalChain([error, 'access', _11 => _11.config, 'optionalAccess', _12 => _12.data]) ? JSON.parse(error.config.data) : null
         },
-        statusCode: _optionalChain([error, 'access', _11 => _11.response, 'optionalAccess', _12 => _12.status]) || 500,
-        error: _optionalChain([error, 'access', _13 => _13.response, 'optionalAccess', _14 => _14.data, 'optionalAccess', _15 => _15.error]) || error.message
+        statusCode: _optionalChain([error, 'access', _13 => _13.response, 'optionalAccess', _14 => _14.status]) || 500,
+        error: _optionalChain([error, 'access', _15 => _15.response, 'optionalAccess', _16 => _16.data, 'optionalAccess', _17 => _17.error]) || error.message
       });
 
       console.error('[WhatsAppService] Error sending WhatsApp message:', error);
-      throw new Error(`Failed to send WhatsApp message: ${_optionalChain([error, 'access', _16 => _16.response, 'optionalAccess', _17 => _17.data, 'optionalAccess', _18 => _18.error]) || error.message}`);
+      throw new Error(`Failed to send WhatsApp message: ${_optionalChain([error, 'access', _18 => _18.response, 'optionalAccess', _19 => _19.data, 'optionalAccess', _20 => _20.error]) || error.message}`);
     }
   }
 }
