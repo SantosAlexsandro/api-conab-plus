@@ -335,16 +335,36 @@ class WorkOrderService extends BaseG4FlexService {
           return;
         } else if (currentStageCode === '007.004') {
           await this.axiosInstance.post(
-            '/api/OrdServ/SavePartial?action=Update',
+            '/api/OrdServ/InserirAlterarOrdServ',
             {
               CodigoEmpresaFilial: '1',
               Numero: order.number,
               EtapaOrdServChildList: [
-                ...oldStageData,
-                { CodigoEmpresaFilial: '1', NumeroOrdServ: order.number, Sequencia: lastSequence + 1, CodigoTipoEtapa: '007.021', CodigoUsuario: 'CONAB+' }
+                {
+                  Sequencia: 3,
+                  NumeroOrdServ: order.number,
+                  CodigoTipoEtapaProxima: '007.021',
+                  DataHoraFim: new Date().toISOString(),
+                  CodigoUsuarioAlteracao: 'CONAB+'
+                },
+                {
+                  CodigoEmpresaFilial: '1',
+                  NumeroOrdServ: order.number,
+                  Sequencia: 4,
+                  CodigoTipoEtapa: '007.021',
+                  CodigoUsuario: 'CONAB+',
+                  CodigoUsuarioAlteracao: 'CONAB+',
+                  DataHoraInicial: new Date().toISOString(),
+                  DataHoraFim: new Date().toISOString()
+                }
               ]
             }
           );
+
+          await this.ERP_SERVICE.insertHistoryStage(order.number, {
+            text: `DETALHES DO CANCELAMENTO: ${cancellationRequesterInfo}`
+          });
+
           console.log(`[G4Flex] Closed work order ${order.number}`);
           return;
         } else {
@@ -374,6 +394,7 @@ class WorkOrderService extends BaseG4FlexService {
     const { currentStageCode, lastSequence, oldStageData } = await this.ERP_SERVICE.getCurrentStage(workOrderId);
     return { currentStageCode, lastSequence, oldStageData };
   }
+
   // Atribuir técnico à OS
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
 
