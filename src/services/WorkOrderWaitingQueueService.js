@@ -13,31 +13,123 @@ export async function createInQueue(data) {
 
 export async function updateQueueStatus(uraRequestId, orderNumber, newStatus) {
   console.log('INIT updateQueueStatus', { uraRequestId, orderNumber, newStatus });
-  return await WorkOrderWaitingQueue.update(
+
+  if (!newStatus) {
+    throw new Error('newStatus is required');
+  }
+
+  if (!uraRequestId && !orderNumber) {
+    throw new Error('At least uraRequestId or orderNumber must be provided');
+  }
+
+  const where = {};
+
+  if (newStatus === 'WAITING_TECHNICIAN') {
+    if (!uraRequestId) {
+      throw new Error('uraRequestId is required when setting status to WAITING_TECHNICIAN');
+    }
+    where.uraRequestId = uraRequestId;
+  } else {
+    if (!orderNumber) {
+      throw new Error('orderNumber is required when status is not WAITING_TECHNICIAN');
+    }
+    where.orderNumber = orderNumber;
+  }
+
+  const [affectedCount] = await WorkOrderWaitingQueue.update(
     { status: newStatus },
-    { where: { orderNumber } }
+    { where }
   );
+
+  if (affectedCount === 0) {
+    console.warn('No records updated in WorkOrderWaitingQueue', { where, newStatus });
+  }
+
+  return {
+    success: affectedCount > 0,
+    updatedRows: affectedCount
+  };
 }
 
+
 export async function updateQueueOrderNumber(uraRequestId, orderNumber) {
-  return await WorkOrderWaitingQueue.update(
+  console.log('🔄 INIT updateQueueOrderNumber', { uraRequestId, orderNumber });
+
+  if (!uraRequestId) throw new Error('uraRequestId is required');
+  if (!orderNumber) throw new Error('orderNumber is required');
+
+  const [affectedCount] = await WorkOrderWaitingQueue.update(
     { orderNumber },
     { where: { uraRequestId } }
   );
+
+  if (affectedCount === 0) {
+    console.warn('⚠️ No records updated in updateQueueOrderNumber', { uraRequestId });
+  }
+
+  return {
+    success: affectedCount > 0,
+    updatedRows: affectedCount
+  };
 }
 
 export async function updateTechnicianAssigned(uraRequestId, technicianName) {
-  return await WorkOrderWaitingQueue.update(
+  console.log('🔄 INIT updateTechnicianAssigned', { uraRequestId, technicianName });
+
+  if (!uraRequestId) throw new Error('uraRequestId is required');
+  if (!technicianName) throw new Error('technicianName is required');
+
+  const [affectedCount] = await WorkOrderWaitingQueue.update(
     { technicianAssigned: technicianName },
     { where: { uraRequestId } }
   );
+
+  if (affectedCount === 0) {
+    console.warn('⚠️ No records updated in updateTechnicianAssigned', { uraRequestId });
+  }
+
+  return {
+    success: affectedCount > 0,
+    updatedRows: affectedCount
+  };
 }
 
 export async function findByUraRequestId(uraRequestId) {
-  return await WorkOrderWaitingQueue.findOne({
+  console.log('🔎 INIT findByUraRequestId', { uraRequestId });
+
+  if (!uraRequestId) throw new Error('uraRequestId is required');
+
+  const result = await WorkOrderWaitingQueue.findOne({
     where: { uraRequestId }
   });
+
+  if (!result) {
+    console.warn('⚠️ No record found in findByUraRequestId', { uraRequestId });
+  }
+
+  return result;
 }
+
+export async function findByStatus(status) {
+  console.log('🔎 INIT findByStatus', { status });
+
+  if (!status) throw new Error('status is required');
+
+  const results = await WorkOrderWaitingQueue.findAll({
+    where: { status }
+  });
+
+  return results;
+}
+
+export async function findAll() {
+  console.log('🔎 INIT findAll');
+
+  return await WorkOrderWaitingQueue.findAll({
+    order: [['created_at', 'DESC']]
+  });
+}
+
 
 /*
 export async function findByOrderNumber(orderNumber) {
@@ -50,18 +142,6 @@ export async function findById(id) {
   return await WorkOrderWaitingQueue.findByPk(id);
 }
 */
-
-export async function findByStatus(status) {
-  return await WorkOrderWaitingQueue.findAll({
-    where: { status }
-  });
-}
-
-export async function findAll() {
-  return await WorkOrderWaitingQueue.findAll({
-    order: [['created_at', 'DESC']]
-  });
-}
 
 export default {
   createInQueue,
