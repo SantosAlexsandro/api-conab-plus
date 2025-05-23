@@ -316,13 +316,27 @@ class WorkOrderService extends BaseG4FlexService {
 
         if (currentStageCode === '007.002') {
           await this.axiosInstance.post(
-            '/api/OrdServ/SavePartial?action=Update',
+            '/api/OrdServ/InserirAlterarOrdServ',
             {
               CodigoEmpresaFilial: '1',
               Numero: order.number,
               EtapaOrdServChildList: [
-                ...oldStageData,
-                { CodigoEmpresaFilial: '1', NumeroOrdServ: order.number, Sequencia: lastSequence + 1, CodigoTipoEtapa: '007.003', CodigoUsuario: 'CONAB+' }
+                {
+                  Sequencia: 2,
+                  NumeroOrdServ: order.number,
+                  CodigoTipoEtapaProxima: '007.003',
+                  CodigoUsuario: 'CONAB+',
+                  DataHoraFim: new Date().toISOString(),
+                  CodigoUsuarioAlteracao: 'CONAB+'
+                },
+                {
+                  CodigoEmpresaFilial: '1',
+                  NumeroOrdServ: order.number,
+                  Sequencia: 3,
+                  CodigoTipoEtapa: '007.003',
+                  CodigoUsuario: 'CONAB+',
+                  DataHoraInicial: new Date().toISOString()
+                }
               ]
             }
           );
