@@ -29,12 +29,20 @@ export default class WorkOrderWaitingQueue extends Model {
           'FINISHED',
           'FAILED',
           'CANCELED',
-          'FULFILLED'
+          'FULFILLED',
+          'URA_FAILURE'
         ),
         source: {
           type: Sequelize.STRING,
           defaultValue: 'g4flex',
         },
+        customerIdentifier: Sequelize.STRING,
+        productId: Sequelize.STRING,
+        requesterNameAndPosition: Sequelize.STRING,
+        incidentAndReceiverName: Sequelize.STRING,
+        requesterContact: Sequelize.STRING,
+        cancellationRequesterInfo: Sequelize.STRING,
+        failureReason: Sequelize.TEXT,
       },
       {
         sequelize,

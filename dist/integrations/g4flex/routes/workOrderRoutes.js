@@ -10,4 +10,7 @@ router.post('/requests', _authG4Flex2.default, _WorkOrderController2.default.req
 
 router.post('/close', _authG4Flex2.default, _WorkOrderController2.default.closeWorkOrder);
 
+// Nova rota para falhas da URA
+router.post('/ura-failure', _authG4Flex2.default, _WorkOrderController2.default.handleUraFailure);
+
 exports. default = router;

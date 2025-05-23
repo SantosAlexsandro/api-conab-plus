@@ -5,10 +5,12 @@ var _EntityService = require('../services/EntityService'); var _EntityService2 =
 
 
 
+
 var _uraValidator = require('../utils/uraValidator');
 var _resolveNumericIdentifier = require('../utils/resolveNumericIdentifier');
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
 var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
+var _workOrderWaitingQueue = require('../../../models/workOrderWaitingQueue'); var _workOrderWaitingQueue2 = _interopRequireDefault(_workOrderWaitingQueue);
 
 class WorkOrderController {
   async getOpenOrdersByCustomerId(req, res) {
@@ -310,6 +312,110 @@ class WorkOrderController {
       console.error("Error handling work order request:", error);
       return res.status(500).json({
         error: error.message || "Error handling work order request",
+      });
+    }
+  }
+
+  // Registra falha da URA
+  async handleUraFailure(req, res) {
+    // Pega uraRequestId dos query params e customerIdentifier pode vir de ambos
+    let { uraRequestId = '' } = req.query;
+    let { customerIdentifier = '' } = { ...req.query, ...req.body };
+
+    // Em ambiente de desenvolvimento, gerar automaticamente uraRequestId se não fornecido
+    if (!uraRequestId && process.env.NODE_ENV === 'development') {
+      uraRequestId = `dev-${Math.floor(Math.random() * 1000000)}`;
+      console.log(`[DESENVOLVIMENTO] Gerado ID URA aleatório: ${uraRequestId}`);
+    }
+
+    try {
+      // Usa validação específica para falhas da URA (customerIdentifier opcional)
+      const validationError = _uraValidator.validateURAFailureQuery.call(void 0, { ...req.query, ...req.body });
+      if (validationError) {
+        await _logEvent2.default.call(void 0, {
+          uraRequestId,
+          source: 'g4flex',
+          action: 'ura_failure_validation_error',
+          payload: req.body, // Só o body no payload
+          response: { error: validationError },
+          statusCode: 400,
+          error: validationError,
+        });
+        return res.status(400).json({ error: validationError });
+      }
+
+      // Resolve o identificador apenas se customerIdentifier foi fornecido
+      let identifierType = null;
+      let identifierValue = null;
+
+      if (customerIdentifier) {
+        const resolved = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
+        identifierType = resolved.identifierType;
+        identifierValue = resolved.identifierValue;
+      }
+
+      // Verifica se já existe uma solicitação com este uraRequestId
+      const existingRequest = await _workOrderWaitingQueue2.default.findOne({
+        where: { uraRequestId }
+      });
+
+      if (existingRequest) {
+        await _logEvent2.default.call(void 0, {
+          uraRequestId,
+          source: 'g4flex',
+          action: 'ura_failure_duplicate_request',
+          payload: req.body, // Só o body no payload
+          response: { error: 'Solicitação já existe' },
+          statusCode: 409,
+          error: 'Duplicate request'
+        });
+        return res.status(409).json({ error: 'Uma solicitação com este ID já existe' });
+      }
+
+      // Cria novo registro na fila com status URA_FAILURE
+      const newRequest = await _workOrderWaitingQueue2.default.create({
+        customerIdentifier: identifierValue, // Pode ser null se não fornecido
+        uraRequestId,
+        status: 'URA_FAILURE',
+        source: 'g4flex',
+        productId: req.body.productId,
+        requesterNameAndPosition: req.body.requesterNameAndPosition,
+        incidentAndReceiverName: req.body.incidentAndReceiverName,
+        requesterContact: req.body.requesterContact,
+        cancellationRequesterInfo: req.body.cancellationRequesterInfo,
+        failureReason: req.body.failureReason,
+        priority: 'high' // Falhas da URA são tratadas com prioridade alta
+      });
+
+      await _logEvent2.default.call(void 0, {
+        uraRequestId,
+        source: 'g4flex',
+        action: 'ura_failure_registered',
+        payload: req.body, // Só o body no payload
+        response: { queueId: newRequest.id },
+        statusCode: 201
+      });
+
+      return res.status(201).json({
+        success: true,
+        message: 'Falha da URA registrada com sucesso',
+        request: newRequest
+      });
+
+    } catch (error) {
+      await _logEvent2.default.call(void 0, {
+        uraRequestId,
+        source: 'g4flex',
+        action: 'ura_failure_error',
+        payload: req.body, // Só o body no payload
+        response: { error: error.message },
+        statusCode: 500,
+        error: error.message
+      });
+
+      console.error('Erro ao registrar falha da URA:', error);
+      return res.status(500).json({
+        error: error.message || 'Erro ao registrar falha da URA'
       });
     }
   }

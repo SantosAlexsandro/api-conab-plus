@@ -27,6 +27,34 @@ export function validateURAQuery({ customerIdentifier, uraRequestId }) {
   return null;
 }
 
+// Validação específica para falhas da URA - customerIdentifier é opcional
+export function validateURAFailureQuery({ customerIdentifier, uraRequestId }) {
+  if (!uraRequestId) return 'URA request ID is required';
+
+  // Se customerIdentifier for fornecido, valida o formato
+  if (customerIdentifier) {
+    // Remove caracteres não numéricos para verificação
+    const numericIdentifier = customerIdentifier.replace(/\D/g, '');
+
+    // CPF tem 11 dígitos
+    if (numericIdentifier.length === 11 && !formatCPF(customerIdentifier)) {
+      return 'Invalid CPF';
+    }
+
+    // CNPJ tem 14 dígitos
+    if (numericIdentifier.length === 14 && !formatCNPJ(customerIdentifier)) {
+      return 'Invalid CNPJ';
+    }
+
+    // ID do cliente normalmente tem menos de 8 caracteres
+    if (numericIdentifier.length < 8 && !formatCustomerId(customerIdentifier)) {
+      return 'Invalid Customer ID';
+    }
+  }
+
+  return null;
+}
+
 // Função para determinar o tipo de identificador do cliente
 export function determineIdentifierType(identifier) {
   if (!identifier) return null;

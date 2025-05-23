@@ -29,12 +29,20 @@
           'FINISHED',
           'FAILED',
           'CANCELED',
-          'FULFILLED'
+          'FULFILLED',
+          'URA_FAILURE'
         ),
         source: {
           type: _sequelize2.default.STRING,
           defaultValue: 'g4flex',
         },
+        customerIdentifier: _sequelize2.default.STRING,
+        productId: _sequelize2.default.STRING,
+        requesterNameAndPosition: _sequelize2.default.STRING,
+        incidentAndReceiverName: _sequelize2.default.STRING,
+        requesterContact: _sequelize2.default.STRING,
+        cancellationRequesterInfo: _sequelize2.default.STRING,
+        failureReason: _sequelize2.default.TEXT,
       },
       {
         sequelize,
