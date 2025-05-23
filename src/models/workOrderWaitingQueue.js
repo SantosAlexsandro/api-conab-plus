@@ -9,9 +9,15 @@ export default class WorkOrderWaitingQueue extends Model {
           autoIncrement: true,
           primaryKey: true,
         },
-        orderNumber: Sequelize.STRING,
+        orderNumber: {
+          type: Sequelize.STRING,
+          unique: true,
+        },
         entityName: Sequelize.STRING,
-        uraRequestId: Sequelize.STRING,
+        uraRequestId: {
+          type: Sequelize.STRING,
+          unique: true,
+        },
         technicianAssigned: Sequelize.STRING,
         priority: Sequelize.ENUM('low', 'normal', 'high'),
         status: Sequelize.ENUM(

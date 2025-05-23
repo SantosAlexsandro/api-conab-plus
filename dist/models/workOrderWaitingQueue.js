@@ -9,9 +9,15 @@
           autoIncrement: true,
           primaryKey: true,
         },
-        orderNumber: _sequelize2.default.STRING,
+        orderNumber: {
+          type: _sequelize2.default.STRING,
+          unique: true,
+        },
         entityName: _sequelize2.default.STRING,
-        uraRequestId: _sequelize2.default.STRING,
+        uraRequestId: {
+          type: _sequelize2.default.STRING,
+          unique: true,
+        },
         technicianAssigned: _sequelize2.default.STRING,
         priority: _sequelize2.default.ENUM('low', 'normal', 'high'),
         status: _sequelize2.default.ENUM(

@@ -51,17 +51,24 @@ const workOrderWorker = new (0, _bullmq.Worker)(
 // Função para processar criação de ordem de serviço
 async function processCreateWorkOrder(job) {
   console.log(`🔄 Processando criação de ordem de serviço para job #${job.id}`);
+
   const orderData = job.data;
 
   try {
     // Registrar na fila de espera que a ordem está sendo processada
-    await _WorkOrderWaitingQueueService2.default.createInQueue({
+    const queueResult = await _WorkOrderWaitingQueueService2.default.createInQueue({
       orderNumber: orderData.orderId || 'Em processamento',
       entityName: orderData.customerName,
       uraRequestId: orderData.uraRequestId,
-      priority: orderData.priority || 'normal', // TODO: Criar método para definir prioridade
+      priority: orderData.priority || 'normal',
       source: 'g4flex'
     });
+
+    // Se for uma solicitação duplicada, retornar o resultado do serviço
+    if (!queueResult.success && queueResult.error === 'DUPLICATE_REQUEST') {
+      console.warn(`⚠️ Solicitação duplicada detectada para uraRequestId: ${orderData.uraRequestId}`);
+      return queueResult;
+    }
 
     // Chamar o serviço para criar a ordem
     const result = await _WorkOrderService2.default.createWorkOrder(orderData);
@@ -85,7 +92,7 @@ async function processCreateWorkOrder(job) {
       orderId: result.workOrder,
       uraRequestId: orderData.uraRequestId
     });
-    // TODO: Adicionar na fila Ordens geradas manualmente.
+
     console.log(
       `📨 Ordem ${result.workOrder} adicionada à fila de atribuição de técnico`
     );

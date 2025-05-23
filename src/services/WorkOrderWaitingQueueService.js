@@ -1,14 +1,92 @@
 import WorkOrderWaitingQueue from '../models/workOrderWaitingQueue';
+import logEvent from '../utils/logEvent';
+
+export async function checkDuplicateRequest(uraRequestId) {
+  const existingRequest = await WorkOrderWaitingQueue.findOne({
+    where: { uraRequestId }
+  });
+
+  if (existingRequest) {
+    await logEvent({
+      uraRequestId,
+      source: 'system',
+      action: 'duplicate_work_order_request',
+      payload: { existingStatus: existingRequest.status },
+      response: { message: 'Duplicate work order request detected' },
+      statusCode: 409,
+      error: 'Duplicate work order request'
+    });
+
+    return {
+      isDuplicate: true,
+      existingRequest
+    };
+  }
+
+  return {
+    isDuplicate: false,
+    existingRequest: null
+  };
+}
 
 export async function createInQueue(data) {
-  return await WorkOrderWaitingQueue.create({
-    orderNumber: data.orderNumber,
-    entityName: data.entityName,
-    uraRequestId: data.uraRequestId,
-    priority: data.priority || 'normal',
-    status: 'WAITING_CREATION',
-    source: data.source || 'g4flex',
-  });
+  try {
+    // Verifica duplicidade antes de criar
+    const { isDuplicate, existingRequest } = await checkDuplicateRequest(data.uraRequestId);
+
+    if (isDuplicate) {
+      console.log(`[WorkOrderWaitingQueueService] Duplicate request detected for uraRequestId: ${data.uraRequestId}`);
+      return {
+        success: false,
+        error: 'DUPLICATE_REQUEST',
+        message: 'Uma solicitação com este ID já existe na fila',
+        existingRequest
+      };
+    }
+
+    const newRequest = await WorkOrderWaitingQueue.create({
+      orderNumber: data.orderNumber,
+      entityName: data.entityName,
+      uraRequestId: data.uraRequestId,
+      priority: data.priority || 'normal',
+      status: 'WAITING_CREATION',
+      source: data.source || 'g4flex',
+    });
+
+    await logEvent({
+      uraRequestId: data.uraRequestId,
+      source: 'system',
+      action: 'work_order_queue_created',
+      payload: data,
+      response: { queueId: newRequest.id },
+      statusCode: 201
+    });
+
+    return {
+      success: true,
+      request: newRequest
+    };
+  } catch (error) {
+    await logEvent({
+      uraRequestId: data.uraRequestId,
+      source: 'system',
+      action: 'work_order_queue_create_error',
+      payload: data,
+      response: { error: error.message },
+      statusCode: 500,
+      error: error.message
+    });
+
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return {
+        success: false,
+        error: 'DUPLICATE_REQUEST',
+        message: 'Uma solicitação com este ID já existe na fila'
+      };
+    }
+
+    throw error;
+  }
 }
 
 export async function updateQueueStatus(uraRequestId, orderNumber, newStatus) {
