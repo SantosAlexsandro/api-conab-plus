@@ -10,6 +10,7 @@ import Role from '../models/Role';
 import Permission from '../models/Permission';
 import RolePermission from '../models/RolePermission';
 import UserRole from '../models/UserRole';
+import Notification from '../models/Notification';
 
 const models = [
   City,
@@ -22,6 +23,7 @@ const models = [
   Permission,
   RolePermission,
   UserRole,
+  Notification,
 ];
 
 const connection = new Sequelize(databaseConfig);

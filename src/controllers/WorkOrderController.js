@@ -1,6 +1,5 @@
 // import Entity from '../models/Entity';
 import WorkOrderService from '../services/WorkOrderService';
-import PushNotificationService from '../services/PushNotificationService';
 
 class WorkOrderController {
   async create(req, res) {
@@ -8,21 +7,8 @@ class WorkOrderController {
       const newEntity = await WorkOrderService.create(req.body);
       const { data } = newEntity;
 
-      // Envia notificação de nova ordem de serviço para todos os usuários
-      try {
-        await PushNotificationService.sendToAll({
-          title: 'Nova Ordem de Serviço',
-          body: `Uma nova OS foi criada: ${data.id || 'Sem ID'}`,
-          data: {
-            type: 'new_work_order',
-            workOrderId: data.id,
-            url: `/work-orders/${data.id}`
-          }
-        });
-      } catch (notificationError) {
-        console.error('Erro ao enviar notificação push:', notificationError);
-        // Não interrompe o fluxo em caso de erro na notificação
-      }
+      // Notificação será enviada automaticamente pelo g4flex WorkOrderService
+      // se for uma OS criada através da integração
 
       return res.json( data );
     } catch (e) {
@@ -58,26 +44,8 @@ class WorkOrderController {
       console.log("updateOrderStage");
       const response = await WorkOrderService.updateOrderStage(req.body);
 
-      // Envia notificação sobre a atualização da etapa da OS
-      try {
-        const { ordem_id, etapa_atual } = req.body;
-
-        if (ordem_id) {
-          await PushNotificationService.sendToAll({
-            title: 'Atualização de Ordem de Serviço',
-            body: `A OS #${ordem_id} foi atualizada para a etapa: ${etapa_atual || 'Nova etapa'}`,
-            data: {
-              type: 'work_order_stage_update',
-              workOrderId: ordem_id,
-              stage: etapa_atual,
-              url: `/work-orders/${ordem_id}`
-            }
-          });
-        }
-      } catch (notificationError) {
-        console.error('Erro ao enviar notificação push:', notificationError);
-        // Não interrompe o fluxo em caso de erro na notificação
-      }
+      // Notificação de atualização será tratada separadamente se necessário
+      // Removida para evitar duplicação com o sistema de notificações persistentes
 
       return res.json(response);
     } catch (error) {

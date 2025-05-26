@@ -10,6 +10,7 @@ var _Role = require('../models/Role'); var _Role2 = _interopRequireDefault(_Role
 var _Permission = require('../models/Permission'); var _Permission2 = _interopRequireDefault(_Permission);
 var _RolePermission = require('../models/RolePermission'); var _RolePermission2 = _interopRequireDefault(_RolePermission);
 var _UserRole = require('../models/UserRole'); var _UserRole2 = _interopRequireDefault(_UserRole);
+var _Notification = require('../models/Notification'); var _Notification2 = _interopRequireDefault(_Notification);
 
 const models = [
   _City2.default,
@@ -22,6 +23,7 @@ const models = [
   _Permission2.default,
   _RolePermission2.default,
   _UserRole2.default,
+  _Notification2.default,
 ];
 
 const connection = new (0, _sequelize2.default)(_database2.default);

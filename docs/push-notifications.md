@@ -236,3 +236,23 @@ O sistema funciona nos seguintes navegadores:
 - Alguns navegadores podem restringir o número de notificações enviadas
 - Dispositivos móveis podem ter política de economia de bateria que atrasa notificações
 - O payload das notificações é limitado (geralmente a 4KB)
+
+### Interação com Notificações
+
+#### Visualização de Detalhes
+
+Quando o usuário recebe uma notificação, ele pode:
+
+1. **Clicar na notificação temporária** (Snackbar que aparece no canto superior direito)
+   - Abre um diálogo com detalhes completos da notificação
+   - Mostra informações adicionais como data/hora de recebimento, número da OS, nome do cliente, etc.
+   - Oferece opção para navegar para a página de detalhes
+
+2. **Acessar o histórico de notificações** (ícone de sino no menu lateral)
+   - Lista todas as notificações recebidas
+   - Clique em qualquer notificação abre o diálogo de detalhes
+   - Marca automaticamente as notificações como lidas
+
+3. **Navegação direta** (botão "Ver Detalhes" no diálogo)
+   - Redireciona para a página específica da ordem de serviço
+   - URL configurada nos dados da notificação: `/trabalho-ordens/{numeroOS}`

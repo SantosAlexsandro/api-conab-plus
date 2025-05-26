@@ -35,6 +35,7 @@ var _addressRoutes = require('./routes/addressRoutes'); var _addressRoutes2 = _i
 var _gupshupRoutes = require('./routes/gupshupRoutes'); var _gupshupRoutes2 = _interopRequireDefault(_gupshupRoutes);
 var _workOrderWaitingQueue = require('./routes/workOrderWaitingQueue'); var _workOrderWaitingQueue2 = _interopRequireDefault(_workOrderWaitingQueue);
 var _pushNotificationRoutes = require('./routes/pushNotificationRoutes'); var _pushNotificationRoutes2 = _interopRequireDefault(_pushNotificationRoutes);
+var _notificationRoutes = require('./routes/notificationRoutes'); var _notificationRoutes2 = _interopRequireDefault(_notificationRoutes);
 var _roleRoutes = require('./routes/roleRoutes'); var _roleRoutes2 = _interopRequireDefault(_roleRoutes);
 var _permissionRoutes = require('./routes/permissionRoutes'); var _permissionRoutes2 = _interopRequireDefault(_permissionRoutes);
 var _userRoleRoutes = require('./routes/userRoleRoutes'); var _userRoleRoutes2 = _interopRequireDefault(_userRoleRoutes);
@@ -106,6 +107,7 @@ class App {
     this.app.use('/user-groups/', _userGroupRoutes2.default);
     this.app.use('/work-order-queue/', _workOrderWaitingQueue2.default);
     this.app.use('/notifications/', _pushNotificationRoutes2.default);
+    this.app.use('/api/notifications/', _notificationRoutes2.default);
     //this.app.use('/gupshup/', gupshupRoutes);
 
     // Novas rotas de permissões e perfis
