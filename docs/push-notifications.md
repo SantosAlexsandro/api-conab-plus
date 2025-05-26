@@ -75,6 +75,101 @@ await PushNotificationService.sendToEndpoint(endpoint, {
 });
 ```
 
+## Integração com g4Flex
+
+### Notificações para Ordens de Serviço
+
+O sistema está integrado com o g4Flex para enviar notificações automaticamente quando:
+
+1. **Nova ordem de serviço criada** - Quando uma ordem de serviço é criada através da integração g4Flex
+   - Localização: `api-conab+/src/integrations/g4flex/services/WorkOrderService.js`
+   - Método: `createWorkOrder()`
+   - Notificação enviada para: Todos os usuários ativos
+
+2. **Técnico atribuído à ordem de serviço** - Quando um técnico é atribuído a uma ordem de serviço
+   - Localização: `api-conab+/src/integrations/g4flex/services/WorkOrderService.js`
+   - Método: `assignTechnicianToWorkOrder()`
+   - Notificação enviada para: Todos os usuários ativos
+
+### Exemplo de Notificação para Ordem de Serviço
+
+**Criação de Ordem de Serviço:**
+```javascript
+await pushNotificationService.sendToAll({
+  title: 'Nova Ordem de Serviço Criada',
+  body: `Ordem de Serviço ${workOrderNumber} foi criada para ${customerName}`,
+  icon: '/icons/icon-192x192.png',
+  tag: 'work-order-created',
+  data: {
+    type: 'work_order_created',
+    workOrderNumber: workOrderNumber,
+    customerName: customerName,
+    uraRequestId: uraRequestId,
+    url: `/trabalho-ordens/${workOrderNumber}`
+  }
+});
+```
+
+**Atribuição de Técnico:**
+```javascript
+await pushNotificationService.sendToAll({
+  title: 'Técnico Atribuído',
+  body: `Técnico ${technicianName} foi atribuído à Ordem de Serviço ${workOrderNumber}`,
+  icon: '/icons/icon-192x192.png',
+  tag: 'technician-assigned',
+  data: {
+    type: 'technician_assigned',
+    workOrderNumber: workOrderNumber,
+    technicianName: technicianName,
+    technicianId: technicianId,
+    uraRequestId: uraRequestId,
+    url: `/trabalho-ordens/${workOrderNumber}`
+  }
+});
+```
+
+### Como Testar a Integração g4Flex
+
+1. **Teste via Postman ou curl**:
+   ```bash
+   POST http://localhost:3000/api/integrations/g4flex/work-orders/requests
+   Headers:
+     Content-Type: application/json
+   Query Params:
+     customerIdentifier: 12345678901 (CPF/CNPJ)
+     uraRequestId: test-123456
+
+   Body:
+   {
+     "productId": "001",
+     "requesterNameAndPosition": "João Silva - Gerente",
+     "incidentAndReceiverName": "Problema no equipamento - Maria Santos",
+     "requesterContact": "11999887766"
+   }
+   ```
+
+2. **Verificar se a notificação foi enviada**:
+   - Verifique os logs do backend para confirmar que a notificação foi enviada
+   - No frontend, a notificação deve aparecer automaticamente
+   - Teste com o navegador aberto para ver a notificação in-app
+   - Teste com o navegador fechado para ver a notificação do sistema
+
+### Fluxo Completo de Notificações
+
+1. **Criação da Ordem de Serviço**:
+   - Requisição para `/api/integrations/g4flex/work-orders/requests`
+   - Processamento pela fila `createWorkOrder`
+   - Criação da OS no ERP
+   - **🔔 Notificação:** "Nova Ordem de Serviço Criada"
+   - Adição à fila `assignTechnician`
+
+2. **Atribuição de Técnico**:
+   - Processamento pela fila `assignTechnician`
+   - Busca por técnico disponível
+   - Atribuição do técnico à OS no ERP
+   - **🔔 Notificação:** "Técnico Atribuído"
+   - Atualização do status para `WAITING_ARRIVAL`
+
 ## Estrutura de dados
 
 ### Modelo PushSubscription

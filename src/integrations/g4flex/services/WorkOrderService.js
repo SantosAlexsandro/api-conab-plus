@@ -8,6 +8,9 @@ import entityService from './EntityService';
 import contractService from './ContractService';
 import WorkOrderERPService from '../../../integrations/erp/services/WorkOrderService';
 import EmployeeERPService from '../../../integrations/erp/services/EmployeeERPService';
+import BaseERPService from '../../../services/BaseERPService';
+import PushNotificationService from '../../../services/PushNotificationService';
+
 class WorkOrderService extends BaseG4FlexService {
   constructor() {
     super();
@@ -112,6 +115,45 @@ class WorkOrderService extends BaseG4FlexService {
       });
 
       console.log(`[WorkOrderService] Work order ${response?.data?.Numero} created successfully`);
+
+      // 3. Enviar notificação push para todos os usuários
+      // Esta notificação será enviada para todos os usuários logados no sistema
+      // quando uma nova ordem de serviço for criada através da integração g4Flex
+      console.log('[WorkOrderService] Sending push notification to all users');
+      try {
+        console.log('[WorkOrderService] PushNotificationService imported:', !!PushNotificationService);
+
+        // Verificar se há assinaturas disponíveis
+        const subscriptions = await PushNotificationService.getSubscriptions({ active: true });
+        console.log('[WorkOrderService] Available subscriptions:', subscriptions.length);
+
+        if (subscriptions.length === 0) {
+          console.log('[WorkOrderService] No active subscriptions found, skipping notification');
+        } else {
+          console.log('[WorkOrderService] Attempting to send notification...');
+
+          const notificationResult = await PushNotificationService.sendToAll({
+            title: 'Nova Ordem de Serviço Criada',
+            body: `Ordem de Serviço ${response?.data?.Numero} foi criada para ${customerData.nome}`,
+            icon: '/icons/icon-192x192.png',
+            tag: 'work-order-created',
+            data: {
+              type: 'work_order_created',
+              workOrderNumber: response?.data?.Numero,
+              customerName: customerData.nome,
+              uraRequestId: uraRequestId,
+              url: `/trabalho-ordens/${response?.data?.Numero}` // URL para redirecionamento no frontend
+            }
+          });
+
+          console.log('[WorkOrderService] Push notification result:', notificationResult);
+          console.log('[WorkOrderService] Push notification sent successfully');
+        }
+      } catch (pushError) {
+        console.error('[WorkOrderService] Failed to send push notification:', pushError);
+        console.error('[WorkOrderService] Push notification error stack:', pushError.stack);
+        // Não interrompe o processo se a notificação falhar
+      }
 
       // 2. Notify webhook
       console.log('[WorkOrderService] Notifying webhook');
@@ -460,7 +502,43 @@ class WorkOrderService extends BaseG4FlexService {
           console.error(`[WorkOrderService] Erro ao agendar feedback de atribuição: ${feedbackError.message}`);
         }
 
-        return { success: true, orderId: workOrderId, technicianId: technician.id };
+        // Enviar notificação push sobre a atribuição do técnico
+        console.log('[WorkOrderService] Sending push notification about technician assignment');
+        try {
+          // Verificar se há assinaturas disponíveis
+          const subscriptions = await PushNotificationService.getSubscriptions({ active: true });
+          console.log('[WorkOrderService] Available subscriptions for technician assignment:', subscriptions.length);
+
+          if (subscriptions.length === 0) {
+            console.log('[WorkOrderService] No active subscriptions found for technician assignment');
+          } else {
+            console.log('[WorkOrderService] Sending technician assignment notification...');
+
+            const notificationResult = await PushNotificationService.sendToAll({
+              title: 'Técnico Atribuído',
+              body: `Técnico ${technician.nome} foi atribuído à Ordem de Serviço ${workOrderId}`,
+              icon: '/icons/icon-192x192.png',
+              tag: 'technician-assigned',
+              data: {
+                type: 'technician_assigned',
+                workOrderNumber: workOrderId,
+                technicianName: technician.nome,
+                technicianId: technician.id,
+                uraRequestId: uraRequestId,
+                url: `/trabalho-ordens/${workOrderId}` // URL para redirecionamento no frontend
+              }
+            });
+
+            console.log('[WorkOrderService] Technician assignment notification result:', notificationResult);
+            console.log('[WorkOrderService] Technician assignment notification sent successfully');
+          }
+        } catch (pushError) {
+          console.error('[WorkOrderService] Failed to send technician assignment notification:', pushError);
+          console.error('[WorkOrderService] Technician assignment notification error stack:', pushError.stack);
+          // Não interrompe o processo se a notificação falhar
+        }
+
+        return { success: true, orderId: workOrderId, technicianId: technician.id, technicianName: technician.nome };
       } else {
         // Sem técnico disponível, o reagendamento será feito pelo worker
 

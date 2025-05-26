@@ -8,6 +8,9 @@ var _EntityService = require('./EntityService'); var _EntityService2 = _interopR
 var _ContractService = require('./ContractService'); var _ContractService2 = _interopRequireDefault(_ContractService);
 var _WorkOrderService = require('../../../integrations/erp/services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
 var _EmployeeERPService = require('../../../integrations/erp/services/EmployeeERPService'); var _EmployeeERPService2 = _interopRequireDefault(_EmployeeERPService);
+var _BaseERPService = require('../../../services/BaseERPService'); var _BaseERPService2 = _interopRequireDefault(_BaseERPService);
+var _PushNotificationService = require('../../../services/PushNotificationService'); var _PushNotificationService2 = _interopRequireDefault(_PushNotificationService);
+
 class WorkOrderService extends _BaseG4FlexService2.default {
   constructor() {
     super();
@@ -113,11 +116,50 @@ class WorkOrderService extends _BaseG4FlexService2.default {
 
       console.log(`[WorkOrderService] Work order ${_optionalChain([response, 'optionalAccess', _7 => _7.data, 'optionalAccess', _8 => _8.Numero])} created successfully`);
 
+      // 3. Enviar notificação push para todos os usuários
+      // Esta notificação será enviada para todos os usuários logados no sistema
+      // quando uma nova ordem de serviço for criada através da integração g4Flex
+      console.log('[WorkOrderService] Sending push notification to all users');
+      try {
+        console.log('[WorkOrderService] PushNotificationService imported:', !!_PushNotificationService2.default);
+
+        // Verificar se há assinaturas disponíveis
+        const subscriptions = await _PushNotificationService2.default.getSubscriptions({ active: true });
+        console.log('[WorkOrderService] Available subscriptions:', subscriptions.length);
+
+        if (subscriptions.length === 0) {
+          console.log('[WorkOrderService] No active subscriptions found, skipping notification');
+        } else {
+          console.log('[WorkOrderService] Attempting to send notification...');
+
+          const notificationResult = await _PushNotificationService2.default.sendToAll({
+            title: 'Nova Ordem de Serviço Criada',
+            body: `Ordem de Serviço ${_optionalChain([response, 'optionalAccess', _9 => _9.data, 'optionalAccess', _10 => _10.Numero])} foi criada para ${customerData.nome}`,
+            icon: '/icons/icon-192x192.png',
+            tag: 'work-order-created',
+            data: {
+              type: 'work_order_created',
+              workOrderNumber: _optionalChain([response, 'optionalAccess', _11 => _11.data, 'optionalAccess', _12 => _12.Numero]),
+              customerName: customerData.nome,
+              uraRequestId: uraRequestId,
+              url: `/trabalho-ordens/${_optionalChain([response, 'optionalAccess', _13 => _13.data, 'optionalAccess', _14 => _14.Numero])}` // URL para redirecionamento no frontend
+            }
+          });
+
+          console.log('[WorkOrderService] Push notification result:', notificationResult);
+          console.log('[WorkOrderService] Push notification sent successfully');
+        }
+      } catch (pushError) {
+        console.error('[WorkOrderService] Failed to send push notification:', pushError);
+        console.error('[WorkOrderService] Push notification error stack:', pushError.stack);
+        // Não interrompe o processo se a notificação falhar
+      }
+
       // 2. Notify webhook
       console.log('[WorkOrderService] Notifying webhook');
       try {
         await _workOrderqueue2.default.add('processWorkOrderFeedback', {
-          orderId: _optionalChain([response, 'optionalAccess', _9 => _9.data, 'optionalAccess', _10 => _10.Numero]),
+          orderId: _optionalChain([response, 'optionalAccess', _15 => _15.data, 'optionalAccess', _16 => _16.Numero]),
           feedback: 'work_order_created',
           uraRequestId: uraRequestId,
           customerName: customerData.nome,
@@ -142,7 +184,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
 
       return {
         success: true,
-        workOrder: _optionalChain([response, 'optionalAccess', _11 => _11.data, 'optionalAccess', _12 => _12.Numero]),
+        workOrder: _optionalChain([response, 'optionalAccess', _17 => _17.data, 'optionalAccess', _18 => _18.Numero]),
         webhookNotified: true
       };
 
@@ -460,7 +502,43 @@ class WorkOrderService extends _BaseG4FlexService2.default {
           console.error(`[WorkOrderService] Erro ao agendar feedback de atribuição: ${feedbackError.message}`);
         }
 
-        return { success: true, orderId: workOrderId, technicianId: technician.id };
+        // Enviar notificação push sobre a atribuição do técnico
+        console.log('[WorkOrderService] Sending push notification about technician assignment');
+        try {
+          // Verificar se há assinaturas disponíveis
+          const subscriptions = await _PushNotificationService2.default.getSubscriptions({ active: true });
+          console.log('[WorkOrderService] Available subscriptions for technician assignment:', subscriptions.length);
+
+          if (subscriptions.length === 0) {
+            console.log('[WorkOrderService] No active subscriptions found for technician assignment');
+          } else {
+            console.log('[WorkOrderService] Sending technician assignment notification...');
+
+            const notificationResult = await _PushNotificationService2.default.sendToAll({
+              title: 'Técnico Atribuído',
+              body: `Técnico ${technician.nome} foi atribuído à Ordem de Serviço ${workOrderId}`,
+              icon: '/icons/icon-192x192.png',
+              tag: 'technician-assigned',
+              data: {
+                type: 'technician_assigned',
+                workOrderNumber: workOrderId,
+                technicianName: technician.nome,
+                technicianId: technician.id,
+                uraRequestId: uraRequestId,
+                url: `/trabalho-ordens/${workOrderId}` // URL para redirecionamento no frontend
+              }
+            });
+
+            console.log('[WorkOrderService] Technician assignment notification result:', notificationResult);
+            console.log('[WorkOrderService] Technician assignment notification sent successfully');
+          }
+        } catch (pushError) {
+          console.error('[WorkOrderService] Failed to send technician assignment notification:', pushError);
+          console.error('[WorkOrderService] Technician assignment notification error stack:', pushError.stack);
+          // Não interrompe o processo se a notificação falhar
+        }
+
+        return { success: true, orderId: workOrderId, technicianId: technician.id, technicianName: technician.nome };
       } else {
         // Sem técnico disponível, o reagendamento será feito pelo worker
 
