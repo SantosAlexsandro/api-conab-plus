@@ -38,6 +38,8 @@ const workOrderWorker = new (0, _bullmq.Worker)(
       return await processWorkOrderFeedback(job);
     } else if (jobType === "cancelWorkOrder") {
       return await processCancelWorkOrder(job);
+    } else if (jobType === "processArrivalCheck") {
+      return await processArrivalCheck(job);
     } else {
       console.log(`❓ Tipo de job não reconhecido: ${jobType}`);
       throw new Error(`Tipo de job não reconhecido: ${jobType}`);
@@ -61,7 +63,12 @@ async function processCreateWorkOrder(job) {
       entityName: orderData.customerName,
       uraRequestId: orderData.uraRequestId,
       priority: orderData.priority || 'normal',
-      source: 'g4flex'
+      source: 'g4flex',
+      customerIdentifier: orderData.identifierValue,
+      productId: orderData.productId,
+      requesterNameAndPosition: orderData.requesterNameAndPosition,
+      incidentAndReceiverName: orderData.incidentAndReceiverName,
+      requesterContact: orderData.requesterContact,
     });
 
     // Se for uma solicitação duplicada, retornar o resultado do serviço
@@ -192,6 +199,18 @@ async function processAssignTechnician(job) {
       console.log(`✅ Técnico ${result.technicianName || result.technicianId} registrado para ordem ${orderId}`);
     }
 
+    // Adicionar na fila de verificação de chegada no cliente
+    await _workOrderqueue2.default.add("processArrivalCheck", {
+      orderId,
+      uraRequestId: validUraRequestId,
+      technicianName: result.technicianName || result.technicianId
+    }, {
+      delay: 1 * 60 * 1000, // 1 minuto de delay
+      removeOnComplete: false
+    });
+
+    console.log(`📅 Verificação de chegada agendada para ordem ${orderId} em 2 minutos`);
+
     return result;
   } catch (error) {
     console.error(`❌ Erro ao atribuir técnico à ordem ${orderId}:`, error);
@@ -319,6 +338,81 @@ async function processCancelWorkOrder(job) {
     }
 
     throw error;
+  }
+}
+
+// Função para processar verificação de chegada no cliente
+async function processArrivalCheck(job) {
+  const { orderId, uraRequestId, technicianName } = job.data;
+  console.log(`🔄 Processando verificação de chegada para ordem ${orderId} - Técnico: ${technicianName}`);
+
+  try {
+    // Garantir que temos um uraRequestId válido
+    const validUraRequestId = uraRequestId;
+
+    // Verificar se a ordem foi cancelada ou concluída
+    const orderStatus = await _WorkOrderService2.default.isOrderFulfilledORCancelled(orderId);
+
+    if (orderStatus.isCancelled) {
+      console.log(`⚠️ Ordem ${orderId} já foi cancelada`);
+      await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+        validUraRequestId,
+        orderId,
+        'CANCELED'
+      );
+      return { success: false, orderCancelled: true };
+    } else if (orderStatus.isFulfilled) {
+      console.log(`✅ Ordem ${orderId} já foi concluída`);
+      await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+        validUraRequestId,
+        orderId,
+        'FINISHED'
+      );
+      return { success: true, orderCompleted: true };
+    }
+
+    // Reagendar próxima verificação em 2 minutos (até que caia em um dos ifs)
+    await _workOrderqueue2.default.add("processArrivalCheck", {
+      orderId,
+      uraRequestId: validUraRequestId,
+      technicianName,
+      retryCount: currentRetryCount + 1
+    }, {
+      delay: 1 * 60 * 1000, // 1 minuto
+      removeOnComplete: false
+    });
+
+    console.log(`📅 Próxima verificação agendada para ordem ${orderId} em 2 minutos`);
+
+    return {
+      success: true,
+      message: `Verificação ${currentRetryCount + 1} concluída para ordem ${orderId}`,
+      nextCheck: '2_minutes'
+    };
+
+  } catch (error) {
+    console.error(`❌ Erro ao verificar ordem ${orderId}:`, error);
+
+    // Reagendar verificação em caso de erro
+    const delay = 2 * 60 * 1000; // 2 minutos
+    const nextAttemptDate = generateNextAttemptDate(delay);
+    const validUraRequestId = uraRequestId || `retry-arrival-${Date.now()}`;
+
+    await _workOrderqueue2.default.add("processArrivalCheck",
+      {
+        orderId,
+        uraRequestId: validUraRequestId,
+        technicianName,
+        retryCount: (job.data.retryCount || 0) + 1
+      },
+      {
+        delay,
+        removeOnComplete: false
+      }
+    );
+
+    console.log(`📅 Reagendada verificação para ordem ${orderId} em ${nextAttemptDate} devido a erro`);
+    return { success: false, rescheduled: true, nextAttempt: nextAttemptDate };
   }
 }
 

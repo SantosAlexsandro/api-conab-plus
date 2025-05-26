@@ -17,8 +17,8 @@ class WorkOrderService extends _BaseG4FlexService2.default {
     // Constants for date range
     this.DATE_RANGE = {
       DAYS_BEFORE: 1,
-      DAYS_AFTER: 0,
-      PAGE_SIZE: 20,
+      DAYS_AFTER: 1,
+      PAGE_SIZE: 50,
       PAGE_INDEX: 1
     };
     this.ERP_SERVICE = new (0, _WorkOrderService2.default)();

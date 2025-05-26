@@ -51,6 +51,11 @@ var _logEvent = require('../utils/logEvent'); var _logEvent2 = _interopRequireDe
       priority: data.priority || 'normal',
       status: 'WAITING_CREATION',
       source: data.source || 'g4flex',
+      customerIdentifier: data.customerIdentifier,
+      productId: data.productId,
+      requesterNameAndPosition: data.requesterNameAndPosition,
+      incidentAndReceiverName: data.incidentAndReceiverName,
+      requesterContact: data.requesterContact,
     });
 
     await _logEvent2.default.call(void 0, {

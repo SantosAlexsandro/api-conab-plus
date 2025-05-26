@@ -51,6 +51,11 @@ export async function createInQueue(data) {
       priority: data.priority || 'normal',
       status: 'WAITING_CREATION',
       source: data.source || 'g4flex',
+      customerIdentifier: data.customerIdentifier,
+      productId: data.productId,
+      requesterNameAndPosition: data.requesterNameAndPosition,
+      incidentAndReceiverName: data.incidentAndReceiverName,
+      requesterContact: data.requesterContact,
     });
 
     await logEvent({
