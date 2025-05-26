@@ -54,11 +54,11 @@ class PushNotificationService {
     // Formato simplificado - mais direto e com menos aninhamento
     const payload = JSON.stringify({
       title,
-      body, 
+      body,
       icon: icon || '/icons/icon-192x192.png',
       tag: tag || 'default',
       data: data || {}
-      // IMPORTANTE: Removemos a estrutura aninhada "notification" 
+      // IMPORTANTE: Removemos a estrutura aninhada "notification"
       // que estava causando confusão entre diferentes implementações
     });
 
@@ -87,7 +87,7 @@ class PushNotificationService {
     for (const subscription of subscriptions) {
       try {
         console.log(`Enviando para ${subscription.endpoint.substring(0, 30)}...`);
-        
+
         // Formata a subscription para o formato esperado pelo web-push
         const pushSubscription = {
           endpoint: subscription.endpoint,
@@ -97,7 +97,7 @@ class PushNotificationService {
           },
           expirationTime: subscription.expirationTime
         };
-        
+
         await webpush.sendNotification(pushSubscription, payload);
         console.log('Notificação enviada com sucesso');
         results.success++;
@@ -124,10 +124,16 @@ class PushNotificationService {
   /**
    * Salva uma nova assinatura
    */
-  async saveSubscription(subscription, userId = null) {
+  async saveSubscription(subscription, userId = null, userName = null) {
     if (!subscription || !subscription.endpoint || !subscription.keys) {
       throw new Error('Dados de assinatura inválidos');
     }
+
+    console.log('PushNotificationService.saveSubscription - Parâmetros recebidos:', {
+      userId,
+      userName,
+      endpoint: subscription.endpoint.substring(0, 30) + '...'
+    });
 
     const [subscriptionRecord, created] = await PushSubscription.findOrCreate({
       where: {
@@ -139,19 +145,24 @@ class PushNotificationService {
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
         user_id: userId,
+        user_name: userName,
         active: true,
       },
     });
 
     if (!created) {
       // Atualiza a assinatura existente
+      console.log('Atualizando assinatura existente com userName:', userName);
       await subscriptionRecord.update({
         expirationTime: subscription.expirationTime || null,
         p256dh: subscription.keys.p256dh,
         auth: subscription.keys.auth,
         user_id: userId || subscriptionRecord.user_id,
+        user_name: userName || subscriptionRecord.user_name,
         active: true,
       });
+    } else {
+      console.log('Nova assinatura criada com userName:', userName);
     }
 
     return subscriptionRecord;
@@ -191,10 +202,10 @@ class PushNotificationService {
    */
   async getSubscriptions(filters = {}) {
     const query = { ...filters };
-    
+
     return PushSubscription.findAll({
       where: query,
-      attributes: ['id', 'endpoint', 'expirationTime', 'p256dh', 'auth', 'user_id', 'active', 'created_at', 'updated_at'],
+      attributes: ['id', 'endpoint', 'expirationTime', 'p256dh', 'auth', 'user_id', 'user_name', 'active', 'created_at', 'updated_at'],
     });
   }
 }

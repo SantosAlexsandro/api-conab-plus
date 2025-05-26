@@ -30,6 +30,11 @@
           allowNull: true,
           field: 'user_id'
         },
+        userName: {
+          type: _sequelize2.default.STRING(100),
+          allowNull: true,
+          field: 'user_name'
+        },
         active: {
           type: _sequelize2.default.BOOLEAN,
           allowNull: false,

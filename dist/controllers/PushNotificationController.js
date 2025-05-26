@@ -4,7 +4,7 @@ class PushNotificationController {
   async getPublicKey(req, res) {
     try {
       const publicKey = _PushNotificationService2.default.getPublicKey();
-      
+
       return res.json({ publicKey });
     } catch (error) {
       console.error('Erro ao obter chave pública VAPID:', error);
@@ -79,20 +79,20 @@ class PushNotificationController {
       }
 
       // Assegura que o formato de dados está consistente
-      const notificationData = { 
-        title, 
-        body, 
+      const notificationData = {
+        title,
+        body,
         // Usa valores default se não forem fornecidos
-        icon: icon || '/icons/icon-192x192.png', 
+        icon: icon || '/icons/icon-192x192.png',
         tag: tag || 'default',
         // Garante que data é um objeto
         data: typeof data === 'object' && data !== null ? data : { message: data || '' }
       };
-      
+
       console.log('Dados normalizados para envio:', notificationData);
 
       let result;
-      
+
       try {
         if (userId) {
           console.log(`Enviando notificação para usuário: ${userId}`);
@@ -130,13 +130,13 @@ class PushNotificationController {
     try {
       const { userId } = req.query;
       const filters = { active: true };
-      
+
       if (userId) {
         filters.user_id = userId;
       }
-      
+
       const subscriptions = await _PushNotificationService2.default.getSubscriptions(filters);
-      
+
       return res.json(subscriptions);
     } catch (error) {
       console.error('Erro ao listar assinaturas:', error);

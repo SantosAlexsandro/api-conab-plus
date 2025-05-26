@@ -30,6 +30,11 @@ export default class PushSubscription extends Model {
           allowNull: true,
           field: 'user_id'
         },
+        userName: {
+          type: Sequelize.STRING(100),
+          allowNull: true,
+          field: 'user_name'
+        },
         active: {
           type: Sequelize.BOOLEAN,
           allowNull: false,
