@@ -71,44 +71,6 @@
  *        cancellationRequesterInfo:
  *          type: string
  *          description: Informações do solicitante e motivo do cancelamento
- *    WorkOrderFailureRequest:
- *      type: object
- *      required:
- *        - requesterContact
- *      properties:
- *        customerIdentifier:
- *          type: string
- *          description: Identificador do cliente (pode ser CPF, CNPJ ou ID do cliente da Conab) - opcional
- *        productId:
- *          type: string
- *          description: Código de identificação do produto (opcional)
- *        requesterNameAndPosition:
- *          type: string
- *          description: Nome e cargo/função do solicitante (opcional)
- *        incidentAndReceiverName:
- *          type: string
- *          description: Descrição do incidente e nome da pessoa responsável que estará no local (opcional)
- *        requesterContact:
- *          type: string
- *          description: Número de contato do solicitante (obrigatório)
- *        cancellationRequesterInfo:
- *          type: string
- *          description: Informações do solicitante e motivo do cancelamento (opcional)
- *        failureReason:
- *          type: string
- *          description: Motivo da falha da URA
- *    WorkOrderFailureResponse:
- *      type: object
- *      properties:
- *        success:
- *          type: boolean
- *          description: Indica se a falha foi registrada com sucesso
- *        message:
- *          type: string
- *          description: Mensagem descritiva do resultado da operação
- *        request:
- *          type: object
- *          description: Dados da solicitação registrada na fila
  *  parameters:
  *    customerIdentifierParam:
  *      in: query
@@ -124,7 +86,6 @@
  *      schema:
  *        type: string
  *      description: ID da requisição da URA (obrigatório)
-
  */
 
 /**
@@ -274,47 +235,6 @@
  *                  example: "Token inválido para acesso à API G4Flex."
  *      '404':
  *        description: Cliente ou ordem de serviço não encontrada
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/Error'
- *      '500':
- *        description: Erro interno do servidor
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/Error'
- *
- * /api/integrations/g4flex/work-orders/request-failures:
- *  post:
- *    tags:
- *      - G4Flex - Ordens de Serviço
- *    x-public: true
- *    summary: Registra falhas da URA
- *    description: Registra falhas ocorridas na URA durante o processamento de solicitações de ordens de serviço. O customerIdentifier é opcional e pode ser enviado no payload. Endpoint público sem necessidade de autenticação.
- *    parameters:
- *      - $ref: '#/components/parameters/uraRequestIdParam'
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            $ref: '#/components/schemas/WorkOrderFailureRequest'
- *    responses:
- *      '201':
- *        description: URA failure registered successfully
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/WorkOrderFailureResponse'
- *      '400':
- *        description: Erro de validação dos parâmetros
- *        content:
- *          application/json:
- *            schema:
- *              $ref: '#/components/schemas/Error'
- *      '409':
- *        description: Duplicate request
  *        content:
  *          application/json:
  *            schema:

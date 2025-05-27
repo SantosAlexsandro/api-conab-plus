@@ -44,6 +44,7 @@ import userRoleRoutes from './routes/userRoleRoutes';
 import g4flexContractRoutes from './integrations/g4flex/routes/contractRoutes'
 import g4flexWorkOrderRoutes from './integrations/g4flex/routes/workOrderRoutes'
 import g4flexTokenRoutes from './integrations/g4flex/routes/tokenRoutes'
+import g4flexUraRoutes from './integrations/g4flex/routes/uraRoutes'
 
 // ERP Integration
 import erpTechnicianRoutes from './integrations/erp/routes/technicianRoutes'
@@ -118,6 +119,7 @@ class App {
     // G4Flex
     this.app.use('/api/integrations/g4flex/contracts/', g4flexContractRoutes);
     this.app.use('/api/integrations/g4flex/work-orders/', g4flexWorkOrderRoutes);
+    this.app.use('/api/integrations/g4flex/ura/', g4flexUraRoutes);
     this.app.use('/api/integrations/g4flex/token', g4flexTokenRoutes);
 
     // ERP Integration
