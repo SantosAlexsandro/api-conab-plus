@@ -3,6 +3,7 @@ var _index = require('./index'); var _index2 = _interopRequireDefault(_index);
 require('./auth');
 require('./contracts');
 require('./workOrders');
+require('./ura');
 
 /**
  * Define which swagger files should be included based on environment
@@ -13,14 +14,16 @@ const getSwaggerOptions = () => {
   const baseApiFiles = [
     './src/integrations/g4flex/routes/tokenRoutes.js',
     './src/integrations/g4flex/routes/contractRoutes.js',
-    './src/integrations/g4flex/routes/workOrderRoutes.js'
+    './src/integrations/g4flex/routes/workOrderRoutes.js',
+    './src/integrations/g4flex/routes/uraRoutes.js'
   ];
 
   // Base Swagger documentation files
   const baseSwaggerFiles = [
     './src/swagger/g4flex/auth.js',
     './src/swagger/g4flex/contracts.js',
-    './src/swagger/g4flex/workOrders.js'
+    './src/swagger/g4flex/workOrders.js',
+    './src/swagger/g4flex/ura.js'
   ];
 
   // In production, we can filter specific APIs if needed

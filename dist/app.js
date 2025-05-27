@@ -44,6 +44,7 @@ var _userRoleRoutes = require('./routes/userRoleRoutes'); var _userRoleRoutes2 =
 var _contractRoutes = require('./integrations/g4flex/routes/contractRoutes'); var _contractRoutes2 = _interopRequireDefault(_contractRoutes);
 var _workOrderRoutes3 = require('./integrations/g4flex/routes/workOrderRoutes'); var _workOrderRoutes4 = _interopRequireDefault(_workOrderRoutes3);
 var _tokenRoutes3 = require('./integrations/g4flex/routes/tokenRoutes'); var _tokenRoutes4 = _interopRequireDefault(_tokenRoutes3);
+var _uraRoutes = require('./integrations/g4flex/routes/uraRoutes'); var _uraRoutes2 = _interopRequireDefault(_uraRoutes);
 
 // ERP Integration
 var _technicianRoutes = require('./integrations/erp/routes/technicianRoutes'); var _technicianRoutes2 = _interopRequireDefault(_technicianRoutes);
@@ -118,6 +119,7 @@ class App {
     // G4Flex
     this.app.use('/api/integrations/g4flex/contracts/', _contractRoutes2.default);
     this.app.use('/api/integrations/g4flex/work-orders/', _workOrderRoutes4.default);
+    this.app.use('/api/integrations/g4flex/ura/', _uraRoutes2.default);
     this.app.use('/api/integrations/g4flex/token', _tokenRoutes4.default);
 
     // ERP Integration
