@@ -343,7 +343,7 @@ async function processCancelWorkOrder(job) {
 
 // Função para processar verificação de chegada no cliente
 async function processArrivalCheck(job) {
-  const { orderId, uraRequestId, technicianName } = job.data;
+  const { orderId, uraRequestId, technicianName, retryCount = 0 } = job.data;
   console.log(`🔄 Processando verificação de chegada para ordem ${orderId} - Técnico: ${technicianName}`);
 
   try {
@@ -371,23 +371,23 @@ async function processArrivalCheck(job) {
       return { success: true, orderCompleted: true };
     }
 
-    // Reagendar próxima verificação em 2 minutos (até que caia em um dos ifs)
+    // Reagendar próxima verificação em 1 minuto (até que caia em um dos ifs)
     await workOrderQueue.add("processArrivalCheck", {
       orderId,
       uraRequestId: validUraRequestId,
       technicianName,
-      retryCount: currentRetryCount + 1
+      retryCount: retryCount + 1
     }, {
       delay: 1 * 60 * 1000, // 1 minuto
       removeOnComplete: false
     });
 
-    console.log(`📅 Próxima verificação agendada para ordem ${orderId} em 2 minutos`);
+    console.log(`📅 Próxima verificação agendada para ordem ${orderId} em 1 minuto`);
 
     return {
       success: true,
-      message: `Verificação ${currentRetryCount + 1} concluída para ordem ${orderId}`,
-      nextCheck: '2_minutes'
+      message: `Verificação ${retryCount + 1} concluída para ordem ${orderId}`,
+      nextCheck: '1_minute'
     };
 
   } catch (error) {
