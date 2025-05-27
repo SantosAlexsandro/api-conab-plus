@@ -317,10 +317,10 @@ class WorkOrderController {
   }
 
   // Registra falha da URA
-  async handleUraFailure(req, res) {
-    // Pega uraRequestId dos query params e customerIdentifier pode vir de ambos
-    let { uraRequestId = '' } = req.query;
-    let { customerIdentifier = '' } = { ...req.query, ...req.body };
+  async handleRequestFailures(req, res) {
+    // Pega uraRequestId dos query params e customerIdentifier do payload (body)
+    let { uraRequestId = "" } = req.query;
+    let { customerIdentifier = "" } = req.body;
 
     // Em ambiente de desenvolvimento, gerar automaticamente uraRequestId se não fornecido
     if (!uraRequestId && process.env.NODE_ENV === 'development') {
@@ -330,18 +330,34 @@ class WorkOrderController {
 
     try {
       // Usa validação específica para falhas da URA (customerIdentifier opcional)
-      const validationError = _uraValidator.validateURAFailureQuery.call(void 0, { ...req.query, ...req.body });
+      const validationError = _uraValidator.validateURAFailureQuery.call(void 0, { customerIdentifier, uraRequestId });
       if (validationError) {
         await _logEvent2.default.call(void 0, {
           uraRequestId,
           source: 'g4flex',
           action: 'ura_failure_validation_error',
-          payload: req.body, // Só o body no payload
+          payload: { customerIdentifier, uraRequestId, ...req.body },
           response: { error: validationError },
           statusCode: 400,
           error: validationError,
         });
         return res.status(400).json({ error: validationError });
+      }
+
+      // Validação de campo obrigatório: requesterContact
+      const { requesterContact } = req.body;
+      if (!requesterContact) {
+        const errorMsg = 'Missing required field: requesterContact';
+        await _logEvent2.default.call(void 0, {
+          uraRequestId,
+          source: 'g4flex',
+          action: 'ura_failure_validation_error',
+          payload: { customerIdentifier, uraRequestId, ...req.body },
+          response: { error: errorMsg },
+          statusCode: 400,
+          error: errorMsg,
+        });
+        return res.status(400).json({ error: errorMsg });
       }
 
       // Resolve o identificador apenas se customerIdentifier foi fornecido
@@ -364,12 +380,12 @@ class WorkOrderController {
           uraRequestId,
           source: 'g4flex',
           action: 'ura_failure_duplicate_request',
-          payload: req.body, // Só o body no payload
-          response: { error: 'Solicitação já existe' },
+          payload: { customerIdentifier, uraRequestId, ...req.body },
+          response: { error: 'Request already exists' },
           statusCode: 409,
           error: 'Duplicate request'
         });
-        return res.status(409).json({ error: 'Uma solicitação com este ID já existe' });
+        return res.status(409).json({ error: 'A request with this ID already exists' });
       }
 
       // Cria novo registro na fila com status URA_FAILURE
@@ -391,14 +407,14 @@ class WorkOrderController {
         uraRequestId,
         source: 'g4flex',
         action: 'ura_failure_registered',
-        payload: req.body, // Só o body no payload
+        payload: { customerIdentifier, uraRequestId, ...req.body },
         response: { queueId: newRequest.id },
         statusCode: 201
       });
 
       return res.status(201).json({
         success: true,
-        message: 'Falha da URA registrada com sucesso',
+        message: 'URA failure registered successfully',
         request: newRequest
       });
 
@@ -407,15 +423,15 @@ class WorkOrderController {
         uraRequestId,
         source: 'g4flex',
         action: 'ura_failure_error',
-        payload: req.body, // Só o body no payload
+        payload: { customerIdentifier, uraRequestId, ...req.body },
         response: { error: error.message },
         statusCode: 500,
         error: error.message
       });
 
-      console.error('Erro ao registrar falha da URA:', error);
+      console.error('Error registering URA failure:', error);
       return res.status(500).json({
-        error: error.message || 'Erro ao registrar falha da URA'
+        error: error.message || 'Error registering URA failure'
       });
     }
   }
