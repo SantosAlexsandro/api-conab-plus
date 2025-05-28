@@ -1,4 +1,4 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// src/integrations/g4flex/queues/workOrder.worker.js
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// src/integrations/g4flex/queues/workOrder.worker.js
 
 // Este arquivo define um worker que processa as ordens de serviço (OS) da fila 'workOrderQueue'.
 // Ele atribui um técnico disponível à OS e atualiza o status da OS.
@@ -309,7 +309,6 @@ async function processCancelWorkOrder(job) {
     });
 
     // Atualizar status na fila de espera para todas as ordens canceladas
-    // TODO: Analisar se não é melhor atualizar considerando o número da OS, em vez do ID da URA.
     if (result.orders && result.orders.length > 0) {
       await Promise.all(result.orders.map(async (orderNumber) => {
         await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
@@ -318,6 +317,31 @@ async function processCancelWorkOrder(job) {
           'CANCELED'
         );
       }));
+
+      // Enviar feedback WhatsApp de cancelamento para cada ordem cancelada
+      try {
+        await Promise.all(result.orders.map(async (orderNumber) => {
+          // Buscar dados da ordem ORIGINAL pelo orderNumber, não pelo uraRequestId de cancelamento
+          const queueData = await _WorkOrderWaitingQueueService2.default.findByOrderNumber(orderNumber);
+          const customerName = _optionalChain([queueData, 'optionalAccess', _ => _.entityName]);
+          const phoneNumber = _optionalChain([queueData, 'optionalAccess', _2 => _2.requesterContact]);
+
+          if (phoneNumber && customerName) {
+            await _WhatsAppService2.default.sendWhatsAppMessage({
+              phoneNumber: phoneNumber,
+              workOrderId: orderNumber,
+              customerName: customerName,
+              feedback: 'order_cancelled',
+              uraRequestId: uraRequestId
+            });
+            console.log(`📱 Feedback de cancelamento enviado via WhatsApp para ${customerName} - ${phoneNumber} (ordem: ${orderNumber})`);
+          } else {
+            console.log(`⚠️ Não foi possível enviar feedback de cancelamento para ordem ${orderNumber}: dados insuficientes (nome: ${customerName}, telefone: ${phoneNumber})`);
+          }
+        }));
+      } catch (feedbackError) {
+        console.error('❌ Erro ao enviar feedback de cancelamento via WhatsApp:', feedbackError);
+      }
     }
 
     console.log(`✅ Ordens canceladas com sucesso: ${result.orders.join(', ')}`);
@@ -378,11 +402,11 @@ async function processArrivalCheck(job) {
       technicianName,
       retryCount: retryCount + 1
     }, {
-      delay: 1 * 60 * 1000, // 1 minuto
+      delay: 2 * 60 * 1000, // 1 minuto
       removeOnComplete: false
     });
 
-    console.log(`📅 Próxima verificação agendada para ordem ${orderId} em 1 minuto`);
+    console.log(`📅 Próxima verificação agendada para ordem ${orderId} em 2 minutos`);
 
     return {
       success: true,

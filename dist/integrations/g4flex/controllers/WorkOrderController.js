@@ -7,6 +7,8 @@ var _resolveNumericIdentifier = require('../utils/resolveNumericIdentifier');
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
 var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
 var _workOrderWaitingQueue = require('../../../models/workOrderWaitingQueue'); var _workOrderWaitingQueue2 = _interopRequireDefault(_workOrderWaitingQueue);
+var _WorkOrderWaitingQueueService = require('../../../services/WorkOrderWaitingQueueService'); var _WorkOrderWaitingQueueService2 = _interopRequireDefault(_WorkOrderWaitingQueueService);
+var _WhatsAppService = require('../services/WhatsAppService'); var _WhatsAppService2 = _interopRequireDefault(_WhatsAppService);
 
 class WorkOrderController {
   async getOpenOrdersByCustomerId(req, res) {
@@ -42,6 +44,34 @@ class WorkOrderController {
         identifierValue,
         uraRequestId
       });
+
+      // Se o cliente possui ordens abertas, enviar notificação via WhatsApp
+      if (result.customerHasOpenOrders && result.orders.length > 0) {
+        try {
+          // Pegar o número da primeira ordem encontrada
+          const firstOrderNumber = result.orders[0].number;
+
+          // Buscar dados da fila de espera usando o número da ordem
+          const queueData = await _WorkOrderWaitingQueueService2.default.findByOrderNumber(firstOrderNumber);
+
+          if (queueData && queueData.requesterContact) {
+            await _WhatsAppService2.default.sendWhatsAppMessage({
+              phoneNumber: queueData.requesterContact,
+              workOrderId: firstOrderNumber,
+              customerName: queueData.entityName,
+              feedback: 'existing_order_found',
+              uraRequestId: queueData.uraRequestId || uraRequestId
+            });
+
+            console.log(`📱 WhatsApp enviado para cliente ${queueData.entityName} sobre ordem existente ${firstOrderNumber}`);
+          } else {
+            console.log(`⚠️ Não foi possível enviar WhatsApp: dados da ordem ${firstOrderNumber} não encontrados na fila ou sem contato`);
+          }
+        } catch (whatsappError) {
+          console.error('❌ Erro ao enviar WhatsApp sobre ordem existente:', whatsappError);
+          // Não propagar o erro para não afetar a resposta da consulta
+        }
+      }
 
       await _logEvent2.default.call(void 0, {
         uraRequestId,

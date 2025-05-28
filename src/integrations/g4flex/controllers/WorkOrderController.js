@@ -7,6 +7,8 @@ import { resolveNumericIdentifier } from "../utils/resolveNumericIdentifier";
 import logEvent from "../../../utils/logEvent";
 import workOrderQueue from "../queues/workOrder.queue";
 import WorkOrderWaitingQueue from "../../../models/workOrderWaitingQueue";
+import WorkOrderWaitingQueueService from '../../../services/WorkOrderWaitingQueueService';
+import WhatsAppService from '../services/WhatsAppService';
 
 class WorkOrderController {
   async getOpenOrdersByCustomerId(req, res) {
@@ -42,6 +44,34 @@ class WorkOrderController {
         identifierValue,
         uraRequestId
       });
+
+      // Se o cliente possui ordens abertas, enviar notificação via WhatsApp
+      if (result.customerHasOpenOrders && result.orders.length > 0) {
+        try {
+          // Pegar o número da primeira ordem encontrada
+          const firstOrderNumber = result.orders[0].number;
+
+          // Buscar dados da fila de espera usando o número da ordem
+          const queueData = await WorkOrderWaitingQueueService.findByOrderNumber(firstOrderNumber);
+
+          if (queueData && queueData.requesterContact) {
+            await WhatsAppService.sendWhatsAppMessage({
+              phoneNumber: queueData.requesterContact,
+              workOrderId: firstOrderNumber,
+              customerName: queueData.entityName,
+              feedback: 'existing_order_found',
+              uraRequestId: queueData.uraRequestId || uraRequestId
+            });
+
+            console.log(`📱 WhatsApp enviado para cliente ${queueData.entityName} sobre ordem existente ${firstOrderNumber}`);
+          } else {
+            console.log(`⚠️ Não foi possível enviar WhatsApp: dados da ordem ${firstOrderNumber} não encontrados na fila ou sem contato`);
+          }
+        } catch (whatsappError) {
+          console.error('❌ Erro ao enviar WhatsApp sobre ordem existente:', whatsappError);
+          // Não propagar o erro para não afetar a resposta da consulta
+        }
+      }
 
       await logEvent({
         uraRequestId,

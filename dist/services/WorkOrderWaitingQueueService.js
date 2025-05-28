@@ -49,13 +49,13 @@ var _logEvent = require('../utils/logEvent'); var _logEvent2 = _interopRequireDe
       entityName: data.entityName,
       uraRequestId: data.uraRequestId,
       priority: data.priority || 'normal',
-      status: 'WAITING_CREATION',
+      status: data.status || 'WAITING_CREATION',
       source: data.source || 'g4flex',
       customerIdentifier: data.customerIdentifier,
       productId: data.productId,
       requesterNameAndPosition: data.requesterNameAndPosition,
       incidentAndReceiverName: data.incidentAndReceiverName,
-      requesterContact: data.requesterContact,
+      requesterContact: data.requesterContact
     });
 
     await _logEvent2.default.call(void 0, {
@@ -213,18 +213,35 @@ var _logEvent = require('../utils/logEvent'); var _logEvent2 = _interopRequireDe
   });
 } exports.findAll = findAll;
 
+ async function findByOrderNumber(orderNumber) {
+  console.log('🔎 INIT findByOrderNumber', { orderNumber });
 
-/*
-export async function findByOrderNumber(orderNumber) {
-  return await WorkOrderWaitingQueue.findOne({
+  if (!orderNumber) throw new Error('orderNumber is required');
+
+  const result = await _workOrderWaitingQueue2.default.findOne({
     where: { orderNumber }
   });
-}
 
-export async function findById(id) {
-  return await WorkOrderWaitingQueue.findByPk(id);
-}
-*/
+  if (!result) {
+    console.warn('⚠️ No record found in findByOrderNumber', { orderNumber });
+  }
+
+  return result;
+} exports.findByOrderNumber = findByOrderNumber;
+
+ async function findById(id) {
+  console.log('🔎 INIT findById', { id });
+
+  if (!id) throw new Error('id is required');
+
+  const result = await _workOrderWaitingQueue2.default.findByPk(id);
+
+  if (!result) {
+    console.warn('⚠️ No record found in findById', { id });
+  }
+
+  return result;
+} exports.findById = findById;
 
 exports. default = {
   createInQueue,
@@ -233,5 +250,7 @@ exports. default = {
   updateTechnicianAssigned,
   findByUraRequestId,
   findByStatus,
-  findAll
+  findAll,
+  findByOrderNumber,
+  findById
 };

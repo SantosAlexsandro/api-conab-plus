@@ -1,4 +1,10 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// src/services/g4flex/WebhookService.js
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// src/integrations/g4flex/services/WhatsAppService.js
+// Serviço para envio de mensagens WhatsApp via G4Flex
+// Tipos de feedback disponíveis:
+// - work_order_created: Quando uma ordem de serviço é criada
+// - technician_assigned: Quando um técnico é atribuído à ordem
+// - existing_order_found: Quando cliente consulta e já possui ordem aberta
+// - order_cancelled: Quando uma ordem de serviço é cancelada
 
 var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
@@ -21,9 +27,9 @@ class WhatsAppService {
     this.ERP_EMPLOYEE_SERVICE = new (0, _EmployeeERPService2.default)();
   }
 
-  async sendWhatsAppMessage({ phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId }) {
+  async sendWhatsAppMessage({ phoneNumber = '', workOrderId = '', customerName = '', feedback = '', technicianName = '', uraRequestId = '' }) {
 
-    if (this.isDevelopment) return
+    //if (this.isDevelopment) return
 
     console.log('INIT sendWhatsAppMessage', { phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId });
     try {
@@ -76,6 +82,41 @@ class WhatsAppService {
           params: [
             _formatUtils.normalizeName.call(void 0, technicianName),
             _optionalChain([employeeData, 'access', _2 => _2[0], 'optionalAccess', _3 => _3.Codigo]),
+            workOrderId
+          ]
+        });
+      }
+
+      if (feedback === 'existing_order_found') {
+        if (!customerName || customerName === '' || !workOrderId) {
+          console.log('Não foi possível enviar feedback de ordem existente, pois os dados necessários não foram encontrados');
+          return;
+        }
+
+        response = await this.axiosInstance.post('/api/enviar-mensagem/texto', {
+          clientPhone: finalPhoneNumber,
+          clientName: customerName,
+          canalWhatsapp: '1137323888',
+          queueId: 53,
+          templateId: 'b3c53e7e-fdbe-4eef-8068-bce6486f92bd',
+          params: [
+          ]
+        });
+      }
+
+      if (feedback === 'order_cancelled') {
+        if (!customerName || customerName === '' || !workOrderId) {
+          console.log('Não foi possível enviar feedback de cancelamento, pois os dados necessários não foram encontrados');
+          return;
+        }
+
+        response = await this.axiosInstance.post('/api/enviar-mensagem/texto', {
+          clientPhone: finalPhoneNumber,
+          clientName: customerName,
+          canalWhatsapp: '1137323888',
+          queueId: 53,
+          templateId: 'd638c087-b231-4e5a-b3bb-9c09dea4ee6b',
+          params: [
             workOrderId
           ]
         });

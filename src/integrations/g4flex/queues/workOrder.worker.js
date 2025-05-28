@@ -309,7 +309,6 @@ async function processCancelWorkOrder(job) {
     });
 
     // Atualizar status na fila de espera para todas as ordens canceladas
-    // TODO: Analisar se não é melhor atualizar considerando o número da OS, em vez do ID da URA.
     if (result.orders && result.orders.length > 0) {
       await Promise.all(result.orders.map(async (orderNumber) => {
         await WorkOrderWaitingQueueService.updateQueueStatus(
@@ -403,11 +402,11 @@ async function processArrivalCheck(job) {
       technicianName,
       retryCount: retryCount + 1
     }, {
-      delay: 1 * 60 * 1000, // 1 minuto
+      delay: 2 * 60 * 1000, // 1 minuto
       removeOnComplete: false
     });
 
-    console.log(`📅 Próxima verificação agendada para ordem ${orderId} em 1 minuto`);
+    console.log(`📅 Próxima verificação agendada para ordem ${orderId} em 2 minutos`);
 
     return {
       success: true,

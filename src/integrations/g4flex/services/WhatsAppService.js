@@ -98,10 +98,8 @@ class WhatsAppService {
           clientName: customerName,
           canalWhatsapp: '1137323888',
           queueId: 53,
-          templateId: 'template-id-para-ordem-existente', // TODO: Definir template ID correto
+          templateId: 'b3c53e7e-fdbe-4eef-8068-bce6486f92bd',
           params: [
-            customerName,
-            workOrderId
           ]
         });
       }
