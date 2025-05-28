@@ -161,11 +161,11 @@ class WhatsAppService {
           requestData: _optionalChain([error, 'access', _11 => _11.config, 'optionalAccess', _12 => _12.data]) ? JSON.parse(error.config.data) : null
         },
         statusCode: _optionalChain([error, 'access', _13 => _13.response, 'optionalAccess', _14 => _14.status]) || 500,
-        error: _optionalChain([error, 'access', _15 => _15.response, 'optionalAccess', _16 => _16.data, 'optionalAccess', _17 => _17.error]) || error.message
+        error: error.message
       });
 
       console.error('[WhatsAppService] Error sending WhatsApp message:', error);
-      throw new Error(`Failed to send WhatsApp message: ${_optionalChain([error, 'access', _18 => _18.response, 'optionalAccess', _19 => _19.data, 'optionalAccess', _20 => _20.error]) || error.message}`);
+      throw new Error(`Failed to send WhatsApp message: ${_optionalChain([error, 'access', _15 => _15.response, 'optionalAccess', _16 => _16.data, 'optionalAccess', _17 => _17.error]) || error.message}`);
     }
   }
 }

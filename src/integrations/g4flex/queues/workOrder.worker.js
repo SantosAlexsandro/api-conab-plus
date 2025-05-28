@@ -280,7 +280,10 @@ async function processWorkOrderFeedback(job) {
         orderId,
         feedback,
         technicianName,
+        technicianId,
         uraRequestId: uraRequestId,
+        requesterContact,
+        customerName,
         retryCount: (job.data.retryCount || 0) + 1
       },
       {

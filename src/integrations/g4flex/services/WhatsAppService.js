@@ -161,7 +161,7 @@ class WhatsAppService {
           requestData: error.config?.data ? JSON.parse(error.config.data) : null
         },
         statusCode: error.response?.status || 500,
-        error: error.response?.data?.error || error.message
+        error: error.message
       });
 
       console.error('[WhatsAppService] Error sending WhatsApp message:', error);
