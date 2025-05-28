@@ -97,7 +97,9 @@ async function processCreateWorkOrder(job) {
     // Adicionar na fila de atribuição de técnico
     await _workOrderqueue2.default.add("assignTechnician", {
       orderId: result.workOrder,
-      uraRequestId: orderData.uraRequestId
+      uraRequestId: orderData.uraRequestId,
+      customerName: orderData.customerName,
+      requesterContact: orderData.requesterContact
     });
 
     console.log(
@@ -127,7 +129,7 @@ async function processCreateWorkOrder(job) {
 
 // Função para processar atribuição de técnico à ordem
 async function processAssignTechnician(job) {
-  const { orderId, uraRequestId } = job.data;
+  const { orderId, uraRequestId, customerName, requesterContact } = job.data;
   console.log(`🔄 Processando atribuição de técnico para ordem ${orderId}`);
 
   try {
@@ -156,7 +158,9 @@ async function processAssignTechnician(job) {
 
     const result = await _WorkOrderService2.default.assignTechnicianToWorkOrder(
       orderId,
-      validUraRequestId
+      validUraRequestId,
+      customerName,
+      requesterContact
     );
 
     // Verificar se não há técnicos disponíveis e reagendar

@@ -435,7 +435,7 @@ class WorkOrderService extends BaseG4FlexService {
   }
 
   // Atribuir técnico à OS
-  async assignTechnicianToWorkOrder(workOrderId, uraRequestId) {
+  async assignTechnicianToWorkOrder(workOrderId, uraRequestId, customerName, requesterContact) {
 
     try {
       const technician = await technicianService.getAvailableTechnician();
@@ -478,7 +478,9 @@ class WorkOrderService extends BaseG4FlexService {
             feedback: 'technician_assigned',
             technicianName: technician.nome,
             technicianId: technician.id,
-            uraRequestId: uraRequestId
+            uraRequestId: uraRequestId,
+            customerName: customerName,
+            requesterContact: requesterContact
           });
           console.log(`[WorkOrderService] Feedback de atribuição de técnico agendado para ordem ${workOrderId}`);
         } catch (feedbackError) {
