@@ -318,6 +318,31 @@ async function processCancelWorkOrder(job) {
           'CANCELED'
         );
       }));
+
+      // Enviar feedback WhatsApp de cancelamento para cada ordem cancelada
+      try {
+        await Promise.all(result.orders.map(async (orderNumber) => {
+          // Buscar dados da ordem ORIGINAL pelo orderNumber, não pelo uraRequestId de cancelamento
+          const queueData = await WorkOrderWaitingQueueService.findByOrderNumber(orderNumber);
+          const customerName = queueData?.entityName;
+          const phoneNumber = queueData?.requesterContact;
+
+          if (phoneNumber && customerName) {
+            await WhatsAppService.sendWhatsAppMessage({
+              phoneNumber: phoneNumber,
+              workOrderId: orderNumber,
+              customerName: customerName,
+              feedback: 'order_cancelled',
+              uraRequestId: uraRequestId
+            });
+            console.log(`📱 Feedback de cancelamento enviado via WhatsApp para ${customerName} - ${phoneNumber} (ordem: ${orderNumber})`);
+          } else {
+            console.log(`⚠️ Não foi possível enviar feedback de cancelamento para ordem ${orderNumber}: dados insuficientes (nome: ${customerName}, telefone: ${phoneNumber})`);
+          }
+        }));
+      } catch (feedbackError) {
+        console.error('❌ Erro ao enviar feedback de cancelamento via WhatsApp:', feedbackError);
+      }
     }
 
     console.log(`✅ Ordens canceladas com sucesso: ${result.orders.join(', ')}`);

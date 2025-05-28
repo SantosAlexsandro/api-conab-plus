@@ -1,4 +1,10 @@
-// src/services/g4flex/WebhookService.js
+// src/integrations/g4flex/services/WhatsAppService.js
+// Serviço para envio de mensagens WhatsApp via G4Flex
+// Tipos de feedback disponíveis:
+// - work_order_created: Quando uma ordem de serviço é criada
+// - technician_assigned: Quando um técnico é atribuído à ordem
+// - existing_order_found: Quando cliente consulta e já possui ordem aberta
+// - order_cancelled: Quando uma ordem de serviço é cancelada
 
 import axios from 'axios';
 import logEvent from '../../../utils/logEvent';
@@ -21,9 +27,9 @@ class WhatsAppService {
     this.ERP_EMPLOYEE_SERVICE = new EmployeeERPService();
   }
 
-  async sendWhatsAppMessage({ phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId }) {
+  async sendWhatsAppMessage({ phoneNumber = '', workOrderId = '', customerName = '', feedback = '', technicianName = '', uraRequestId = '' }) {
 
-    if (this.isDevelopment) return
+    //if (this.isDevelopment) return
 
     console.log('INIT sendWhatsAppMessage', { phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId });
     try {
@@ -76,6 +82,43 @@ class WhatsAppService {
           params: [
             normalizeName(technicianName),
             employeeData[0]?.Codigo,
+            workOrderId
+          ]
+        });
+      }
+
+      if (feedback === 'existing_order_found') {
+        if (!customerName || customerName === '' || !workOrderId) {
+          console.log('Não foi possível enviar feedback de ordem existente, pois os dados necessários não foram encontrados');
+          return;
+        }
+
+        response = await this.axiosInstance.post('/api/enviar-mensagem/texto', {
+          clientPhone: finalPhoneNumber,
+          clientName: customerName,
+          canalWhatsapp: '1137323888',
+          queueId: 53,
+          templateId: 'template-id-para-ordem-existente', // TODO: Definir template ID correto
+          params: [
+            customerName,
+            workOrderId
+          ]
+        });
+      }
+
+      if (feedback === 'order_cancelled') {
+        if (!customerName || customerName === '' || !workOrderId) {
+          console.log('Não foi possível enviar feedback de cancelamento, pois os dados necessários não foram encontrados');
+          return;
+        }
+
+        response = await this.axiosInstance.post('/api/enviar-mensagem/texto', {
+          clientPhone: finalPhoneNumber,
+          clientName: customerName,
+          canalWhatsapp: '1137323888',
+          queueId: 53,
+          templateId: 'd638c087-b231-4e5a-b3bb-9c09dea4ee6b',
+          params: [
             workOrderId
           ]
         });
