@@ -33,7 +33,7 @@
           type: _sequelize.DataTypes.STRING,
           allowNull: false,
           validate: {
-            isIn: [['work_order_created', 'technician_assigned', 'work_order_completed', 'system_alert', 'maintenance', 'custom']],
+            isIn: [['work_order_created', 'technician_assigned', 'work_order_completed', 'work_order_released_mobile', 'system_alert', 'maintenance', 'custom']],
           },
         },
         priority: {

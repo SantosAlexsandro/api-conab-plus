@@ -302,6 +302,10 @@ class NotificationService {
       'technician_assigned': {
         title: 'Técnico Atribuído',
         body: `Técnico ${technicianInfo?.name} foi atribuído à Ordem de Serviço ${workOrderNumber}`
+      },
+      'work_order_released_mobile': {
+        title: '🚫 Atendimento Cancelado',
+        body: `Atendimento para a Ordem de Serviço ${workOrderNumber}, cliente ${customerName ? customerName.trim() : ''} foi CANCELADO ❌${technicianInfo?.name ? ` - Técnico ${technicianInfo.name.trim()}, por favor, sincronize o Alvo Mobile.` : ''}`
       }
     };
 

@@ -7,9 +7,11 @@ import workOrderQueue from '../queues/workOrder.queue';
 import entityService from './EntityService';
 import contractService from './ContractService';
 import WorkOrderERPService from '../../../integrations/erp/services/WorkOrderService';
+import WorkOrderMobileERPService from '../../../integrations/erp/services/WorkOrderMobileService';
 import EmployeeERPService from '../../../integrations/erp/services/EmployeeERPService';
 import BaseERPService from '../../../services/BaseERPService';
 import NotificationService from '../../../services/NotificationService';
+import WorkOrderWaitingQueueService from '../../../services/WorkOrderWaitingQueueService';
 
 class WorkOrderService extends BaseG4FlexService {
   constructor() {
@@ -22,6 +24,7 @@ class WorkOrderService extends BaseG4FlexService {
       PAGE_INDEX: 1
     };
     this.ERP_SERVICE = new WorkOrderERPService();
+    this.MOBILE_ERP_SERVICE = new WorkOrderMobileERPService();
     this.EMPLOYEE_SERVICE = new EmployeeERPService();
   }
 
@@ -371,6 +374,50 @@ class WorkOrderService extends BaseG4FlexService {
           });
 
           console.log(`[G4Flex] Closed work order ${order.number}`);
+
+          // Liberar a ordem de serviço no mobile após cancelamento
+          try {
+            await this.MOBILE_ERP_SERVICE.releaseWorkOrder(order.number);
+            console.log(`[G4Flex] Work order ${order.number} released in mobile system after cancellation`);
+
+            // Buscar informações do técnico na fila de espera
+            let technicianInfo = null;
+            try {
+              const queueData = await WorkOrderWaitingQueueService.findByOrderNumber(order.number);
+              if (queueData && queueData.technicianAssigned) {
+                technicianInfo = {
+                  name: queueData.technicianAssigned,
+                  id: queueData.technicianAssigned // Usando o nome como ID temporariamente
+                };
+                console.log(`[G4Flex] Found technician in queue for order ${order.number}: ${queueData.technicianAssigned}`);
+              }
+            } catch (queueError) {
+              console.warn(`[G4Flex] Could not find technician info in queue for order ${order.number}:`, queueError.message);
+            }
+
+            // Enviar notificação push sobre a liberação da ordem no mobile
+            try {
+              console.log(`[G4Flex] Preparing to send notification for order ${order.number}`);
+              console.log(`[G4Flex] Customer: ${customerData.nome}, URA: ${uraRequestId}, Technician: ${technicianInfo?.name || 'None'}`);
+
+              await NotificationService.sendWorkOrderNotification(
+                'work_order_released_mobile',
+                order.number,
+                customerData.nome,
+                uraRequestId,
+                technicianInfo
+              );
+              console.log(`[G4Flex] Mobile release notification sent for work order ${order.number}${technicianInfo ? ` with technician ${technicianInfo.name}` : ''}`);
+            } catch (notificationError) {
+              console.error(`[G4Flex] Failed to send mobile release notification for work order ${order.number}:`, notificationError);
+              console.error(`[G4Flex] Notification error details:`, notificationError.stack);
+              // Não interrompe o processo se a notificação falhar
+            }
+          } catch (releaseError) {
+            console.error(`[G4Flex] Error releasing work order ${order.number} in mobile system:`, releaseError);
+            // Não interrompe o processo, apenas loga o erro
+          }
+
           return;
         } else if (currentStageCode === '007.004') {
           await this.axiosInstance.post(
@@ -405,6 +452,50 @@ class WorkOrderService extends BaseG4FlexService {
           });
 
           console.log(`[G4Flex] Closed work order ${order.number}`);
+
+          // Liberar a ordem de serviço no mobile após cancelamento
+          try {
+            await this.MOBILE_ERP_SERVICE.releaseWorkOrder(order.number);
+            console.log(`[G4Flex] Work order ${order.number} released in mobile system after cancellation`);
+
+            // Buscar informações do técnico na fila de espera
+            let technicianInfo = null;
+            try {
+              const queueData = await WorkOrderWaitingQueueService.findByOrderNumber(order.number);
+              if (queueData && queueData.technicianAssigned) {
+                technicianInfo = {
+                  name: queueData.technicianAssigned,
+                  id: queueData.technicianAssigned // Usando o nome como ID temporariamente
+                };
+                console.log(`[G4Flex] Found technician in queue for order ${order.number}: ${queueData.technicianAssigned}`);
+              }
+            } catch (queueError) {
+              console.warn(`[G4Flex] Could not find technician info in queue for order ${order.number}:`, queueError.message);
+            }
+
+            // Enviar notificação push sobre a liberação da ordem no mobile
+            try {
+              console.log(`[G4Flex] Preparing to send notification for order ${order.number}`);
+              console.log(`[G4Flex] Customer: ${customerData.nome}, URA: ${uraRequestId}, Technician: ${technicianInfo?.name || 'None'}`);
+
+              await NotificationService.sendWorkOrderNotification(
+                'work_order_released_mobile',
+                order.number,
+                customerData.nome,
+                uraRequestId,
+                technicianInfo
+              );
+              console.log(`[G4Flex] Mobile release notification sent for work order ${order.number}${technicianInfo ? ` with technician ${technicianInfo.name}` : ''}`);
+            } catch (notificationError) {
+              console.error(`[G4Flex] Failed to send mobile release notification for work order ${order.number}:`, notificationError);
+              console.error(`[G4Flex] Notification error details:`, notificationError.stack);
+              // Não interrompe o processo se a notificação falhar
+            }
+          } catch (releaseError) {
+            console.error(`[G4Flex] Error releasing work order ${order.number} in mobile system:`, releaseError);
+            // Não interrompe o processo, apenas loga o erro
+          }
+
           return;
         } else {
           console.log(`[G4Flex] Order ${order.number} is in an unknown stage`);

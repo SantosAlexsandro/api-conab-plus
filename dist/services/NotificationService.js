@@ -302,6 +302,10 @@ class NotificationService {
       'technician_assigned': {
         title: 'Técnico Atribuído',
         body: `Técnico ${_optionalChain([technicianInfo, 'optionalAccess', _ => _.name])} foi atribuído à Ordem de Serviço ${workOrderNumber}`
+      },
+      'work_order_released_mobile': {
+        title: '🚫 Atendimento Cancelado',
+        body: `Atendimento para a Ordem de Serviço ${workOrderNumber}, cliente ${customerName ? customerName.trim() : ''} foi CANCELADO ❌${_optionalChain([technicianInfo, 'optionalAccess', _2 => _2.name]) ? ` - Técnico ${technicianInfo.name.trim()}, por favor, sincronize o Alvo Mobile.` : ''}`
       }
     };
 
@@ -321,8 +325,8 @@ class NotificationService {
         workOrderNumber,
         customerName,
         uraRequestId,
-        technicianName: _optionalChain([technicianInfo, 'optionalAccess', _2 => _2.name]),
-        technicianId: _optionalChain([technicianInfo, 'optionalAccess', _3 => _3.id]),
+        technicianName: _optionalChain([technicianInfo, 'optionalAccess', _3 => _3.name]),
+        technicianId: _optionalChain([technicianInfo, 'optionalAccess', _4 => _4.id]),
         url: `/trabalho-ordens/${workOrderNumber}`
       },
       source: 'g4flex',
@@ -336,7 +340,7 @@ class NotificationService {
    */
   getUserNameFromRequest(req) {
     try {
-      const token = _optionalChain([req, 'access', _4 => _4.headers, 'access', _5 => _5.authorization, 'optionalAccess', _6 => _6.replace, 'call', _7 => _7('Bearer ', '')]);
+      const token = _optionalChain([req, 'access', _5 => _5.headers, 'access', _6 => _6.authorization, 'optionalAccess', _7 => _7.replace, 'call', _8 => _8('Bearer ', '')]);
       if (!token) return null;
 
       return this.getUserNameFromToken(token);
