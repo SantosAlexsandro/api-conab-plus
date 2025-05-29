@@ -1,5 +1,8 @@
 import WorkOrderWaitingQueue from '../models/workOrderWaitingQueue';
+import EntityService from './EntityService';
+import CityService from './CityService';
 import logEvent from '../utils/logEvent';
+import { resolveNumericIdentifier } from '../integrations/g4flex/utils/resolveNumericIdentifier';
 
 export async function checkDuplicateRequest(uraRequestId) {
   const existingRequest = await WorkOrderWaitingQueue.findOne({
@@ -44,6 +47,26 @@ export async function createInQueue(data) {
       };
     }
 
+    // Get entity data
+    let filter = ''
+    const getEntityData = async (codigo) => {
+      const { identifierType, identifierValue } = resolveNumericIdentifier(codigo);
+      if (identifierType === 'customerId') {
+        filter = `Codigo=${identifierValue}`
+      } else if (identifierType === 'cpf') {
+        filter = `CPFCNPJ=${identifierValue}`
+      } else if (identifierType === 'cnpj') {
+        filter = `CPFCNPJ=${identifierValue}`
+      }
+      const entity = await EntityService.loadEntityByFilter(filter)
+      return entity;
+    }
+    const entityData = await getEntityData(data.customerIdentifier);
+
+    // Get city data
+    const cityData = await CityService.getCityByErpCode(entityData?.CodigoCidade)
+
+
     const newRequest = await WorkOrderWaitingQueue.create({
       orderNumber: data.orderNumber,
       entityName: data.entityName,
@@ -55,7 +78,16 @@ export async function createInQueue(data) {
       productId: data.productId,
       requesterNameAndPosition: data.requesterNameAndPosition,
       incidentAndReceiverName: data.incidentAndReceiverName,
-      requesterContact: data.requesterContact
+      requesterContact: data.requesterContact,
+      customerStreet: entityData?.Endereco,
+      customerNumber: entityData?.NumeroEndereco,
+      customerAddressComplement: entityData?.ComplementoEndereco,
+      customerNeighborhood: entityData?.Bairro,
+      customerCity: cityData?.full_name,
+      customerState: cityData?.acronym_federal_unit,
+      customerZipCode: entityData?.Cep,
+      customerCityErpCode: entityData?.CodigoCidade,
+      customerStreetTypeCode: entityData?.CodigoTipoLograd
     });
 
     await logEvent({

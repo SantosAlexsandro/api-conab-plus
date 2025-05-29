@@ -29,7 +29,7 @@ class WhatsAppService {
 
   async sendWhatsAppMessage({ phoneNumber = '', workOrderId = '', customerName = '', feedback = '', technicianName = '', uraRequestId = '' }) {
 
-    //if (this.isDevelopment) return
+    if (this.isDevelopment) return
 
     console.log('INIT sendWhatsAppMessage', { phoneNumber, workOrderId, customerName, feedback, technicianName, uraRequestId });
     try {

@@ -104,6 +104,13 @@ class CitiesService {
     }
   }
 
+  async getCityByErpCode(erpCode) {
+    const city = await _City2.default.findOne({
+      where: { city_cod: erpCode },
+    });
+    return city;
+  }
+
   handleError(error) {
     if (error.response) {
       // Erro de resposta da API

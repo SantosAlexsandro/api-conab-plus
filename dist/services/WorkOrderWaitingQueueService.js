@@ -1,5 +1,8 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _workOrderWaitingQueue = require('../models/workOrderWaitingQueue'); var _workOrderWaitingQueue2 = _interopRequireDefault(_workOrderWaitingQueue);
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _workOrderWaitingQueue = require('../models/workOrderWaitingQueue'); var _workOrderWaitingQueue2 = _interopRequireDefault(_workOrderWaitingQueue);
+var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
+var _CityService = require('./CityService'); var _CityService2 = _interopRequireDefault(_CityService);
 var _logEvent = require('../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
+var _resolveNumericIdentifier = require('../integrations/g4flex/utils/resolveNumericIdentifier');
 
  async function checkDuplicateRequest(uraRequestId) {
   const existingRequest = await _workOrderWaitingQueue2.default.findOne({
@@ -44,6 +47,26 @@ var _logEvent = require('../utils/logEvent'); var _logEvent2 = _interopRequireDe
       };
     }
 
+    // Get entity data
+    let filter = ''
+    const getEntityData = async (codigo) => {
+      const { identifierType, identifierValue } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, codigo);
+      if (identifierType === 'customerId') {
+        filter = `Codigo=${identifierValue}`
+      } else if (identifierType === 'cpf') {
+        filter = `CPFCNPJ=${identifierValue}`
+      } else if (identifierType === 'cnpj') {
+        filter = `CPFCNPJ=${identifierValue}`
+      }
+      const entity = await _EntityService2.default.loadEntityByFilter(filter)
+      return entity;
+    }
+    const entityData = await getEntityData(data.customerIdentifier);
+
+    // Get city data
+    const cityData = await _CityService2.default.getCityByErpCode(_optionalChain([entityData, 'optionalAccess', _ => _.CodigoCidade]))
+
+
     const newRequest = await _workOrderWaitingQueue2.default.create({
       orderNumber: data.orderNumber,
       entityName: data.entityName,
@@ -55,7 +78,16 @@ var _logEvent = require('../utils/logEvent'); var _logEvent2 = _interopRequireDe
       productId: data.productId,
       requesterNameAndPosition: data.requesterNameAndPosition,
       incidentAndReceiverName: data.incidentAndReceiverName,
-      requesterContact: data.requesterContact
+      requesterContact: data.requesterContact,
+      customerStreet: _optionalChain([entityData, 'optionalAccess', _2 => _2.Endereco]),
+      customerNumber: _optionalChain([entityData, 'optionalAccess', _3 => _3.NumeroEndereco]),
+      customerAddressComplement: _optionalChain([entityData, 'optionalAccess', _4 => _4.ComplementoEndereco]),
+      customerNeighborhood: _optionalChain([entityData, 'optionalAccess', _5 => _5.Bairro]),
+      customerCity: _optionalChain([cityData, 'optionalAccess', _6 => _6.full_name]),
+      customerState: _optionalChain([cityData, 'optionalAccess', _7 => _7.acronym_federal_unit]),
+      customerZipCode: _optionalChain([entityData, 'optionalAccess', _8 => _8.Cep]),
+      customerCityErpCode: _optionalChain([entityData, 'optionalAccess', _9 => _9.CodigoCidade]),
+      customerStreetTypeCode: _optionalChain([entityData, 'optionalAccess', _10 => _10.CodigoTipoLograd])
     });
 
     await _logEvent2.default.call(void 0, {
