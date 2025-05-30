@@ -3,6 +3,8 @@ import EntityService from './EntityService';
 import CityService from './CityService';
 import logEvent from '../utils/logEvent';
 import { resolveNumericIdentifier } from '../integrations/g4flex/utils/resolveNumericIdentifier';
+import { Op } from 'sequelize';
+import sequelize from '../database';
 
 export async function checkDuplicateRequest(uraRequestId) {
   const existingRequest = await WorkOrderWaitingQueue.findOne({
@@ -126,7 +128,7 @@ export async function createInQueue(data) {
   }
 }
 
-export async function updateQueueStatus(uraRequestId, orderNumber, newStatus) {
+export async function updateQueueStatus(uraRequestId, orderNumber, newStatus, transaction = null) {
   console.log('INIT updateQueueStatus', { uraRequestId, orderNumber, newStatus });
 
   if (!newStatus) {
@@ -151,9 +153,12 @@ export async function updateQueueStatus(uraRequestId, orderNumber, newStatus) {
     where.orderNumber = orderNumber;
   }
 
+  const updateOptions = { where };
+  if (transaction) updateOptions.transaction = transaction;
+
   const [affectedCount] = await WorkOrderWaitingQueue.update(
     { status: newStatus },
-    { where }
+    updateOptions
   );
 
   if (affectedCount === 0) {
@@ -188,19 +193,48 @@ export async function updateQueueOrderNumber(uraRequestId, orderNumber) {
   };
 }
 
-export async function updateTechnicianAssigned(uraRequestId, technicianName) {
+export async function updateTechnicianAssigned(uraRequestId, technicianName, transaction = null) {
   console.log('🔄 INIT updateTechnicianAssigned', { uraRequestId, technicianName });
 
   if (!uraRequestId) throw new Error('uraRequestId is required');
   if (!technicianName) throw new Error('technicianName is required');
 
+  const updateOptions = { where: { uraRequestId } };
+  if (transaction) updateOptions.transaction = transaction;
+
   const [affectedCount] = await WorkOrderWaitingQueue.update(
     { technicianAssigned: technicianName },
-    { where: { uraRequestId } }
+    updateOptions
   );
 
   if (affectedCount === 0) {
+    // Tentar atualizar pelo número da ordem caso o uraRequestId não encontre registros
+    const findOptions = { where: { orderNumber: uraRequestId } };
+    if (transaction) findOptions.transaction = transaction;
+
+    const queue = await WorkOrderWaitingQueue.findOne(findOptions);
+
+    if (queue) {
+      const updateOrderOptions = { where: { orderNumber: uraRequestId } };
+      if (transaction) updateOrderOptions.transaction = transaction;
+
+      const [updateCount] = await WorkOrderWaitingQueue.update(
+        { technicianAssigned: technicianName },
+        updateOrderOptions
+      );
+
+      if (updateCount > 0) {
+        console.log(`✅ Técnico ${technicianName} atribuído à ordem ${uraRequestId}`);
+        return {
+          success: true,
+          updatedRows: updateCount
+        };
+      }
+    }
+
     console.warn('⚠️ No records updated in updateTechnicianAssigned', { uraRequestId });
+  } else {
+    console.log(`✅ Técnico ${technicianName} atribuído ao pedido ${uraRequestId}`);
   }
 
   return {
@@ -261,6 +295,51 @@ export async function findByOrderNumber(orderNumber) {
   return result;
 }
 
+export async function findOldestWaitingOrder() {
+  console.log('🔎 INIT findOldestWaitingOrder');
+
+  const result = await WorkOrderWaitingQueue.findOne({
+    where: {
+      status: 'WAITING_TECHNICIAN'
+    },
+    order: [['created_at', 'ASC']] // Ordena pela data de criação (mais antiga primeiro)
+  });
+
+  if (!result) {
+    console.log('⚠️ Nenhuma ordem aguardando atribuição de técnico encontrada');
+    return null;
+  }
+
+  console.log(`✅ Ordem mais antiga encontrada: ${result.orderNumber}, criada em ${result.created_at}`);
+  return result;
+}
+
+export async function findAndLockOldestWaitingOrder(transaction) {
+  console.log('🔒 INIT findAndLockOldestWaitingOrder com bloqueio transacional');
+
+  if (!transaction) {
+    console.error('❌ É necessário fornecer uma transação para o bloqueio');
+    throw new Error('Transaction is required for locking');
+  }
+
+  const result = await WorkOrderWaitingQueue.findOne({
+    where: {
+      status: 'WAITING_TECHNICIAN'
+    },
+    order: [['created_at', 'ASC']], // Ordena pela data de criação (mais antiga primeiro)
+    lock: transaction.LOCK.UPDATE,
+    transaction
+  });
+
+  if (!result) {
+    console.log('⚠️ Nenhuma ordem aguardando atribuição de técnico encontrada');
+    return null;
+  }
+
+  console.log(`🔐 Ordem mais antiga encontrada e BLOQUEADA: ${result.orderNumber}, criada em ${result.created_at}`);
+  return result;
+}
+
 export async function findById(id) {
   console.log('🔎 INIT findById', { id });
 
@@ -284,5 +363,7 @@ export default {
   findByStatus,
   findAll,
   findByOrderNumber,
+  findOldestWaitingOrder,
+  findAndLockOldestWaitingOrder,
   findById
 };
