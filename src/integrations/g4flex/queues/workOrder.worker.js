@@ -175,6 +175,8 @@ async function processAssignTechnician(job) {
         {
           orderId,
           uraRequestId: validUraRequestId,
+          customerName,
+          requesterContact,
           retryCount: (job.data.retryCount || 0) + 1
         },
         {
@@ -228,6 +230,8 @@ async function processAssignTechnician(job) {
       {
         orderId,
         uraRequestId: validUraRequestId,
+        customerName,
+        requesterContact,
         retryCount: (job.data.retryCount || 0) + 1
       },
       {
