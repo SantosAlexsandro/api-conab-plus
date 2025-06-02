@@ -59,8 +59,8 @@ services:
       - mariadb_data:/var/lib/mysql
     networks:
       - conabplus-net
-    expose:
-      - "3306"
+    ports:
+      - "3306:3306"
 
   redis:
     image: redis:7.2-alpine
