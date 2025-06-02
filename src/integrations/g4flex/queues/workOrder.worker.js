@@ -11,6 +11,7 @@ import workOrderQueue from "./workOrder.queue";
 import WhatsAppService from "../services/WhatsAppService";
 import WorkOrderWaitingQueueService from "../../../services/WorkOrderWaitingQueueService";
 import technicianService from "../services/TechnicianService";
+import sequelize from "../../../database";
 
 const RETRY_INTERVAL_MS = 1 * 60 * 1000;
 const TIMEZONE_BRASILIA = 'America/Sao_Paulo';
@@ -162,168 +163,186 @@ async function processAssignTechnician(job) {
       return { success: false, noTechnician: true, rescheduled: true, nextAttempt: nextAttemptDate };
     }
 
-    // Se temos um técnico disponível, buscar a ordem mais antiga aguardando atribuição
-    const oldestOrder = await WorkOrderWaitingQueueService.findOldestWaitingOrder();
+    // Usar transação para garantir exclusividade
+    const result = await sequelize.transaction(async (transaction) => {
+      try {
+        // Buscar a ordem mais antiga COM BLOQUEIO para evitar race conditions
+        const oldestOrder = await WorkOrderWaitingQueueService.findAndLockOldestWaitingOrder(transaction);
 
-    // Se não há nenhuma ordem aguardando, usar a ordem atual
-    if (!oldestOrder) {
-      console.log(`⚠️ Nenhuma ordem aguardando atribuição. Verificando a ordem atual ${orderId}`);
+        // Se não há nenhuma ordem aguardando atribuição com status WAITING_TECHNICIAN
+        if (!oldestOrder) {
+          console.log(`⚠️ Nenhuma ordem aguardando atribuição. Verificando a ordem atual ${orderId}`);
 
-      // Verificar se a ordem atual está aguardando técnico
-      const currentOrder = await WorkOrderWaitingQueueService.findByOrderNumber(orderId);
+          // Verificar se a ordem atual está aguardando técnico
+          const currentOrder = await WorkOrderWaitingQueueService.findByOrderNumber(orderId);
 
-      if (!currentOrder || currentOrder.status !== 'WAITING_TECHNICIAN') {
-        console.log(`⚠️ Ordem atual ${orderId} não está aguardando técnico ou não existe`);
-        return { success: false, message: 'Ordem não está aguardando técnico' };
+          if (!currentOrder || currentOrder.status !== 'WAITING_TECHNICIAN') {
+            console.log(`⚠️ Ordem atual ${orderId} não está aguardando técnico ou não existe`);
+            return { success: false, message: 'Ordem não está aguardando técnico' };
+          }
+
+          // Usar a ordem atual se ela estiver aguardando técnico
+          const validUraRequestId = currentOrder.uraRequestId || uraRequestId;
+          const orderStatus = await workOrderService.isOrderFulfilledORCancelled(orderId);
+
+          if (orderStatus.isCancelled) {
+            console.log(`⚠️ Ordem ${orderId} já foi cancelada`);
+            await WorkOrderWaitingQueueService.updateQueueStatus(
+              validUraRequestId,
+              orderId,
+              'CANCELED'
+            );
+            return { success: false, orderCancelled: true };
+          } else if (orderStatus.isFulfilled) {
+            console.log(`⚠️ Ordem ${orderId} já foi concluída`);
+            await WorkOrderWaitingQueueService.updateQueueStatus(
+              validUraRequestId,
+              orderId,
+              'FULFILLED'
+            );
+            return { success: false, orderFulfilled: true };
+          }
+
+          // Processar a ordem atual
+          const assignResult = await workOrderService.assignTechnicianToWorkOrder(
+            orderId,
+            validUraRequestId,
+            customerName,
+            requesterContact
+          );
+
+          // Atualizar status na fila de espera
+          await WorkOrderWaitingQueueService.updateQueueStatus(
+            validUraRequestId,
+            orderId,
+            'WAITING_ARRIVAL'
+          );
+
+          // Registrar o técnico atribuído
+          if (assignResult.technicianId) {
+            await WorkOrderWaitingQueueService.updateTechnicianAssigned(
+              validUraRequestId,
+              assignResult.technicianName || assignResult.technicianId,
+              transaction
+            );
+            console.log(`✅ Técnico ${assignResult.technicianName || assignResult.technicianId} registrado para ordem ${orderId}`);
+          }
+
+          // Adicionar na fila de verificação de chegada no cliente
+          await workOrderQueue.add("processArrivalCheck", {
+            orderId,
+            uraRequestId: validUraRequestId,
+            technicianName: assignResult.technicianName || assignResult.technicianId
+          }, {
+            delay: 1 * 60 * 1000, // 1 minuto de delay
+            removeOnComplete: false
+          });
+
+          console.log(`📅 Verificação de chegada agendada para ordem ${orderId} em 1 minuto`);
+
+          return assignResult;
+        } else {
+          // Usar a ordem mais antiga bloqueada pela transação
+          const oldestOrderId = oldestOrder.orderNumber;
+          const oldestUraRequestId = oldestOrder.uraRequestId;
+          const oldestCustomerName = oldestOrder.entityName;
+          const oldestRequesterContact = oldestOrder.requesterContact;
+
+          console.log(`🕒 Encontrada ordem mais antiga aguardando técnico: ${oldestOrderId}`);
+
+          if (oldestOrderId === orderId) {
+            console.log(`✅ A ordem atual ${orderId} é a mais antiga aguardando técnico`);
+          } else {
+            console.log(`🔄 Redirecionando atribuição de técnico da ordem ${orderId} para ordem mais antiga ${oldestOrderId}`);
+          }
+
+          const orderStatus = await workOrderService.isOrderFulfilledORCancelled(oldestOrderId);
+
+          if (orderStatus.isCancelled) {
+            console.log(`⚠️ Ordem ${oldestOrderId} já foi cancelada`);
+            await WorkOrderWaitingQueueService.updateQueueStatus(
+              oldestUraRequestId,
+              oldestOrderId,
+              'CANCELED',
+            );
+            // Liberar a transação atual e tentar novamente
+            return { success: false, orderCancelled: true, retryNeeded: true };
+          } else if (orderStatus.isFulfilled) {
+            console.log(`⚠️ Ordem ${oldestOrderId} já foi concluída`);
+            await WorkOrderWaitingQueueService.updateQueueStatus(
+              oldestUraRequestId,
+              oldestOrderId,
+              'FULFILLED',
+            );
+            // Liberar a transação atual e tentar novamente
+            return { success: false, orderFulfilled: true, retryNeeded: true };
+          }
+
+          // Processar a ordem mais antiga
+          const assignResult = await workOrderService.assignTechnicianToWorkOrder(
+            oldestOrderId,
+            oldestUraRequestId,
+            oldestCustomerName,
+            oldestRequesterContact
+          );
+
+          // Atualizar status na fila de espera - já dentro da transação
+          await WorkOrderWaitingQueueService.updateQueueStatus(
+            oldestUraRequestId,
+            oldestOrderId,
+            'WAITING_ARRIVAL'
+          );
+
+          // Registrar o técnico atribuído - já dentro da transação
+          if (assignResult.technicianId) {
+            await WorkOrderWaitingQueueService.updateTechnicianAssigned(
+              oldestUraRequestId,
+              assignResult.technicianName || assignResult.technicianId,
+              transaction
+            );
+            console.log(`✅ Técnico ${assignResult.technicianName || assignResult.technicianId} registrado para ordem ${oldestOrderId}`);
+          }
+
+          // Adicionar na fila de verificação de chegada no cliente
+          await workOrderQueue.add("processArrivalCheck", {
+            orderId: oldestOrderId,
+            uraRequestId: oldestUraRequestId,
+            technicianName: assignResult.technicianName || assignResult.technicianId
+          }, {
+            delay: 1 * 60 * 1000, // 1 minuto de delay
+            removeOnComplete: false
+          });
+
+          console.log(`📅 Verificação de chegada agendada para ordem ${oldestOrderId} em 1 minuto`);
+
+          // Reagendar a ordem atual se ela não foi a processada
+          if (orderId !== oldestOrderId) {
+            console.log(`📝 Ordem atual ${orderId} não foi processada pois não era a mais antiga`);
+          }
+
+          return {
+            ...assignResult,
+            prioritizedOrder: {
+              oldOrderId: oldestOrderId,
+              originalOrderId: orderId
+            },
+            message: `Ordem mais antiga ${oldestOrderId} foi priorizada${orderId !== oldestOrderId ? ` sobre a ordem atual ${orderId}` : ''}`
+          };
+        }
+      } catch (innerError) {
+        // Garantir que erros dentro da transação sejam propagados corretamente
+        console.error(`❌ Erro dentro da transação durante atribuição de técnico:`, innerError);
+        throw innerError; // Isso fará com que a transação seja revertida
       }
+    });
 
-      // Usar a ordem atual se ela estiver aguardando técnico
-      const validUraRequestId = currentOrder.uraRequestId || uraRequestId;
-      const orderStatus = await workOrderService.isOrderFulfilledORCancelled(orderId);
-
-      if (orderStatus.isCancelled) {
-        console.log(`⚠️ Ordem ${orderId} já foi cancelada`);
-        await WorkOrderWaitingQueueService.updateQueueStatus(
-          validUraRequestId,
-          orderId,
-          'CANCELED'
-        );
-        return { success: false, orderCancelled: true };
-      } else if (orderStatus.isFulfilled) {
-        console.log(`⚠️ Ordem ${orderId} já foi concluída`);
-        await WorkOrderWaitingQueueService.updateQueueStatus(
-          validUraRequestId,
-          orderId,
-          'FULFILLED'
-        );
-        return { success: false, orderFulfilled: true };
-      }
-
-      // Processar a ordem atual
-      const result = await workOrderService.assignTechnicianToWorkOrder(
-        orderId,
-        validUraRequestId,
-        customerName,
-        requesterContact
-      );
-
-      // Atualizar status na fila de espera
-      await WorkOrderWaitingQueueService.updateQueueStatus(
-        validUraRequestId,
-        orderId,
-        'WAITING_ARRIVAL'
-      );
-
-      // Registrar o técnico atribuído
-      if (result.technicianId) {
-        await WorkOrderWaitingQueueService.updateTechnicianAssigned(
-          validUraRequestId,
-          result.technicianName || result.technicianId
-        );
-        console.log(`✅ Técnico ${result.technicianName || result.technicianId} registrado para ordem ${orderId}`);
-      }
-
-      // Adicionar na fila de verificação de chegada no cliente
-      await workOrderQueue.add("processArrivalCheck", {
-        orderId,
-        uraRequestId: validUraRequestId,
-        technicianName: result.technicianName || result.technicianId
-      }, {
-        delay: 1 * 60 * 1000, // 1 minuto de delay
-        removeOnComplete: false
-      });
-
-      console.log(`📅 Verificação de chegada agendada para ordem ${orderId} em 1 minuto`);
-
-      return result;
-    } else {
-      // Usar a ordem mais antiga
-      const oldestOrderId = oldestOrder.orderNumber;
-      const oldestUraRequestId = oldestOrder.uraRequestId;
-      const oldestCustomerName = oldestOrder.entityName;
-      const oldestRequesterContact = oldestOrder.requesterContact;
-
-      console.log(`🕒 Encontrada ordem mais antiga aguardando técnico: ${oldestOrderId}`);
-
-      if (oldestOrderId === orderId) {
-        console.log(`✅ A ordem atual ${orderId} é a mais antiga aguardando técnico`);
-      } else {
-        console.log(`🔄 Redirecionando atribuição de técnico da ordem ${orderId} para ordem mais antiga ${oldestOrderId}`);
-      }
-
-      const orderStatus = await workOrderService.isOrderFulfilledORCancelled(oldestOrderId);
-
-      if (orderStatus.isCancelled) {
-        console.log(`⚠️ Ordem ${oldestOrderId} já foi cancelada`);
-        await WorkOrderWaitingQueueService.updateQueueStatus(
-          oldestUraRequestId,
-          oldestOrderId,
-          'CANCELED'
-        );
-        // Tentar novamente com outra ordem
-        return processAssignTechnician(job);
-      } else if (orderStatus.isFulfilled) {
-        console.log(`⚠️ Ordem ${oldestOrderId} já foi concluída`);
-        await WorkOrderWaitingQueueService.updateQueueStatus(
-          oldestUraRequestId,
-          oldestOrderId,
-          'FULFILLED'
-        );
-        // Tentar novamente com outra ordem
-        return processAssignTechnician(job);
-      }
-
-      // Processar a ordem mais antiga
-      const result = await workOrderService.assignTechnicianToWorkOrder(
-        oldestOrderId,
-        oldestUraRequestId,
-        oldestCustomerName,
-        oldestRequesterContact
-      );
-
-      // Atualizar status na fila de espera
-      await WorkOrderWaitingQueueService.updateQueueStatus(
-        oldestUraRequestId,
-        oldestOrderId,
-        'WAITING_ARRIVAL'
-      );
-
-      // Registrar o técnico atribuído
-      if (result.technicianId) {
-        await WorkOrderWaitingQueueService.updateTechnicianAssigned(
-          oldestUraRequestId,
-          result.technicianName || result.technicianId
-        );
-        console.log(`✅ Técnico ${result.technicianName || result.technicianId} registrado para ordem ${oldestOrderId}`);
-      }
-
-      // Adicionar na fila de verificação de chegada no cliente
-      await workOrderQueue.add("processArrivalCheck", {
-        orderId: oldestOrderId,
-        uraRequestId: oldestUraRequestId,
-        technicianName: result.technicianName || result.technicianId
-      }, {
-        delay: 1 * 60 * 1000, // 1 minuto de delay
-        removeOnComplete: false
-      });
-
-      console.log(`📅 Verificação de chegada agendada para ordem ${oldestOrderId} em 1 minuto`);
-
-      // Reagendar a ordem atual se ela não foi a processada
-      if (orderId !== oldestOrderId) {
-        console.log(`📝 Ordem atual ${orderId} não foi processada pois não era a mais antiga`);
-      }
-
-      return {
-        ...result,
-        prioritizedOrder: {
-          oldOrderId: oldestOrderId,
-          originalOrderId: orderId
-        },
-        message: `Ordem mais antiga ${oldestOrderId} foi priorizada${orderId !== oldestOrderId ? ` sobre a ordem atual ${orderId}` : ''}`
-      };
+    // Se for necessário tentar novamente devido a alguma condição especial
+    if (result && result.retryNeeded) {
+      console.log(`🔄 Nova tentativa necessária após verificação de ordem`);
+      return await processAssignTechnician(job);
     }
 
+    return result;
   } catch (error) {
     console.error(`❌ Erro ao atribuir técnico à ordem ${orderId}:`, error);
 
