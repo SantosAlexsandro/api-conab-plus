@@ -527,82 +527,81 @@ class WorkOrderService extends _BaseG4FlexService2.default {
 
   // Atribuir técnico à OS
   async assignTechnicianToWorkOrder(workOrderId, uraRequestId, customerName, requesterContact) {
-
     try {
+      // O técnico já deve ser verificado e estar disponível antes de chamar este método
       const technician = await _TechnicianService2.default.getAvailableTechnician();
 
-      if (technician) {
-        console.log('[WorkOrderService] Atribuindo técnico à ordem de serviço');
-        await this.axiosInstance.post(
-          `/api/OrdServ/InserirAlterarOrdServ`,
-          {
-            CodigoEmpresaFilial: "1",
-            Numero: workOrderId,
-            CodigoTipoEtapa: "007.004",
-            CodigoUsuario: "CONAB+",
-            EtapaOrdServChildList: [
-              {
-                Sequencia: 2,
-                NumeroOrdServ: workOrderId,
-                CodigoTipoEtapaProxima: "007.004",
-                DataHoraFim: new Date().toISOString(),
-                CodigoUsuario: "CONAB+",
-                CodigoUsuarioAlteracao: "CONAB+"
-              },
-              {
-                CodigoEmpresaFilial: "1",
-                NumeroOrdServ: workOrderId,
-                Sequencia: 3,
-                CodigoTipoEtapa: "007.004",
-                CodigoUsuario: technician.id,
-                CodigoUsuarioAlteracao: "CONAB+",
-                DataHoraInicial: new Date().toISOString(),
-              }
-            ]
-          }
+      if (!technician) {
+        console.error('[WorkOrderService] Erro: Método foi chamado sem verificar se há técnico disponível');
+        throw new Error('Nenhum técnico disponível');
+      }
+
+      console.log('[WorkOrderService] Atribuindo técnico à ordem de serviço');
+      await this.axiosInstance.post(
+        `/api/OrdServ/InserirAlterarOrdServ`,
+        {
+          CodigoEmpresaFilial: "1",
+          Numero: workOrderId,
+          CodigoTipoEtapa: "007.004",
+          CodigoUsuario: "CONAB+",
+          EtapaOrdServChildList: [
+            {
+              Sequencia: 2,
+              NumeroOrdServ: workOrderId,
+              CodigoTipoEtapaProxima: "007.004",
+              DataHoraFim: new Date().toISOString(),
+              CodigoUsuario: "CONAB+",
+              CodigoUsuarioAlteracao: "CONAB+"
+            },
+            {
+              CodigoEmpresaFilial: "1",
+              NumeroOrdServ: workOrderId,
+              Sequencia: 3,
+              CodigoTipoEtapa: "007.004",
+              CodigoUsuario: technician.id,
+              CodigoUsuarioAlteracao: "CONAB+",
+              DataHoraInicial: new Date().toISOString(),
+            }
+          ]
+        }
+      );
+
+      // Adicionar na fila de feedback para notificar sobre a atribuição do técnico
+      try {
+        await _workOrderqueue2.default.add('processWorkOrderFeedback', {
+          orderId: workOrderId,
+          feedback: 'technician_assigned',
+          technicianName: technician.nome,
+          technicianId: technician.id,
+          uraRequestId: uraRequestId,
+          customerName: customerName,
+          requesterContact: requesterContact
+        });
+        console.log(`[WorkOrderService] Feedback de atribuição de técnico agendado para ordem ${workOrderId}`);
+      } catch (feedbackError) {
+        console.error(`[WorkOrderService] Erro ao agendar feedback de atribuição: ${feedbackError.message}`);
+      }
+
+      // Enviar notificação push sobre a atribuição do técnico
+      console.log('[WorkOrderService] Sending notification about technician assignment');
+      try {
+        const notificationResult = await _NotificationService2.default.sendWorkOrderNotification(
+          'technician_assigned',
+          workOrderId,
+          null, // customerName não está disponível aqui
+          uraRequestId,
+          { name: technician.nome, id: technician.id }
         );
 
-        // Adicionar na fila de feedback para notificar sobre a atribuição do técnico
-        try {
-          await _workOrderqueue2.default.add('processWorkOrderFeedback', {
-            orderId: workOrderId,
-            feedback: 'technician_assigned',
-            technicianName: technician.nome,
-            technicianId: technician.id,
-            uraRequestId: uraRequestId,
-            customerName: customerName,
-            requesterContact: requesterContact
-          });
-          console.log(`[WorkOrderService] Feedback de atribuição de técnico agendado para ordem ${workOrderId}`);
-        } catch (feedbackError) {
-          console.error(`[WorkOrderService] Erro ao agendar feedback de atribuição: ${feedbackError.message}`);
-        }
-
-        // Enviar notificação push sobre a atribuição do técnico
-        console.log('[WorkOrderService] Sending notification about technician assignment');
-        try {
-          const notificationResult = await _NotificationService2.default.sendWorkOrderNotification(
-            'technician_assigned',
-            workOrderId,
-            null, // customerName não está disponível aqui
-            uraRequestId,
-            { name: technician.nome, id: technician.id }
-          );
-
-          console.log('[WorkOrderService] Technician assignment notification result:', notificationResult);
-          console.log('[WorkOrderService] Technician assignment notification sent successfully');
-        } catch (notificationError) {
-          console.error('[WorkOrderService] Failed to send notification:', notificationError);
-          console.error('[WorkOrderService] Notification error stack:', notificationError.stack);
-          // Não interrompe o processo se a notificação falhar
-        }
-
-        return { success: true, orderId: workOrderId, technicianId: technician.id, technicianName: technician.nome };
-      } else {
-        // Sem técnico disponível, o reagendamento será feito pelo worker
-
-        return { success: false, noTechnician: true };
+        console.log('[WorkOrderService] Technician assignment notification result:', notificationResult);
+        console.log('[WorkOrderService] Technician assignment notification sent successfully');
+      } catch (notificationError) {
+        console.error('[WorkOrderService] Failed to send notification:', notificationError);
+        console.error('[WorkOrderService] Notification error stack:', notificationError.stack);
+        // Não interrompe o processo se a notificação falhar
       }
+
+      return { success: true, orderId: workOrderId, technicianId: technician.id, technicianName: technician.nome };
     } catch (error) {
       await _logEvent2.default.call(void 0, {
         uraRequestId,
