@@ -459,25 +459,36 @@ async function processCancelWorkOrder(job) {
       } catch (feedbackError) {
         console.error('❌ Erro ao enviar feedback de cancelamento via WhatsApp:', feedbackError);
       }
+
+      console.log(`✅ Ordens canceladas com sucesso: ${result.orders.join(', ')}`);
+    } else {
+      console.log(`ℹ️ Nenhuma ordem encontrada para cancelar para o cliente ${identifierValue}`);
     }
 
-    console.log(`✅ Ordens canceladas com sucesso: ${result.orders.join(', ')}`);
     return result;
 
   } catch (error) {
     console.error(`❌ Erro ao cancelar ordens:`, error);
 
-    // Registrar falha na fila de espera
+    // Tentar encontrar ID da ordem para registrar falha, se possível
     try {
-      await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
-        uraRequestId,
-        orderId,
-        'FAILED'
-      );
+      // Verificar se o erro aconteceu em uma ordem específica
+      const orderId = error.orderId || null;
+
+      if (orderId) {
+        await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
+          uraRequestId,
+          orderId,
+          'FAILED'
+        );
+      } else {
+        console.warn('⚠️ Não foi possível determinar a ordem específica para registrar falha');
+      }
     } catch (queueError) {
       console.error('Erro ao atualizar status na fila de espera:', queueError);
     }
 
+    // Re-lançar o erro para permitir que o BullMQ trate conforme configurado
     throw error;
   }
 }

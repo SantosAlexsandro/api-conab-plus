@@ -330,7 +330,21 @@ class WorkOrderService extends BaseG4FlexService {
 
       console.log(`[G4Flex] Found ${openOrders.orders.length} orders for customer ${finalCustomerCode}`);
       if (!openOrders || openOrders.orders.length === 0) {
-        throw new Error('No orders found for customer');
+        console.log(`[G4Flex] No open orders found for customer ${finalCustomerCode}`);
+        await logEvent({
+          uraRequestId,
+          source: 'g4flex',
+          action: 'work_order_close_no_orders',
+          payload: { identifierType, identifierValue, customerCode: finalCustomerCode },
+          response: { message: 'No open orders found for customer' }
+        });
+
+        // Retornar sucesso em vez de lançar erro, já que não há ordens para cancelar
+        return {
+          success: true,
+          message: 'No open orders found to close',
+          orders: []
+        };
       }
 
       await Promise.all(openOrders.orders.map(async order => {

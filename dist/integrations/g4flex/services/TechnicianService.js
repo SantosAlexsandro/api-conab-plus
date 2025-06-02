@@ -32,8 +32,17 @@ class TechnicianService extends _BaseG4FlexService2.default {
       const activeTechnicianCodes = activeShifts.map(shift => shift.user_code);
       console.log(`[TechnicianService] Técnicos em turno ativo: ${activeTechnicianCodes.join(', ')}`);
 
-      const openOrders = await _WorkOrderService2.default.getAllOpenOrders();
-      console.log(`[TechnicianService] Ordens abertas: ${openOrders.length}`);
+      // Inicializa com array vazio para o caso de falha na obtenção das ordens
+      let openOrders = [];
+
+      try {
+        openOrders = await _WorkOrderService2.default.getAllOpenOrders();
+        console.log(`[TechnicianService] Ordens abertas: ${openOrders.length}`);
+      } catch (orderError) {
+        console.error(`[TechnicianService] Erro ao buscar ordens abertas: ${orderError.message}`);
+        console.log('[TechnicianService] Continuando com lista vazia de ordens abertas');
+        // Não propaga o erro, apenas continua com lista vazia
+      }
 
       // Obter os técnicos que estão trabalhando em ordens abertas
       const workingTechs = [];
@@ -45,6 +54,7 @@ class TechnicianService extends _BaseG4FlexService2.default {
           if (tech && !workingTechs.includes(tech)) workingTechs.push(tech);
         } catch (err) {
           console.error(`[TechnicianService] Erro em ordem ${order.number}: ${err.message}`);
+          // Continua para a próxima ordem mesmo em caso de erro
         }
       }
 
@@ -68,6 +78,7 @@ class TechnicianService extends _BaseG4FlexService2.default {
 
       return null;
     } catch (error) {
+      console.error(`[TechnicianService] Erro crítico ao buscar técnicos disponíveis: ${error.message}`);
       this.handleError(error);
       throw new Error(`Erro ao buscar técnicos disponíveis: ${error.message}`);
     }
