@@ -134,6 +134,28 @@ async function processAssignTechnician(job) {
   console.log(`🔄 Processando atribuição de técnico para ordem ${orderId}`);
 
   try {
+    // ✅ VERIFICAÇÃO ANTI-RACE CONDITION: Verificar se ordem está em edição ANTES de qualquer processamento
+    console.log(`🔍 Verificando flag isEditing para ordem ${orderId}...`);
+    const currentOrderCheck = await WorkOrderWaitingQueueService.findByOrderNumber(orderId);
+
+    if (currentOrderCheck?.isEditing) {
+      // Verificar se a edição não expirou (TTL)
+      const isExpired = await WorkOrderWaitingQueueService.isOrderEditingExpired(orderId, 10 * 60 * 1000); // 10 minutos
+
+      if (!isExpired) {
+        console.log(`⏸️ SKIP: Ordem ${orderId} está em edição manual (isEditing=true).`);
+
+        return {
+          success: false,
+          skipped: true,
+          reason: 'Order is being edited manually',
+          message: `Ordem ${orderId} pulada - em edição`
+        };
+      } else {
+        console.log(`⏰ Ordem ${orderId} teve edição expirada, processamento será retomado.`);
+      }
+    }
+
     // Verificar se há um técnico disponível antes de continuar
     const technician = await technicianService.getAvailableTechnician();
 
@@ -175,6 +197,23 @@ async function processAssignTechnician(job) {
       if (!currentOrder || currentOrder.status !== 'WAITING_TECHNICIAN') {
         console.log(`⚠️ Ordem atual ${orderId} não está aguardando técnico ou não existe`);
         return { success: false, message: 'Ordem não está aguardando técnico' };
+      }
+
+      // ✅ SEGUNDA VERIFICAÇÃO ANTI-RACE CONDITION: Verificar novamente antes do processamento final
+      if (currentOrder.isEditing) {
+        // Verificar se a edição não expirou (TTL)
+        const isExpired = await WorkOrderWaitingQueueService.isOrderEditingExpired(orderId, 10 * 60 * 1000); // 10 minutos
+
+        if (!isExpired) {
+          console.log(`⏸️ SKIP: Ordem ${orderId} entrou em edição durante processamento.`);
+          return {
+            success: false,
+            skipped: true,
+            reason: 'Order was marked for editing during processing'
+          };
+        } else {
+          console.log(`⏰ Ordem ${orderId} teve edição expirada durante processamento, continuando.`);
+        }
       }
 
       // Usar a ordem atual se ela estiver aguardando técnico
@@ -244,6 +283,33 @@ async function processAssignTechnician(job) {
       const oldestRequesterContact = oldestOrder.requesterContact;
 
       console.log(`🕒 Encontrada ordem mais antiga aguardando técnico: ${oldestOrderId}`);
+
+      // ✅ TERCEIRA VERIFICAÇÃO ANTI-RACE CONDITION: Verificar se ordem mais antiga não está em edição
+      if (oldestOrder.isEditing) {
+        // Verificar se a edição não expirou (TTL)
+        const isExpired = await WorkOrderWaitingQueueService.isOrderEditingExpired(oldestOrderId, 10 * 60 * 1000); // 10 minutos
+
+        if (!isExpired) {
+          console.log(`⏸️ SKIP: Ordem mais antiga ${oldestOrderId} está em edição.`);
+
+          // Buscar próxima ordem mais antiga que não esteja em edição
+          const nextOldestOrder = await WorkOrderWaitingQueueService.findOldestWaitingOrderNotEditing();
+
+          if (!nextOldestOrder) {
+            console.log(`⚠️ Nenhuma ordem disponível para processamento (todas em edição).`);
+            return {
+              success: false,
+              message: 'No orders available for processing - all are being edited'
+            };
+          }
+
+          // Processar recursivamente com próxima ordem
+          const updatedJob = { ...job, data: { ...job.data, orderId: nextOldestOrder.orderNumber } };
+          return processAssignTechnician(updatedJob);
+        } else {
+          console.log(`⏰ Ordem mais antiga ${oldestOrderId} teve edição expirada, processando.`);
+        }
+      }
 
       if (oldestOrderId === orderId) {
         console.log(`✅ A ordem atual ${orderId} é a mais antiga aguardando técnico`);
