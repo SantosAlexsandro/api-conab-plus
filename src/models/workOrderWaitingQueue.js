@@ -52,11 +52,6 @@ export default class WorkOrderWaitingQueue extends Model {
         customerZipCode: Sequelize.STRING,
         customerCityErpCode: Sequelize.STRING,
         customerStreetTypeCode: Sequelize.STRING,
-        isEditing: {
-          type: Sequelize.BOOLEAN,
-          defaultValue: false,
-        },
-        editedAt: Sequelize.DATE,
       },
       {
         sequelize,

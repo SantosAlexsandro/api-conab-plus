@@ -6,7 +6,6 @@ Este diretório contém documentação detalhada sobre os componentes e funciona
 
 - [Sistema de Permissões e Perfis](./permission-system.md) - Documentação sobre o sistema RBAC de controle de acesso
 - [Notificações Push](./push-notifications.md) - Documentação sobre o sistema de notificações push
-- [Work Order Queue API](./work-order-queue-api.md) - API para controle de edição de ordens de trabalho na fila de espera
 
 ## Visão Geral
 

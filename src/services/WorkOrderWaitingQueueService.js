@@ -303,29 +303,6 @@ export async function findOldestWaitingOrder() {
   return result;
 }
 
-export async function findOldestWaitingOrderNotEditing() {
-  console.log('🔎 INIT findOldestWaitingOrderNotEditing');
-
-  const result = await WorkOrderWaitingQueue.findOne({
-    where: {
-      status: 'WAITING_TECHNICIAN',
-      [Op.or]: [
-        { isEditing: false },
-        { isEditing: null }
-      ]
-    },
-    order: [['created_at', 'ASC']] // Ordena pela data de criação (mais antiga primeiro)
-  });
-
-  if (!result) {
-    console.log('⚠️ Nenhuma ordem disponível aguardando atribuição de técnico (todas em edição)');
-    return null;
-  }
-
-  console.log(`✅ Ordem mais antiga não editando encontrada: ${result.orderNumber}, criada em ${result.created_at}`);
-  return result;
-}
-
 export async function findById(id) {
   console.log('🔎 INIT findById', { id });
 
@@ -340,79 +317,6 @@ export async function findById(id) {
   return result;
 }
 
-export async function setEditingFlag(orderNumber, isEditing) {
-  console.log('🔧 INIT setEditingFlag', { orderNumber, isEditing });
-
-  if (!orderNumber) throw new Error('orderNumber is required');
-
-  const updateData = {
-    isEditing,
-    editedAt: isEditing ? new Date() : null
-  };
-
-  const [affectedCount] = await WorkOrderWaitingQueue.update(updateData, {
-    where: { orderNumber }
-  });
-
-  if (affectedCount === 0) {
-    console.warn('⚠️ No records updated in setEditingFlag', { orderNumber });
-    throw new Error(`Order ${orderNumber} not found`);
-  }
-
-  console.log(`✅ Flag isEditing ${isEditing ? 'ativada' : 'desativada'} para ordem ${orderNumber}`);
-
-  return {
-    success: affectedCount > 0,
-    updatedRows: affectedCount
-  };
-}
-
-export async function isOrderBeingEdited(orderNumber) {
-  console.log('🔎 INIT isOrderBeingEdited', { orderNumber });
-
-  if (!orderNumber) throw new Error('orderNumber is required');
-
-  const result = await WorkOrderWaitingQueue.findOne({
-    where: { orderNumber },
-    attributes: ['isEditing', 'editedAt']
-  });
-
-  if (!result) {
-    console.warn('⚠️ No record found in isOrderBeingEdited', { orderNumber });
-    return false;
-  }
-
-  return result.isEditing || false;
-}
-
-export async function isOrderEditingExpired(orderNumber, maxEditDurationMs = 10 * 60 * 1000) {
-  console.log('🔎 INIT isOrderEditingExpired', { orderNumber, maxEditDurationMs });
-
-  if (!orderNumber) throw new Error('orderNumber is required');
-
-  const result = await WorkOrderWaitingQueue.findOne({
-    where: { orderNumber },
-    attributes: ['isEditing', 'editedAt']
-  });
-
-  if (!result || !result.isEditing || !result.editedAt) {
-    return false; // Não está em edição ou não tem editedAt
-  }
-
-  const editedTime = new Date(result.editedAt).getTime();
-  const currentTime = Date.now();
-  const isExpired = (currentTime - editedTime) > maxEditDurationMs;
-
-  if (isExpired) {
-    console.log(`⏰ Edição da ordem ${orderNumber} expirada. Editada há ${Math.floor((currentTime - editedTime) / 1000)}s`);
-
-    // Automaticamente desativar flag se expirou
-    await setEditingFlag(orderNumber, false);
-  }
-
-  return isExpired;
-}
-
 export default {
   createInQueue,
   updateQueueStatus,
@@ -423,9 +327,5 @@ export default {
   findAll,
   findByOrderNumber,
   findOldestWaitingOrder,
-  findOldestWaitingOrderNotEditing,
-  findById,
-  setEditingFlag,
-  isOrderBeingEdited,
-  isOrderEditingExpired
+  findById
 };
