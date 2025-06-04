@@ -33,7 +33,7 @@ import authRoutes from './routes/authRoutes'
 import addressRoutes from './routes/addressRoutes'
 import userGroupRoutes from './routes/userGroupRoutes'
 import gupshupRoutes from './routes/gupshupRoutes'
-import workOrderWaitingQueueRoutes from './routes/workOrderWaitingQueue'
+import workOrderWaitingQueueRoutes from './routes/workOrderWaitingQueueRoutes'
 import pushNotificationRoutes from './routes/pushNotificationRoutes';
 import notificationRoutes from './routes/notificationRoutes';
 import roleRoutes from './routes/roleRoutes';

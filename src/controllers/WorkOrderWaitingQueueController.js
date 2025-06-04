@@ -100,7 +100,7 @@ class WorkOrderWaitingQueueController {
   async pauseTechnicianAssignment(req, res) {
     let { uraRequestId = '' } = req.query;
     const { orderNumber } = req.params;
-    const userId = req.userId;
+    const userId = req.userName;
 
     console.log('🔍 INIT pauseTechnicianAssignment', { uraRequestId, orderNumber, userId });
 
@@ -173,7 +173,7 @@ class WorkOrderWaitingQueueController {
       }
 
       // Ativar flag isEditing no banco de dados
-      await WorkOrderWaitingQueueService.setEditingFlag(orderNumber, true);
+      await WorkOrderWaitingQueueService.setEditingFlag(orderNumber, true, userId);
 
       const result = {
         success: true,
@@ -219,7 +219,7 @@ class WorkOrderWaitingQueueController {
   async resumeTechnicianAssignment(req, res) {
     let { uraRequestId = '' } = req.query;
     const { orderNumber } = req.params;
-    const userId = req.userId;
+    const userId = req.userName;
 
     try {
       if (!orderNumber || !userId) {
@@ -272,7 +272,9 @@ class WorkOrderWaitingQueueController {
       }
 
       // Desativar flag isEditing no banco de dados
-      await WorkOrderWaitingQueueService.setEditingFlag(orderNumber, false);
+      await WorkOrderWaitingQueueService.setEditingFlag(orderNumber, false, userId);
+
+      console.log(`✅ Flag isEditing desativada para ordem ${orderNumber}. Worker reagendado processará automaticamente.`);
 
       const result = {
         success: true,

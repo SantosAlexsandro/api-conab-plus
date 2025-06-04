@@ -5,9 +5,8 @@ import checkPermission from '../middlewares/checkPermission';
 
 const router = new Router();
 
-// Middleware de autenticação para todas as rotas
-console.log('🔍 [Routes] Aplicando middleware authUser nas rotas work-order-queue');
-// router.use(authUser); TODO: Incluir no futuro
+// Middleware de autenticação aplicado a todas as rotas
+router.use(authUser);
 
 // Pausar atribuição de técnico para uma ordem específica
 router.post('/:orderNumber/pause-technician-assignment', workOrderWaitingQueueController.pauseTechnicianAssignment);

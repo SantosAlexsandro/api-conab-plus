@@ -340,14 +340,15 @@ export async function findById(id) {
   return result;
 }
 
-export async function setEditingFlag(orderNumber, isEditing) {
-  console.log('🔧 INIT setEditingFlag', { orderNumber, isEditing });
+export async function setEditingFlag(orderNumber, isEditing, editedBy = null) {
+  console.log('🔧 INIT setEditingFlag', { orderNumber, isEditing, editedBy });
 
   if (!orderNumber) throw new Error('orderNumber is required');
 
   const updateData = {
     isEditing,
-    editedAt: isEditing ? new Date() : null
+    editedAt: isEditing ? new Date() : null,
+    editedBy: isEditing ? editedBy : null
   };
 
   const [affectedCount] = await WorkOrderWaitingQueue.update(updateData, {
@@ -359,7 +360,7 @@ export async function setEditingFlag(orderNumber, isEditing) {
     throw new Error(`Order ${orderNumber} not found`);
   }
 
-  console.log(`✅ Flag isEditing ${isEditing ? 'ativada' : 'desativada'} para ordem ${orderNumber}`);
+  console.log(`✅ Flag isEditing ${isEditing ? 'ativada' : 'desativada'} para ordem ${orderNumber}${editedBy ? ` por ${editedBy}` : ''}`);
 
   return {
     success: affectedCount > 0,
@@ -392,7 +393,7 @@ export async function isOrderEditingExpired(orderNumber, maxEditDurationMs = 10 
 
   const result = await WorkOrderWaitingQueue.findOne({
     where: { orderNumber },
-    attributes: ['isEditing', 'editedAt']
+    attributes: ['isEditing', 'editedAt', 'editedBy']
   });
 
   if (!result || !result.isEditing || !result.editedAt) {
@@ -401,10 +402,13 @@ export async function isOrderEditingExpired(orderNumber, maxEditDurationMs = 10 
 
   const editedTime = new Date(result.editedAt).getTime();
   const currentTime = Date.now();
+  const editDurationSeconds = Math.floor((currentTime - editedTime) / 1000);
   const isExpired = (currentTime - editedTime) > maxEditDurationMs;
 
   if (isExpired) {
-    console.log(`⏰ Edição da ordem ${orderNumber} expirada. Editada há ${Math.floor((currentTime - editedTime) / 1000)}s`);
+    console.log(`⏰ Edição da ordem ${orderNumber} expirada (TTL: ${maxEditDurationMs/1000/60}min)`);
+    console.log(`   📊 Editada há ${editDurationSeconds}s por usuário: ${result.editedBy || 'Desconhecido'}`);
+    console.log(`   🔧 Liberando ordem automaticamente...`);
 
     // Automaticamente desativar flag se expirou
     await setEditingFlag(orderNumber, false);

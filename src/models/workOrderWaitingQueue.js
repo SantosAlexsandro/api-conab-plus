@@ -57,6 +57,7 @@ export default class WorkOrderWaitingQueue extends Model {
           defaultValue: false,
         },
         editedAt: Sequelize.DATE,
+        editedBy: Sequelize.STRING,
       },
       {
         sequelize,
