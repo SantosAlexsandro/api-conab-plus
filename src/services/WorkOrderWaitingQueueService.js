@@ -417,6 +417,44 @@ export async function isOrderEditingExpired(orderNumber, maxEditDurationMs = 10 
   return isExpired;
 }
 
+export async function hasAnyOrderBeingEdited() {
+  console.log('🔎 INIT hasAnyOrderBeingEdited');
+
+  const result = await WorkOrderWaitingQueue.findOne({
+    where: {
+      status: 'WAITING_TECHNICIAN',
+      isEditing: true
+    },
+    attributes: ['orderNumber', 'editedBy', 'editedAt']
+  });
+
+  if (result) {
+    // Verificar se alguma das edições expirou
+    const isExpired = await isOrderEditingExpired(result.orderNumber, 10 * 60 * 1000);
+    
+    if (!isExpired) {
+      console.log(`🔒 Edição ativa detectada: Ordem ${result.orderNumber} sendo editada por ${result.editedBy}`);
+      return {
+        hasEditing: true,
+        orderNumber: result.orderNumber,
+        editedBy: result.editedBy,
+        editedAt: result.editedAt
+      };
+    } else {
+      // Se expirou, verificar novamente se há outras
+      return hasAnyOrderBeingEdited();
+    }
+  }
+
+  console.log(`✅ Nenhuma ordem em edição ativa - processamento pode continuar`);
+  return {
+    hasEditing: false,
+    orderNumber: null,
+    editedBy: null,
+    editedAt: null
+  };
+}
+
 export default {
   createInQueue,
   updateQueueStatus,
@@ -431,5 +469,6 @@ export default {
   findById,
   setEditingFlag,
   isOrderBeingEdited,
-  isOrderEditingExpired
+  isOrderEditingExpired,
+  hasAnyOrderBeingEdited
 };
