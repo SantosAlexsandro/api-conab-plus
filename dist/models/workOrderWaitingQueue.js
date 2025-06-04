@@ -52,6 +52,12 @@
         customerZipCode: _sequelize2.default.STRING,
         customerCityErpCode: _sequelize2.default.STRING,
         customerStreetTypeCode: _sequelize2.default.STRING,
+        isEditing: {
+          type: _sequelize2.default.BOOLEAN,
+          defaultValue: false,
+        },
+        editedAt: _sequelize2.default.DATE,
+        editedBy: _sequelize2.default.STRING,
       },
       {
         sequelize,

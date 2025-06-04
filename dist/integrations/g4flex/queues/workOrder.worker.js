@@ -134,6 +134,51 @@ async function processAssignTechnician(job) {
   console.log(`🔄 Processando atribuição de técnico para ordem ${orderId}`);
 
   try {
+    // ✅ VERIFICAÇÃO ANTI-RACE CONDITION: Verificar se ordem está em edição ANTES de qualquer processamento
+    console.log(`🔍 Verificando flag isEditing para ordem ${orderId}...`);
+    const currentOrderCheck = await _WorkOrderWaitingQueueService2.default.findByOrderNumber(orderId);
+
+    if (_optionalChain([currentOrderCheck, 'optionalAccess', _ => _.isEditing])) {
+      // Verificar se a edição não expirou (TTL)
+      const isExpired = await _WorkOrderWaitingQueueService2.default.isOrderEditingExpired(orderId, 10 * 60 * 1000); // 10 minutos
+
+      if (!isExpired) {
+        console.log(`⏸️ SKIP: Ordem ${orderId} está em edição manual (isEditing=true). Reagendando...`);
+
+        // ✅ REAGENDAR para nova tentativa ao invés de marcar como completed
+        const delay = RETRY_INTERVAL_MS; // 1 minuto
+        const nextAttemptDate = generateNextAttemptDate(delay);
+
+        await _workOrderqueue2.default.add("assignTechnician",
+          {
+            orderId,
+            uraRequestId,
+            customerName,
+            requesterContact,
+            retryCount: (job.data.retryCount || 0) + 1,
+            skippedDueToEditing: true
+          },
+          {
+            delay,
+            removeOnComplete: false
+          }
+        );
+
+        console.log(`📅 Ordem ${orderId} reagendada para ${nextAttemptDate} - está em edição`);
+        
+        return {
+          success: false,
+          skipped: true,
+          rescheduled: true,
+          reason: 'Order is being edited manually',
+          message: `Ordem ${orderId} reagendada - está em edição`,
+          nextAttempt: nextAttemptDate
+        };
+      } else {
+        console.log(`⏰ Ordem ${orderId} teve edição expirada, processamento será retomado.`);
+      }
+    }
+
     // Verificar se há um técnico disponível antes de continuar
     const technician = await _TechnicianService2.default.getAvailableTechnician();
 
@@ -175,6 +220,48 @@ async function processAssignTechnician(job) {
       if (!currentOrder || currentOrder.status !== 'WAITING_TECHNICIAN') {
         console.log(`⚠️ Ordem atual ${orderId} não está aguardando técnico ou não existe`);
         return { success: false, message: 'Ordem não está aguardando técnico' };
+      }
+
+      // ✅ SEGUNDA VERIFICAÇÃO ANTI-RACE CONDITION: Verificar novamente antes do processamento final
+      if (currentOrder.isEditing) {
+        // Verificar se a edição não expirou (TTL)
+        const isExpired = await _WorkOrderWaitingQueueService2.default.isOrderEditingExpired(orderId, 10 * 60 * 1000); // 10 minutos
+
+        if (!isExpired) {
+          console.log(`⏸️ SKIP: Ordem ${orderId} entrou em edição durante processamento. Reagendando...`);
+          
+          // ✅ REAGENDAR para nova tentativa ao invés de marcar como completed
+          const delay = RETRY_INTERVAL_MS; // 1 minuto
+          const nextAttemptDate = generateNextAttemptDate(delay);
+
+          await _workOrderqueue2.default.add("assignTechnician",
+            {
+              orderId,
+              uraRequestId,
+              customerName,
+              requesterContact,
+              retryCount: (job.data.retryCount || 0) + 1,
+              skippedDueToEditing: true
+            },
+            {
+              delay,
+              removeOnComplete: false
+            }
+          );
+
+          console.log(`📅 Ordem ${orderId} reagendada para ${nextAttemptDate} - entrou em edição durante processamento`);
+          
+          return {
+            success: false,
+            skipped: true,
+            rescheduled: true,
+            reason: 'Order was marked for editing during processing',
+            message: `Ordem ${orderId} reagendada - entrou em edição durante processamento`,
+            nextAttempt: nextAttemptDate
+          };
+        } else {
+          console.log(`⏰ Ordem ${orderId} teve edição expirada durante processamento, continuando.`);
+        }
       }
 
       // Usar a ordem atual se ela estiver aguardando técnico
@@ -245,6 +332,48 @@ async function processAssignTechnician(job) {
 
       console.log(`🕒 Encontrada ordem mais antiga aguardando técnico: ${oldestOrderId}`);
 
+      // ✅ TERCEIRA VERIFICAÇÃO ANTI-RACE CONDITION: Verificar se ordem mais antiga não está em edição
+      if (oldestOrder.isEditing) {
+        // Verificar se a edição não expirou (TTL)
+        const isExpired = await _WorkOrderWaitingQueueService2.default.isOrderEditingExpired(oldestOrderId, 10 * 60 * 1000); // 10 minutos
+
+        if (!isExpired) {
+          console.log(`⏸️ SKIP: Ordem mais antiga ${oldestOrderId} está em edição. Reagendando...`);
+
+          // ✅ REAGENDAR para nova tentativa ao invés de tentar próxima ordem
+          const delay = RETRY_INTERVAL_MS; // 1 minuto
+          const nextAttemptDate = generateNextAttemptDate(delay);
+
+          await _workOrderqueue2.default.add("assignTechnician",
+            {
+              orderId,
+              uraRequestId,
+              customerName,
+              requesterContact,
+              retryCount: (job.data.retryCount || 0) + 1,
+              skippedDueToEditing: true
+            },
+            {
+              delay,
+              removeOnComplete: false
+            }
+          );
+
+          console.log(`📅 Ordem ${orderId} reagendada para ${nextAttemptDate} - ordem mais antiga em edição`);
+          
+          return {
+            success: false,
+            skipped: true,
+            rescheduled: true,
+            reason: 'Oldest order is being edited',
+            message: `Ordem ${orderId} reagendada - ordem mais antiga ${oldestOrderId} está em edição`,
+            nextAttempt: nextAttemptDate
+          };
+        } else {
+          console.log(`⏰ Ordem mais antiga ${oldestOrderId} teve edição expirada, processando.`);
+        }
+      }
+
       if (oldestOrderId === orderId) {
         console.log(`✅ A ordem atual ${orderId} é a mais antiga aguardando técnico`);
       } else {
@@ -254,12 +383,6 @@ async function processAssignTechnician(job) {
       const orderStatus = await _WorkOrderService2.default.isOrderFulfilledORCancelled(oldestOrderId);
 
       if (orderStatus.isCancelled) {
-        console.log(`⚠️ Ordem ${oldestOrderId} já foi cancelada`);
-        await _WorkOrderWaitingQueueService2.default.updateQueueStatus(
-          oldestUraRequestId,
-          oldestOrderId,
-          'CANCELED'
-        );
         // Tentar novamente com outra ordem
         return processAssignTechnician(job);
       } else if (orderStatus.isFulfilled) {
@@ -440,8 +563,8 @@ async function processCancelWorkOrder(job) {
         await Promise.all(result.orders.map(async (orderNumber) => {
           // Buscar dados da ordem ORIGINAL pelo orderNumber, não pelo uraRequestId de cancelamento
           const queueData = await _WorkOrderWaitingQueueService2.default.findByOrderNumber(orderNumber);
-          const customerName = _optionalChain([queueData, 'optionalAccess', _ => _.entityName]);
-          const phoneNumber = _optionalChain([queueData, 'optionalAccess', _2 => _2.requesterContact]);
+          const customerName = _optionalChain([queueData, 'optionalAccess', _2 => _2.entityName]);
+          const phoneNumber = _optionalChain([queueData, 'optionalAccess', _3 => _3.requesterContact]);
 
           if (phoneNumber && customerName) {
             await _WhatsAppService2.default.sendWhatsAppMessage({
