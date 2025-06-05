@@ -30,20 +30,36 @@ var _CustomerService = require('../integrations/g4flex/services/CustomerService'
   }
 
   try {
-    // Buscar dados da entidade usando o CustomerService que já funciona
-    const getEntityData = async (customerIdentifier) => {
-      const { identifierType, identifierValue } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
-      const customerData = await _CustomerService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+    let entityData = null;
+    let cityData = null;
 
-      // Buscar dados completos da entidade usando o código encontrado
-      const entityData = await _EntityService2.default.getById(customerData.codigo);
-      return entityData;
+    // Tentar buscar dados da entidade, mas não falhar se não conseguir
+    try {
+      const getEntityData = async (customerIdentifier) => {
+        const { identifierType, identifierValue } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
+        const customerData = await _CustomerService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+        const entityData = await _EntityService2.default.getById(customerData.codigo);
+        return entityData;
+      }
+
+      entityData = await getEntityData(data.customerIdentifier);
+
+      // Tentar buscar dados da cidade
+      if (_optionalChain([entityData, 'optionalAccess', _ => _.CodigoCidade])) {
+        cityData = await _CityService2.default.getCityByErpCode(entityData.CodigoCidade);
+      }
+    } catch (dataError) {
+      console.warn('⚠️ Falha ao buscar dados da entidade/cidade:', dataError.message);
+      // Log do erro mas continua o processo
+      await _logEvent2.default.call(void 0, {
+        uraRequestId: data.uraRequestId,
+        source: 'system',
+        action: 'data_fetch_warning',
+        payload: { error: dataError.message },
+        response: { warning: 'Dados da entidade/cidade não puderam ser obtidos' },
+        statusCode: 200
+      });
     }
-
-    const entityData = await getEntityData(data.customerIdentifier);
-
-    // Get city data
-    const cityData = await _CityService2.default.getCityByErpCode(_optionalChain([entityData, 'optionalAccess', _ => _.CodigoCidade]))
 
     const newRequest = await _workOrderWaitingQueue2.default.create({
       orderNumber: data.orderNumber,
@@ -57,15 +73,16 @@ var _CustomerService = require('../integrations/g4flex/services/CustomerService'
       requesterNameAndPosition: _optionalChain([data, 'optionalAccess', _2 => _2.requesterNameAndPosition]),
       incidentAndReceiverName: _optionalChain([data, 'optionalAccess', _3 => _3.incidentAndReceiverName]),
       requesterContact: _optionalChain([data, 'optionalAccess', _4 => _4.requesterContact]),
-      customerStreet: _optionalChain([entityData, 'optionalAccess', _5 => _5.Endereco]),
-      customerNumber: _optionalChain([entityData, 'optionalAccess', _6 => _6.NumeroEndereco]),
-      customerAddressComplement: _optionalChain([entityData, 'optionalAccess', _7 => _7.ComplementoEndereco]),
-      customerNeighborhood: _optionalChain([entityData, 'optionalAccess', _8 => _8.Bairro]),
-      customerCity: _optionalChain([cityData, 'optionalAccess', _9 => _9.full_name]),
-      customerState: _optionalChain([cityData, 'optionalAccess', _10 => _10.acronym_federal_unit]),
-      customerZipCode: _optionalChain([entityData, 'optionalAccess', _11 => _11.Cep]),
-      customerCityErpCode: _optionalChain([entityData, 'optionalAccess', _12 => _12.CodigoCidade]),
-      customerStreetTypeCode: _optionalChain([entityData, 'optionalAccess', _13 => _13.CodigoTipoLograd])
+      // Usar dados se disponíveis, senão null
+      customerStreet: _optionalChain([entityData, 'optionalAccess', _5 => _5.Endereco]) || null,
+      customerNumber: _optionalChain([entityData, 'optionalAccess', _6 => _6.NumeroEndereco]) || null,
+      customerAddressComplement: _optionalChain([entityData, 'optionalAccess', _7 => _7.ComplementoEndereco]) || null,
+      customerNeighborhood: _optionalChain([entityData, 'optionalAccess', _8 => _8.Bairro]) || null,
+      customerCity: _optionalChain([cityData, 'optionalAccess', _9 => _9.full_name]) || null,
+      customerState: _optionalChain([cityData, 'optionalAccess', _10 => _10.acronym_federal_unit]) || null,
+      customerZipCode: _optionalChain([entityData, 'optionalAccess', _11 => _11.Cep]) || null,
+      customerCityErpCode: _optionalChain([entityData, 'optionalAccess', _12 => _12.CodigoCidade]) || null,
+      customerStreetTypeCode: _optionalChain([entityData, 'optionalAccess', _13 => _13.CodigoTipoLograd]) || null
     });
 
     await _logEvent2.default.call(void 0, {
@@ -73,7 +90,11 @@ var _CustomerService = require('../integrations/g4flex/services/CustomerService'
       source: 'system',
       action: 'work_order_queue_created',
       payload: data,
-      response: { queueId: newRequest.id },
+      response: {
+        queueId: newRequest.id,
+        entityDataAvailable: !!entityData,
+        cityDataAvailable: !!cityData
+      },
       statusCode: 201
     });
 

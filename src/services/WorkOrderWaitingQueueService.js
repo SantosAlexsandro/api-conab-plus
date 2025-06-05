@@ -30,20 +30,36 @@ export async function createInQueue(data) {
   }
 
   try {
-    // Buscar dados da entidade usando o CustomerService que já funciona
-    const getEntityData = async (customerIdentifier) => {
-      const { identifierType, identifierValue } = resolveNumericIdentifier(customerIdentifier);
-      const customerData = await customerService.getCustomerByIdentifier(identifierType, identifierValue);
+    let entityData = null;
+    let cityData = null;
 
-      // Buscar dados completos da entidade usando o código encontrado
-      const entityData = await EntityService.getById(customerData.codigo);
-      return entityData;
+    // Tentar buscar dados da entidade, mas não falhar se não conseguir
+    try {
+      const getEntityData = async (customerIdentifier) => {
+        const { identifierType, identifierValue } = resolveNumericIdentifier(customerIdentifier);
+        const customerData = await customerService.getCustomerByIdentifier(identifierType, identifierValue);
+        const entityData = await EntityService.getById(customerData.codigo);
+        return entityData;
+      }
+
+      entityData = await getEntityData(data.customerIdentifier);
+
+      // Tentar buscar dados da cidade
+      if (entityData?.CodigoCidade) {
+        cityData = await CityService.getCityByErpCode(entityData.CodigoCidade);
+      }
+    } catch (dataError) {
+      console.warn('⚠️ Falha ao buscar dados da entidade/cidade:', dataError.message);
+      // Log do erro mas continua o processo
+      await logEvent({
+        uraRequestId: data.uraRequestId,
+        source: 'system',
+        action: 'data_fetch_warning',
+        payload: { error: dataError.message },
+        response: { warning: 'Dados da entidade/cidade não puderam ser obtidos' },
+        statusCode: 200
+      });
     }
-
-    const entityData = await getEntityData(data.customerIdentifier);
-
-    // Get city data
-    const cityData = await CityService.getCityByErpCode(entityData?.CodigoCidade)
 
     const newRequest = await WorkOrderWaitingQueue.create({
       orderNumber: data.orderNumber,
@@ -57,15 +73,16 @@ export async function createInQueue(data) {
       requesterNameAndPosition: data?.requesterNameAndPosition,
       incidentAndReceiverName: data?.incidentAndReceiverName,
       requesterContact: data?.requesterContact,
-      customerStreet: entityData?.Endereco,
-      customerNumber: entityData?.NumeroEndereco,
-      customerAddressComplement: entityData?.ComplementoEndereco,
-      customerNeighborhood: entityData?.Bairro,
-      customerCity: cityData?.full_name,
-      customerState: cityData?.acronym_federal_unit,
-      customerZipCode: entityData?.Cep,
-      customerCityErpCode: entityData?.CodigoCidade,
-      customerStreetTypeCode: entityData?.CodigoTipoLograd
+      // Usar dados se disponíveis, senão null
+      customerStreet: entityData?.Endereco || null,
+      customerNumber: entityData?.NumeroEndereco || null,
+      customerAddressComplement: entityData?.ComplementoEndereco || null,
+      customerNeighborhood: entityData?.Bairro || null,
+      customerCity: cityData?.full_name || null,
+      customerState: cityData?.acronym_federal_unit || null,
+      customerZipCode: entityData?.Cep || null,
+      customerCityErpCode: entityData?.CodigoCidade || null,
+      customerStreetTypeCode: entityData?.CodigoTipoLograd || null
     });
 
     await logEvent({
@@ -73,7 +90,11 @@ export async function createInQueue(data) {
       source: 'system',
       action: 'work_order_queue_created',
       payload: data,
-      response: { queueId: newRequest.id },
+      response: {
+        queueId: newRequest.id,
+        entityDataAvailable: !!entityData,
+        cityDataAvailable: !!cityData
+      },
       statusCode: 201
     });
 
