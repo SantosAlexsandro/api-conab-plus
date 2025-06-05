@@ -73,6 +73,7 @@ export async function createInQueue(data) {
       requesterNameAndPosition: data?.requesterNameAndPosition,
       incidentAndReceiverName: data?.incidentAndReceiverName,
       requesterContact: data?.requesterContact,
+      callerPhoneNumber: data?.callerPhoneNumber,
       // Usar dados se disponíveis, senão null
       customerStreet: entityData?.Endereco || null,
       customerNumber: entityData?.NumeroEndereco || null,

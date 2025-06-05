@@ -217,6 +217,7 @@ class WorkOrderController {
         requesterNameAndPosition,
         incidentAndReceiverName,
         requesterContact,
+        callerPhoneNumber,
       } = req.body;
 
       const validationError = validateURAQuery(req.query);
@@ -299,6 +300,7 @@ class WorkOrderController {
         requesterNameAndPosition,
         incidentAndReceiverName,
         requesterContact,
+        callerPhoneNumber,
       });
 
       console.log('[WorkOrderController] Ordem adicionada à fila para processamento');

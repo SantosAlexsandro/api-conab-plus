@@ -73,16 +73,17 @@ var _CustomerService = require('../integrations/g4flex/services/CustomerService'
       requesterNameAndPosition: _optionalChain([data, 'optionalAccess', _2 => _2.requesterNameAndPosition]),
       incidentAndReceiverName: _optionalChain([data, 'optionalAccess', _3 => _3.incidentAndReceiverName]),
       requesterContact: _optionalChain([data, 'optionalAccess', _4 => _4.requesterContact]),
+      callerPhoneNumber: _optionalChain([data, 'optionalAccess', _5 => _5.callerPhoneNumber]),
       // Usar dados se disponíveis, senão null
-      customerStreet: _optionalChain([entityData, 'optionalAccess', _5 => _5.Endereco]) || null,
-      customerNumber: _optionalChain([entityData, 'optionalAccess', _6 => _6.NumeroEndereco]) || null,
-      customerAddressComplement: _optionalChain([entityData, 'optionalAccess', _7 => _7.ComplementoEndereco]) || null,
-      customerNeighborhood: _optionalChain([entityData, 'optionalAccess', _8 => _8.Bairro]) || null,
-      customerCity: _optionalChain([cityData, 'optionalAccess', _9 => _9.full_name]) || null,
-      customerState: _optionalChain([cityData, 'optionalAccess', _10 => _10.acronym_federal_unit]) || null,
-      customerZipCode: _optionalChain([entityData, 'optionalAccess', _11 => _11.Cep]) || null,
-      customerCityErpCode: _optionalChain([entityData, 'optionalAccess', _12 => _12.CodigoCidade]) || null,
-      customerStreetTypeCode: _optionalChain([entityData, 'optionalAccess', _13 => _13.CodigoTipoLograd]) || null
+      customerStreet: _optionalChain([entityData, 'optionalAccess', _6 => _6.Endereco]) || null,
+      customerNumber: _optionalChain([entityData, 'optionalAccess', _7 => _7.NumeroEndereco]) || null,
+      customerAddressComplement: _optionalChain([entityData, 'optionalAccess', _8 => _8.ComplementoEndereco]) || null,
+      customerNeighborhood: _optionalChain([entityData, 'optionalAccess', _9 => _9.Bairro]) || null,
+      customerCity: _optionalChain([cityData, 'optionalAccess', _10 => _10.full_name]) || null,
+      customerState: _optionalChain([cityData, 'optionalAccess', _11 => _11.acronym_federal_unit]) || null,
+      customerZipCode: _optionalChain([entityData, 'optionalAccess', _12 => _12.Cep]) || null,
+      customerCityErpCode: _optionalChain([entityData, 'optionalAccess', _13 => _13.CodigoCidade]) || null,
+      customerStreetTypeCode: _optionalChain([entityData, 'optionalAccess', _14 => _14.CodigoTipoLograd]) || null
     });
 
     await _logEvent2.default.call(void 0, {

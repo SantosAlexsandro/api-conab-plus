@@ -41,6 +41,7 @@
         requesterNameAndPosition: _sequelize2.default.STRING,
         incidentAndReceiverName: _sequelize2.default.STRING,
         requesterContact: _sequelize2.default.STRING,
+        callerPhoneNumber: _sequelize2.default.STRING,
         cancellationRequesterInfo: _sequelize2.default.STRING,
         failureReason: _sequelize2.default.TEXT,
         customerStreet: _sequelize2.default.STRING,

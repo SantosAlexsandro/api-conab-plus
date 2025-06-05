@@ -40,6 +40,9 @@
  *        requesterContact:
  *          type: string
  *          description: Número de contato do solicitante (fixo ou celular/WhatsApp)
+ *        callerPhoneNumber:
+ *          type: string
+ *          description: Número de telefone de origem da chamada (opcional)
  *    WorkOrderCreateResponse:
  *      type: object
  *      properties:

@@ -41,6 +41,7 @@ export default class WorkOrderWaitingQueue extends Model {
         requesterNameAndPosition: Sequelize.STRING,
         incidentAndReceiverName: Sequelize.STRING,
         requesterContact: Sequelize.STRING,
+        callerPhoneNumber: Sequelize.STRING,
         cancellationRequesterInfo: Sequelize.STRING,
         failureReason: Sequelize.TEXT,
         customerStreet: Sequelize.STRING,

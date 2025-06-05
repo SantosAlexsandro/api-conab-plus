@@ -70,6 +70,7 @@ async function processCreateWorkOrder(job) {
       requesterNameAndPosition: orderData.requesterNameAndPosition,
       incidentAndReceiverName: orderData.incidentAndReceiverName,
       requesterContact: orderData.requesterContact,
+      callerPhoneNumber: orderData.callerPhoneNumber,
     });
 
     // Se for uma solicitação duplicada, retornar o resultado do serviço
