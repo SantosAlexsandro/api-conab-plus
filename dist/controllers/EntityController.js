@@ -62,11 +62,26 @@ class EntityController {
     // Retorna entidade por filtro das propriedades
     async getByFilter(req, res) {
       try {
-        const { page = 1, filter = "" } = req.query;
-        const { data } = await _EntityService2.default.getByFilter(page, filter);
-        return res.json(data);
+        const { field, value } = req.query;
+
+        if (!field || !value) {
+          return res.status(400).json({
+            errors: ['Os parâmetros "field" e "value" são obrigatórios']
+          });
+        }
+
+        const result = await _EntityService2.default.getEntityByProperty(field, value);
+        return res.json(result.data);
       } catch (e) {
-        return res.status(400).json({ errors: e.errors.map((err) => err.Message) });
+        console.error('Erro no getByFilter:', e);
+
+        if (e.status === 404) {
+          return res.status(404).json({ message: e.message });
+        }
+
+        return res.status(400).json({
+          errors: _optionalChain([e, 'access', _4 => _4.errors, 'optionalAccess', _5 => _5.map, 'call', _6 => _6((err) => err.Message)]) || [e.message]
+        });
       }
     }
 

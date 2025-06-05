@@ -5,69 +5,45 @@ var _logEvent = require('../utils/logEvent'); var _logEvent2 = _interopRequireDe
 var _resolveNumericIdentifier = require('../integrations/g4flex/utils/resolveNumericIdentifier');
 var _sequelize = require('sequelize');
 var _database = require('../database'); var _database2 = _interopRequireDefault(_database);
+var _CustomerService = require('../integrations/g4flex/services/CustomerService'); var _CustomerService2 = _interopRequireDefault(_CustomerService);
 
  async function checkDuplicateRequest(uraRequestId) {
+  console.log('INIT checkDuplicateRequest', { uraRequestId });
+
+  if (!uraRequestId) throw new Error('uraRequestId is required');
+
   const existingRequest = await _workOrderWaitingQueue2.default.findOne({
     where: { uraRequestId }
   });
 
-  if (existingRequest) {
-    await _logEvent2.default.call(void 0, {
-      uraRequestId,
-      source: 'system',
-      action: 'duplicate_work_order_request',
-      payload: { existingStatus: existingRequest.status },
-      response: { message: 'Duplicate work order request detected' },
-      statusCode: 409,
-      error: 'Duplicate work order request'
-    });
-
-    return {
-      isDuplicate: true,
-      existingRequest
-    };
-  }
-
   return {
-    isDuplicate: false,
-    existingRequest: null
+    isDuplicate: !!existingRequest,
+    existingRequest
   };
 } exports.checkDuplicateRequest = checkDuplicateRequest;
 
  async function createInQueue(data) {
+  console.log('INIT createInQueue', data);
+
+  if (!data.uraRequestId) {
+    throw new Error('uraRequestId is required');
+  }
+
   try {
-    // Verifica duplicidade antes de criar
-    const { isDuplicate, existingRequest } = await checkDuplicateRequest(data.uraRequestId);
+    // Buscar dados da entidade usando o CustomerService que já funciona
+    const getEntityData = async (customerIdentifier) => {
+      const { identifierType, identifierValue } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, customerIdentifier);
+      const customerData = await _CustomerService2.default.getCustomerByIdentifier(identifierType, identifierValue);
 
-    if (isDuplicate) {
-      console.log(`[WorkOrderWaitingQueueService] Duplicate request detected for uraRequestId: ${data.uraRequestId}`);
-      return {
-        success: false,
-        error: 'DUPLICATE_REQUEST',
-        message: 'Uma solicitação com este ID já existe na fila',
-        existingRequest
-      };
+      // Buscar dados completos da entidade usando o código encontrado
+      const entityData = await _EntityService2.default.getById(customerData.codigo);
+      return entityData;
     }
 
-    // Get entity data
-    let filter = ''
-    const getEntityData = async (codigo) => {
-      const { identifierType, identifierValue } = _resolveNumericIdentifier.resolveNumericIdentifier.call(void 0, codigo);
-      if (identifierType === 'customerId') {
-        filter = `Codigo=${identifierValue}`
-      } else if (identifierType === 'cpf') {
-        filter = `CPFCNPJ=${identifierValue}`
-      } else if (identifierType === 'cnpj') {
-        filter = `CPFCNPJ=${identifierValue}`
-      }
-      const entity = await _EntityService2.default.loadEntityByFilter(filter)
-      return entity;
-    }
     const entityData = await getEntityData(data.customerIdentifier);
 
     // Get city data
     const cityData = await _CityService2.default.getCityByErpCode(_optionalChain([entityData, 'optionalAccess', _ => _.CodigoCidade]))
-
 
     const newRequest = await _workOrderWaitingQueue2.default.create({
       orderNumber: data.orderNumber,
@@ -78,18 +54,18 @@ var _database = require('../database'); var _database2 = _interopRequireDefault(
       source: data.source || 'g4flex',
       customerIdentifier: data.customerIdentifier,
       productId: data.productId,
-      requesterNameAndPosition: data.requesterNameAndPosition,
-      incidentAndReceiverName: data.incidentAndReceiverName,
-      requesterContact: data.requesterContact,
-      customerStreet: _optionalChain([entityData, 'optionalAccess', _2 => _2.Endereco]),
-      customerNumber: _optionalChain([entityData, 'optionalAccess', _3 => _3.NumeroEndereco]),
-      customerAddressComplement: _optionalChain([entityData, 'optionalAccess', _4 => _4.ComplementoEndereco]),
-      customerNeighborhood: _optionalChain([entityData, 'optionalAccess', _5 => _5.Bairro]),
-      customerCity: _optionalChain([cityData, 'optionalAccess', _6 => _6.full_name]),
-      customerState: _optionalChain([cityData, 'optionalAccess', _7 => _7.acronym_federal_unit]),
-      customerZipCode: _optionalChain([entityData, 'optionalAccess', _8 => _8.Cep]),
-      customerCityErpCode: _optionalChain([entityData, 'optionalAccess', _9 => _9.CodigoCidade]),
-      customerStreetTypeCode: _optionalChain([entityData, 'optionalAccess', _10 => _10.CodigoTipoLograd])
+      requesterNameAndPosition: _optionalChain([data, 'optionalAccess', _2 => _2.requesterNameAndPosition]),
+      incidentAndReceiverName: _optionalChain([data, 'optionalAccess', _3 => _3.incidentAndReceiverName]),
+      requesterContact: _optionalChain([data, 'optionalAccess', _4 => _4.requesterContact]),
+      customerStreet: _optionalChain([entityData, 'optionalAccess', _5 => _5.Endereco]),
+      customerNumber: _optionalChain([entityData, 'optionalAccess', _6 => _6.NumeroEndereco]),
+      customerAddressComplement: _optionalChain([entityData, 'optionalAccess', _7 => _7.ComplementoEndereco]),
+      customerNeighborhood: _optionalChain([entityData, 'optionalAccess', _8 => _8.Bairro]),
+      customerCity: _optionalChain([cityData, 'optionalAccess', _9 => _9.full_name]),
+      customerState: _optionalChain([cityData, 'optionalAccess', _10 => _10.acronym_federal_unit]),
+      customerZipCode: _optionalChain([entityData, 'optionalAccess', _11 => _11.Cep]),
+      customerCityErpCode: _optionalChain([entityData, 'optionalAccess', _12 => _12.CodigoCidade]),
+      customerStreetTypeCode: _optionalChain([entityData, 'optionalAccess', _13 => _13.CodigoTipoLograd])
     });
 
     await _logEvent2.default.call(void 0, {
@@ -106,6 +82,7 @@ var _database = require('../database'); var _database2 = _interopRequireDefault(
       request: newRequest
     };
   } catch (error) {
+    // TODO: Gerar aviso para whatsApp
     await _logEvent2.default.call(void 0, {
       uraRequestId: data.uraRequestId,
       source: 'system',
@@ -431,7 +408,7 @@ var _database = require('../database'); var _database2 = _interopRequireDefault(
   if (result) {
     // Verificar se alguma das edições expirou
     const isExpired = await isOrderEditingExpired(result.orderNumber, 10 * 60 * 1000);
-    
+
     if (!isExpired) {
       console.log(`🔒 Edição ativa detectada: Ordem ${result.orderNumber} sendo editada por ${result.editedBy}`);
       return {

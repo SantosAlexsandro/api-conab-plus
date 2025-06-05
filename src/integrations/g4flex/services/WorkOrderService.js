@@ -1,10 +1,10 @@
 // src/integrations/g4flex/services/WorkOrderService.js
 
-import BaseG4FlexService from './BaseG4FlexService';
+import BaseERPService from './BaseERPService';
 import logEvent from '../../../utils/logEvent';
 import technicianService from './TechnicianService';
 import workOrderQueue from '../queues/workOrder.queue';
-import entityService from './EntityService';
+import customerService from './CustomerService';
 import contractService from './ContractService';
 import WorkOrderERPService from '../../../integrations/erp/services/WorkOrderService';
 import WorkOrderMobileERPService from '../../../integrations/erp/services/WorkOrderMobileService';
@@ -13,7 +13,7 @@ import BaseERPService from '../../../services/BaseERPService';
 import NotificationService from '../../../services/NotificationService';
 import WorkOrderWaitingQueueService from '../../../services/WorkOrderWaitingQueueService';
 
-class WorkOrderService extends BaseG4FlexService {
+class WorkOrderService extends BaseERPService {
   constructor() {
     super();
     // Constants for date range
@@ -42,7 +42,7 @@ class WorkOrderService extends BaseG4FlexService {
       console.log('[WorkOrderService] Starting work order creation process');
 
       // Busca dados do cliente usando o método otimizado
-      const customerData = await entityService.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await customerService.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerId = customerData.codigo;
 
       const contractData = await contractService.getActiveContract(finalCustomerId);
@@ -266,7 +266,7 @@ class WorkOrderService extends BaseG4FlexService {
   async getOpenOrdersByCustomerId({ identifierType, identifierValue, uraRequestId }) {
     try {
       // Busca dados do cliente usando o método otimizado
-      const customerData = await entityService.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await customerService.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerCode = customerData.codigo;
 
       const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
@@ -323,7 +323,7 @@ class WorkOrderService extends BaseG4FlexService {
   async closeWorkOrderByCustomerId({ identifierType, identifierValue, uraRequestId, cancellationRequesterInfo }) {
     try {
       // Busca dados do cliente usando o método otimizado
-      const customerData = await entityService.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await customerService.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerCode = customerData.codigo;
 
       const openOrders = await this.getOpenOrdersByCustomerId({ identifierType, identifierValue, uraRequestId });

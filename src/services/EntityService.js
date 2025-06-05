@@ -134,27 +134,35 @@ class EntityService {
     }
   }
 
-
-  // Método para recuperar entidade por filtros, exemplos: Por Endereço + Número
-  async getByFilter(page = 1, filter = "") {
-    const pageSize = 10;
-    const order = "DataCadastro desc";
-    const url = `/api/Entidade/RetrievePage?filter=${filter}&order=${order}&pageSize=${pageSize}&pageIndex=${page}`;
-    console.log('url', url)
+  // Método para recuperar entidade por propriedade
+  async getEntityByProperty(propertyField, propertyValue) {
     try {
-      const { data, headers } = await this.axiosInstance.get(url);
+      if (!propertyValue) {
+        throw new Error(`Filter value for ${propertyField} not provided`);
+      }
+
+      const response = await this.axiosInstance.get(
+        `/api/Entidade/RetrievePage?filter=${propertyField}=${propertyValue}&order=&pageSize=10&pageIndex=1`
+      );
+
+      if (!response.data || response.data.length === 0) {
+        throw { status: 404, message: 'Customer not found' };
+      }
+
       return {
-        data,
-        totalCount: headers["x-total-count"] || 10, // Fallback para 10 se o cabeçalho não existir
+        data: response.data,
+        totalCount: response.headers["x-total-count"] || 10, // Fallback para 10 se o cabeçalho não existir
       };
+
     } catch (error) {
       this.handleError(error);
+      throw error;
     }
   }
 
-  // Método para recuperar entidade por filtro das propriedades
-  async loadEntityByFilter(filter) {
-    const url = `/api/Entidade/Load?${filter}&loadChild=All&loadOneToOne=All`;
+  // Método para recuperar entidade pelo código de cadastro
+  async loadEntityByCode(codeValue) {
+    const url = `/api/Entidade/Load?Codigo=${codeValue}&loadChild=All&loadOneToOne=All`;
     try {
       const { data } = await this.axiosInstance.get(url);
       return data;

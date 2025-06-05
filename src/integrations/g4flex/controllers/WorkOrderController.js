@@ -1,7 +1,7 @@
 // src/integrations/g4flex/controllers/WorkOrderController.js
 
 import WorkOrderService from "../services/WorkOrderService";
-import EntityService from "../services/EntityService";
+import CustomerService from "../services/CustomerService";
 import { validateURAQuery } from "../utils/uraValidator";
 import { resolveNumericIdentifier } from "../utils/resolveNumericIdentifier";
 import logEvent from "../../../utils/logEvent";
@@ -265,7 +265,7 @@ class WorkOrderController {
       }
 
       // Busca dados do cliente usando o método otimizado
-      const customerData = await EntityService.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await CustomerService.getCustomerByIdentifier(identifierType, identifierValue);
       const customerName = customerData.nome;
 
       const openOrders = await WorkOrderService.getOpenOrdersByCustomerId({

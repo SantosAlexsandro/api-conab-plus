@@ -1,10 +1,10 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// src/integrations/g4flex/services/ContractService.js
-var _BaseG4FlexService = require('./BaseG4FlexService'); var _BaseG4FlexService2 = _interopRequireDefault(_BaseG4FlexService);
-var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
+var _BaseERPService = require('./BaseERPService'); var _BaseERPService2 = _interopRequireDefault(_BaseERPService);
+var _CustomerService = require('./CustomerService'); var _CustomerService2 = _interopRequireDefault(_CustomerService);
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
 var _resolveNumericIdentifier = require('../utils/resolveNumericIdentifier');
 
-class ContractService extends _BaseG4FlexService2.default {
+class ContractService extends _BaseERPService2.default {
   constructor() {
     super();
   }
@@ -28,7 +28,7 @@ class ContractService extends _BaseG4FlexService2.default {
       }
 
       // Busca dados do cliente usando o método unificado
-      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await _CustomerService2.default.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerId = customerData.codigo;
       const customerName = customerData.nome;
 

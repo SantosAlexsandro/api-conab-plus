@@ -1,13 +1,11 @@
-import BaseG4FlexService from './BaseG4FlexService';
 import logEvent from '../../../utils/logEvent';
 import WorkShift from '../../../models/WorkShift';
 import { Op } from 'sequelize';
 import WorkOrderService from './WorkOrderService';
 import TechnicianERPService from '../../erp/services/TechnicianERPService';
 
-class TechnicianService extends BaseG4FlexService {
+class TechnicianService {
   constructor() {
-    super();
     this.erp = new TechnicianERPService();
   }
 
@@ -79,7 +77,6 @@ class TechnicianService extends BaseG4FlexService {
       return null;
     } catch (error) {
       console.error(`[TechnicianService] Erro crítico ao buscar técnicos disponíveis: ${error.message}`);
-      this.handleError(error);
       throw new Error(`Erro ao buscar técnicos disponíveis: ${error.message}`);
     }
   }

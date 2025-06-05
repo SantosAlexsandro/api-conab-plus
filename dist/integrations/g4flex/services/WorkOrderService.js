@@ -1,19 +1,19 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// src/integrations/g4flex/services/WorkOrderService.js
 
-var _BaseG4FlexService = require('./BaseG4FlexService'); var _BaseG4FlexService2 = _interopRequireDefault(_BaseG4FlexService);
+var _BaseERPService = require('./BaseERPService'); var _BaseERPService2 = _interopRequireDefault(_BaseERPService);
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
 var _TechnicianService = require('./TechnicianService'); var _TechnicianService2 = _interopRequireDefault(_TechnicianService);
 var _workOrderqueue = require('../queues/workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
-var _EntityService = require('./EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
+var _CustomerService = require('./CustomerService'); var _CustomerService2 = _interopRequireDefault(_CustomerService);
 var _ContractService = require('./ContractService'); var _ContractService2 = _interopRequireDefault(_ContractService);
 var _WorkOrderService = require('../../../integrations/erp/services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
 var _WorkOrderMobileService = require('../../../integrations/erp/services/WorkOrderMobileService'); var _WorkOrderMobileService2 = _interopRequireDefault(_WorkOrderMobileService);
 var _EmployeeERPService = require('../../../integrations/erp/services/EmployeeERPService'); var _EmployeeERPService2 = _interopRequireDefault(_EmployeeERPService);
-var _BaseERPService = require('../../../services/BaseERPService'); var _BaseERPService2 = _interopRequireDefault(_BaseERPService);
+var _BaseERPService3 = require('../../../services/BaseERPService'); var _BaseERPService4 = _interopRequireDefault(_BaseERPService3);
 var _NotificationService = require('../../../services/NotificationService'); var _NotificationService2 = _interopRequireDefault(_NotificationService);
 var _WorkOrderWaitingQueueService = require('../../../services/WorkOrderWaitingQueueService'); var _WorkOrderWaitingQueueService2 = _interopRequireDefault(_WorkOrderWaitingQueueService);
 
-class WorkOrderService extends _BaseG4FlexService2.default {
+class WorkOrderService extends _BaseERPService4.default {
   constructor() {
     super();
     // Constants for date range
@@ -42,7 +42,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
       console.log('[WorkOrderService] Starting work order creation process');
 
       // Busca dados do cliente usando o método otimizado
-      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await _CustomerService2.default.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerId = customerData.codigo;
 
       const contractData = await _ContractService2.default.getActiveContract(finalCustomerId);
@@ -266,7 +266,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
   async getOpenOrdersByCustomerId({ identifierType, identifierValue, uraRequestId }) {
     try {
       // Busca dados do cliente usando o método otimizado
-      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await _CustomerService2.default.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerCode = customerData.codigo;
 
       const startDate = new Date(new Date().setDate(new Date().getDate() - this.DATE_RANGE.DAYS_BEFORE)).toISOString();
@@ -323,7 +323,7 @@ class WorkOrderService extends _BaseG4FlexService2.default {
   async closeWorkOrderByCustomerId({ identifierType, identifierValue, uraRequestId, cancellationRequesterInfo }) {
     try {
       // Busca dados do cliente usando o método otimizado
-      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await _CustomerService2.default.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerCode = customerData.codigo;
 
       const openOrders = await this.getOpenOrdersByCustomerId({ identifierType, identifierValue, uraRequestId });

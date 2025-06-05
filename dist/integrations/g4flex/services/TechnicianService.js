@@ -1,13 +1,11 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _BaseG4FlexService = require('./BaseG4FlexService'); var _BaseG4FlexService2 = _interopRequireDefault(_BaseG4FlexService);
-var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
 var _WorkShift = require('../../../models/WorkShift'); var _WorkShift2 = _interopRequireDefault(_WorkShift);
 var _sequelize = require('sequelize');
 var _WorkOrderService = require('./WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
 var _TechnicianERPService = require('../../erp/services/TechnicianERPService'); var _TechnicianERPService2 = _interopRequireDefault(_TechnicianERPService);
 
-class TechnicianService extends _BaseG4FlexService2.default {
+class TechnicianService {
   constructor() {
-    super();
     this.erp = new (0, _TechnicianERPService2.default)();
   }
 
@@ -79,7 +77,6 @@ class TechnicianService extends _BaseG4FlexService2.default {
       return null;
     } catch (error) {
       console.error(`[TechnicianService] Erro crítico ao buscar técnicos disponíveis: ${error.message}`);
-      this.handleError(error);
       throw new Error(`Erro ao buscar técnicos disponíveis: ${error.message}`);
     }
   }

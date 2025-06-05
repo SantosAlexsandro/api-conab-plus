@@ -1,10 +1,10 @@
 // src/integrations/g4flex/services/ContractService.js
-import BaseG4FlexService from './BaseG4FlexService';
-import entityService from './EntityService';
+import BaseERPService from './BaseERPService';
+import customerService from './CustomerService';
 import logEvent from '../../../utils/logEvent';
 import { resolveNumericIdentifier } from '../utils/resolveNumericIdentifier';
 
-class ContractService extends BaseG4FlexService {
+class ContractService extends BaseERPService {
   constructor() {
     super();
   }
@@ -28,7 +28,7 @@ class ContractService extends BaseG4FlexService {
       }
 
       // Busca dados do cliente usando o método unificado
-      const customerData = await entityService.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await customerService.getCustomerByIdentifier(identifierType, identifierValue);
       const finalCustomerId = customerData.codigo;
       const customerName = customerData.nome;
 

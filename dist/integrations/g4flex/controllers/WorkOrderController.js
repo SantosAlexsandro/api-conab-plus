@@ -1,7 +1,7 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }// src/integrations/g4flex/controllers/WorkOrderController.js
 
 var _WorkOrderService = require('../services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
-var _EntityService = require('../services/EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
+var _CustomerService = require('../services/CustomerService'); var _CustomerService2 = _interopRequireDefault(_CustomerService);
 var _uraValidator = require('../utils/uraValidator');
 var _resolveNumericIdentifier = require('../utils/resolveNumericIdentifier');
 var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopRequireDefault(_logEvent);
@@ -265,7 +265,7 @@ class WorkOrderController {
       }
 
       // Busca dados do cliente usando o método otimizado
-      const customerData = await _EntityService2.default.getCustomerByIdentifier(identifierType, identifierValue);
+      const customerData = await _CustomerService2.default.getCustomerByIdentifier(identifierType, identifierValue);
       const customerName = customerData.nome;
 
       const openOrders = await _WorkOrderService2.default.getOpenOrdersByCustomerId({

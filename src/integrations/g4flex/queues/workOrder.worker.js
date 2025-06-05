@@ -111,12 +111,12 @@ async function processCreateWorkOrder(job) {
   } catch (error) {
     console.error(`❌ Erro ao criar ordem de serviço:`, error);
 
-    // Registrar falha na fila de espera, se possível
+    // Registrar falha na fila de espera
     if (orderData.uraRequestId) {
       try {
         await WorkOrderWaitingQueueService.updateQueueStatus(
           orderData.uraRequestId,
-          orderData.orderId,
+          orderData.orderId, // pode ser undefined, e a função vai usar uraRequestId como fallback
           'FAILED'
         );
       } catch (queueError) {
@@ -164,7 +164,7 @@ async function processAssignTechnician(job) {
       );
 
       console.log(`📅 Ordem ${orderId} reagendada para ${nextAttemptDate} - pausa global (${editingStatus.orderNumber} em edição)`);
-      
+
       return {
         success: false,
         skipped: true,

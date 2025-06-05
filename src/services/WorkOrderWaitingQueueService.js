@@ -5,69 +5,45 @@ import logEvent from '../utils/logEvent';
 import { resolveNumericIdentifier } from '../integrations/g4flex/utils/resolveNumericIdentifier';
 import { Op } from 'sequelize';
 import sequelize from '../database';
+import customerService from '../integrations/g4flex/services/CustomerService';
 
 export async function checkDuplicateRequest(uraRequestId) {
+  console.log('INIT checkDuplicateRequest', { uraRequestId });
+
+  if (!uraRequestId) throw new Error('uraRequestId is required');
+
   const existingRequest = await WorkOrderWaitingQueue.findOne({
     where: { uraRequestId }
   });
 
-  if (existingRequest) {
-    await logEvent({
-      uraRequestId,
-      source: 'system',
-      action: 'duplicate_work_order_request',
-      payload: { existingStatus: existingRequest.status },
-      response: { message: 'Duplicate work order request detected' },
-      statusCode: 409,
-      error: 'Duplicate work order request'
-    });
-
-    return {
-      isDuplicate: true,
-      existingRequest
-    };
-  }
-
   return {
-    isDuplicate: false,
-    existingRequest: null
+    isDuplicate: !!existingRequest,
+    existingRequest
   };
 }
 
 export async function createInQueue(data) {
+  console.log('INIT createInQueue', data);
+
+  if (!data.uraRequestId) {
+    throw new Error('uraRequestId is required');
+  }
+
   try {
-    // Verifica duplicidade antes de criar
-    const { isDuplicate, existingRequest } = await checkDuplicateRequest(data.uraRequestId);
+    // Buscar dados da entidade usando o CustomerService que já funciona
+    const getEntityData = async (customerIdentifier) => {
+      const { identifierType, identifierValue } = resolveNumericIdentifier(customerIdentifier);
+      const customerData = await customerService.getCustomerByIdentifier(identifierType, identifierValue);
 
-    if (isDuplicate) {
-      console.log(`[WorkOrderWaitingQueueService] Duplicate request detected for uraRequestId: ${data.uraRequestId}`);
-      return {
-        success: false,
-        error: 'DUPLICATE_REQUEST',
-        message: 'Uma solicitação com este ID já existe na fila',
-        existingRequest
-      };
+      // Buscar dados completos da entidade usando o código encontrado
+      const entityData = await EntityService.getById(customerData.codigo);
+      return entityData;
     }
 
-    // Get entity data
-    let filter = ''
-    const getEntityData = async (codigo) => {
-      const { identifierType, identifierValue } = resolveNumericIdentifier(codigo);
-      if (identifierType === 'customerId') {
-        filter = `Codigo=${identifierValue}`
-      } else if (identifierType === 'cpf') {
-        filter = `CPFCNPJ=${identifierValue}`
-      } else if (identifierType === 'cnpj') {
-        filter = `CPFCNPJ=${identifierValue}`
-      }
-      const entity = await EntityService.loadEntityByFilter(filter)
-      return entity;
-    }
     const entityData = await getEntityData(data.customerIdentifier);
 
     // Get city data
     const cityData = await CityService.getCityByErpCode(entityData?.CodigoCidade)
-
 
     const newRequest = await WorkOrderWaitingQueue.create({
       orderNumber: data.orderNumber,
@@ -78,9 +54,9 @@ export async function createInQueue(data) {
       source: data.source || 'g4flex',
       customerIdentifier: data.customerIdentifier,
       productId: data.productId,
-      requesterNameAndPosition: data.requesterNameAndPosition,
-      incidentAndReceiverName: data.incidentAndReceiverName,
-      requesterContact: data.requesterContact,
+      requesterNameAndPosition: data?.requesterNameAndPosition,
+      incidentAndReceiverName: data?.incidentAndReceiverName,
+      requesterContact: data?.requesterContact,
       customerStreet: entityData?.Endereco,
       customerNumber: entityData?.NumeroEndereco,
       customerAddressComplement: entityData?.ComplementoEndereco,
@@ -106,6 +82,7 @@ export async function createInQueue(data) {
       request: newRequest
     };
   } catch (error) {
+    // TODO: Gerar aviso para whatsApp
     await logEvent({
       uraRequestId: data.uraRequestId,
       source: 'system',
@@ -431,7 +408,7 @@ export async function hasAnyOrderBeingEdited() {
   if (result) {
     // Verificar se alguma das edições expirou
     const isExpired = await isOrderEditingExpired(result.orderNumber, 10 * 60 * 1000);
-    
+
     if (!isExpired) {
       console.log(`🔒 Edição ativa detectada: Ordem ${result.orderNumber} sendo editada por ${result.editedBy}`);
       return {

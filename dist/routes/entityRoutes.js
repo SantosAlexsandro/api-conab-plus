@@ -5,9 +5,8 @@ var _authUser = require('../middlewares/authUser'); var _authUser2 = _interopReq
 const router = new (0, _express.Router)();
 
 router.get('/', _authUser2.default, _EntityController2.default.getAll);
+router.get('/search', _authUser2.default, _EntityController2.default.getByFilter);
 router.get('/:id', _authUser2.default, _EntityController2.default.show);
-router.get('/cnpjcpf', _authUser2.default, _EntityController2.default.getByFilter);
-router.get('/address&number', _authUser2.default, _EntityController2.default.getByFilter);
 router.post('/', _authUser2.default, _EntityController2.default.create);
 router.post('/edit', _authUser2.default, _EntityController2.default.update);
 router.post('/savePartialData', _authUser2.default, _EntityController2.default.savePartialData);
