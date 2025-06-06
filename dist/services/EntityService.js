@@ -2,10 +2,11 @@
 
 var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 var _moment = require('moment'); var _moment2 = _interopRequireDefault(_moment);
+var _https = require('https'); var _https2 = _interopRequireDefault(_https);
 
 class EntityService {
-  constructor(token) {
-    this.apiUrl = "https://erpteste.conab.com.br:7211";
+  constructor() {
+    this.apiUrl = process.env.ERP_API_URL;
 
     // Token padrão do ERP se não for fornecido
     const defaultToken = process.env.ERP_TOKEN;
@@ -16,10 +17,13 @@ class EntityService {
       headers: {
         Accept: "application/json, text/plain, */*",
       },
+      httpsAgent: new _https2.default.Agent({
+        rejectUnauthorized: false
+      })
     });
 
     // Armazena o token localmente no serviço (usa o token fornecido ou o padrão)
-    this.token = token || defaultToken;
+    this.token = defaultToken;
 
     // Configura o interceptor para adicionar o token antes de cada requisição
     this.axiosInstance.interceptors.request.use(

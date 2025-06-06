@@ -11,10 +11,11 @@ var _logEvent = require('../../../utils/logEvent'); var _logEvent2 = _interopReq
 var _WorkOrderWaitingQueueService = require('../../../services/WorkOrderWaitingQueueService'); var _WorkOrderWaitingQueueService2 = _interopRequireDefault(_WorkOrderWaitingQueueService);
 var _formatUtils = require('../../../utils/string/formatUtils');
 var _EmployeeERPService = require('../../../integrations/erp/services/EmployeeERPService'); var _EmployeeERPService2 = _interopRequireDefault(_EmployeeERPService);
+
 class WhatsAppService {
   constructor() {
-    this.apiUrl = 'https://conab.g4flex.com.br:9090/integration-service';
-    this.token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlVNeWN1NEd1VFF3VGVuUERwWGxIRjB4NE9HMnhiNDgxIn0.eyJpZCI6IjM0Yjc0MTczLWVlMTctNDRhYy05OGI5LTM5ODM1NDA1M2ZqNCIsInNjb3BlcyI6WyJmdWxsX2FjY2VzcyJdLCJ1c2VyIjoieEJ2bG94OWFTT2RaM2loekJ4TWxYVVMxaVlkaURoOWoiLCJsb2dpbiI6ImludGVncmF0aW9uLnNlcnZpY2UiLCJpYXQiOjE3NDcxNjY0NTQsImV4cCI6MTc0NzE3MDA1NCwiaXNzIjoiaHR0cHM6Ly93d3cuZzRmbGV4LmNvbS5iciIsInN1YiI6IjM0Yjc0MTczLWVlMTctNDRhYy05OGI5LTM5ODM1NDA1M2ZqNCJ9.V1G8dUkdk3hoj-0aG6cuL70wewk4eM0hG7mD8vwXVOc";
+    this.apiUrl = process.env.G4FLEX_API_URL;
+    this.token = process.env.G4FLEX_TOKEN;
     this.axiosInstance = _axios2.default.create({
       baseURL: this.apiUrl,
       headers: {
