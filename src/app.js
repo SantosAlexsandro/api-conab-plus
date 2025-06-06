@@ -49,6 +49,9 @@ import g4flexUraRoutes from './integrations/g4flex/routes/uraRoutes'
 // ERP Integration
 import erpTechnicianRoutes from './integrations/erp/routes/technicianRoutes'
 
+// Teams Integration (comentado - usado apenas internamente)
+// import teamsRoutes from './integrations/teams/routes/teamsRoutes'
+
 const whiteList = [
   'http://localhost:8080',
   'http://localhost:3000',
@@ -124,6 +127,9 @@ class App {
 
     // ERP Integration
     this.app.use('/api/integrations/erp/technicians', erpTechnicianRoutes);
+
+    // Teams Integration (comentado - usado apenas internamente)
+    // this.app.use('/api/integrations/teams', teamsRoutes);
 
     //this.app.use('/transactions/', transactionRoutes);
     //this.app.use('/items/', itemRoutes);

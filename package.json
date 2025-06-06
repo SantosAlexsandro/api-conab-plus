@@ -5,15 +5,20 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "concurrently \"nodemon src/server.js\" \"nodemon src/integrations/g4flex/queues/workOrder.worker.js\" \"nodemon src/integrations/g4flex/queues/bull-dashboard.js\"",
+    "dev": "concurrently \"nodemon src/server.js\" \"nodemon src/integrations/g4flex/queues/workOrder.worker.js\" \"nodemon src/integrations/teams/queues/teamsToken.worker.js\" \"nodemon src/integrations/g4flex/queues/bull-dashboard.js\"",
     "dev:server": "nodemon src/server.js",
     "dev:worker": "nodemon src/integrations/g4flex/queues/workOrder.worker.js",
+    "dev:teams-worker": "nodemon src/integrations/teams/queues/teamsToken.worker.js",
     "dev:dashboard": "nodemon src/integrations/g4flex/queues/bull-dashboard.js",
-    "dev:queue": "concurrently \"nodemon src/integrations/g4flex/queues/workOrder.worker.js\" \"nodemon src/integrations/g4flex/queues/bull-dashboard.js\"",
+    "dev:queue": "concurrently \"nodemon src/integrations/g4flex/queues/workOrder.worker.js\" \"nodemon src/integrations/teams/queues/teamsToken.worker.js\" \"nodemon src/integrations/g4flex/queues/bull-dashboard.js\"",
     "build": "sucrase ./src -d ./dist --transforms imports",
     "start": "node dist/server.js",
     "generate-vapid-keys": "node scripts/generate-vapid-keys.js",
-    "clear-subscriptions": "node scripts/clear-subscriptions.js"
+    "clear-subscriptions": "node scripts/clear-subscriptions.js",
+    "teams:setup": "node -r sucrase/register scripts/teams-setup.js",
+    "teams:complete": "node -r sucrase/register scripts/teams-complete.js",
+    "teams:test": "node -r sucrase/register scripts/teams-test.js",
+    "teams:status": "node -r sucrase/register scripts/teams-status.js"
   },
   "keywords": [],
   "author": "",
