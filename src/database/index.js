@@ -11,6 +11,7 @@ import Permission from '../models/Permission';
 import RolePermission from '../models/RolePermission';
 import UserRole from '../models/UserRole';
 import Notification from '../models/Notification';
+import TeamsToken from '../models/TeamsToken';
 
 const models = [
   City,
@@ -24,6 +25,7 @@ const models = [
   RolePermission,
   UserRole,
   Notification,
+  TeamsToken,
 ];
 
 const connection = new Sequelize(databaseConfig);

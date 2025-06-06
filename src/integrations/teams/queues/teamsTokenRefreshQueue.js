@@ -62,11 +62,33 @@ async function refreshSingleUser(userId) {
 
     // Verificar se precisa renovar (expira em menos de 15 minutos)
     const tokenInfo = TeamsAuthService.tokenCache.get(userId);
-    const fifteenMinutesFromNow = new Date(Date.now() + (15 * 60 * 1000));
 
-    if (tokenInfo.expiresAt > fifteenMinutesFromNow) {
-      console.log(`[TeamsTokenWorker] Token do usuário ${userId} ainda válido por mais de 15 minutos`);
-      return { success: true, reason: 'token_still_valid' };
+    if (!tokenInfo) {
+      console.log(`[TeamsTokenWorker] Token não encontrado no cache para usuário ${userId}, carregando do banco...`);
+      // Força recarregar do banco para o cache
+      await TeamsAuthService.getValidAccessToken(userId);
+      const reloadedToken = TeamsAuthService.tokenCache.get(userId);
+
+      if (!reloadedToken) {
+        console.log(`[TeamsTokenWorker] Falha ao carregar token do banco para usuário ${userId}`);
+        return { success: false, reason: 'token_not_found' };
+      }
+
+      // Continuar com token recarregado
+      const tokenToCheck = reloadedToken;
+      const fifteenMinutesFromNow = new Date(Date.now() + (15 * 60 * 1000));
+
+      if (tokenToCheck.expiresAt > fifteenMinutesFromNow) {
+        console.log(`[TeamsTokenWorker] Token do usuário ${userId} ainda válido por mais de 15 minutos`);
+        return { success: true, reason: 'token_still_valid' };
+      }
+    } else {
+      const fifteenMinutesFromNow = new Date(Date.now() + (15 * 60 * 1000));
+
+      if (tokenInfo.expiresAt > fifteenMinutesFromNow) {
+        console.log(`[TeamsTokenWorker] Token do usuário ${userId} ainda válido por mais de 15 minutos`);
+        return { success: true, reason: 'token_still_valid' };
+      }
     }
 
     // Renovar token

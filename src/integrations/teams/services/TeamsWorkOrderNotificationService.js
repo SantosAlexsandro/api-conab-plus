@@ -6,10 +6,10 @@ import axios from 'axios';
 class TeamsWorkOrderNotificationService {
   constructor() {
     // ID do chat específico fornecido pelo usuário
-    this.targetChatId = '19:b2f438dde3f74c5daf960d92dbecf443@thread.v2';
+    this.targetChatId = '19:e5190f65ef0e4a36af96205fefdaebb1@thread.v2';
 
     // Usuário padrão para envio de notificações
-    this.defaultNotificationUser = process.env.TEAMS_NOTIFICATION_USER_ID || 'notification_bot';
+    this.defaultNotificationUser = process.env.TEAMS_NOTIFICATION_USER_ID || 'work_order_bot';
 
     this.teamsService = TeamsService;
     this.teamsAuth = TeamsAuthService;
@@ -20,7 +20,7 @@ class TeamsWorkOrderNotificationService {
     try {
       console.log(`[TeamsWorkOrderNotification] 📋 Enviando notificação de nova OS: ${workOrderData.workOrder}`);
 
-      const isAuthenticated = this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
+      const isAuthenticated = await this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
 
       if (!isAuthenticated) {
         console.warn(`[TeamsWorkOrderNotification] ⚠️ Usuário de notificação não autenticado: ${this.defaultNotificationUser}`);
@@ -54,7 +54,7 @@ class TeamsWorkOrderNotificationService {
     try {
       console.log(`[TeamsWorkOrderNotification] 👨‍🔧 Enviando notificação de técnico atribuído: OS ${workOrderData.orderId}`);
 
-      const isAuthenticated = this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
+      const isAuthenticated = await this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
 
       if (!isAuthenticated) {
         console.warn(`[TeamsWorkOrderNotification] ⚠️ Usuário de notificação não autenticado`);
@@ -81,7 +81,7 @@ class TeamsWorkOrderNotificationService {
     try {
       console.log(`[TeamsWorkOrderNotification] 📊 Enviando notificação de status: OS ${workOrderData.orderId} - ${status}`);
 
-      const isAuthenticated = this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
+      const isAuthenticated = await this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
 
       if (!isAuthenticated) {
         console.warn(`[TeamsWorkOrderNotification] ⚠️ Usuário de notificação não autenticado`);
@@ -108,7 +108,7 @@ class TeamsWorkOrderNotificationService {
     try {
       console.log(`[TeamsWorkOrderNotification] 👨‍🔧 Enviando notificação de técnico atribuído: OS ${workOrderData.orderId}`);
 
-      const isAuthenticated = this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
+      const isAuthenticated = await this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
 
       if (!isAuthenticated) {
         console.warn(`[TeamsWorkOrderNotification] ⚠️ Usuário de notificação não autenticado`);
@@ -408,8 +408,8 @@ ${additionalInfo.message}
   }
 
   // Verificar status de configuração
-  getConfigurationStatus() {
-    const isUserAuthenticated = this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
+  async getConfigurationStatus() {
+    const isUserAuthenticated = await this.teamsAuth.isUserAuthenticated(this.defaultNotificationUser);
 
     return {
       targetChatId: this.targetChatId,
