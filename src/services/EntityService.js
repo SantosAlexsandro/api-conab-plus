@@ -1,47 +1,20 @@
 // EntityService.js
 
-import axios from "axios";
+import BaseERPService from './BaseERPService';
 import moment from "moment";
-import https from 'https';
 
-class EntityService {
+class EntityService extends BaseERPService {
   constructor() {
-    this.apiUrl = process.env.ERP_API_URL;
-
-    // Token padrão do ERP se não for fornecido
-    const defaultToken = process.env.ERP_TOKEN;
-
-    this.axiosInstance = axios.create({
-      baseURL: this.apiUrl,
-      timeout: 20000, // Timeout de 20 segundos
-      headers: {
-        Accept: "application/json, text/plain, */*",
-      },
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: false
-      })
-    });
-
-    // Armazena o token localmente no serviço (usa o token fornecido ou o padrão)
-    this.token = defaultToken;
-
-    // Configura o interceptor para adicionar o token antes de cada requisição
-    this.axiosInstance.interceptors.request.use(
-      (config) => {
-        if (this.token) {
-          config.headers["Riosoft-Token"] = this.token; // Adiciona o token nos cabeçalhos
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error); // Lida com erros na configuração da requisição
-      }
-    );
+    super();
   }
 
   // Método para atualizar dinamicamente o token
   setToken(token) {
     this.token = token;
+    // Atualizar o header da instância singleton
+    if (BaseERPService.axiosInstance) {
+      BaseERPService.axiosInstance.defaults.headers["Riosoft-Token"] = token;
+    }
   }
 
   // Método para criar uma nova entidade

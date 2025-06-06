@@ -2,18 +2,21 @@
 
 class BaseERPService {
   constructor() {
-    this.apiUrl = process.env.ERP_API_URL;
-    // Token do ERP (Riosoft) para autenticação nas APIs do sistema
-    this.token = process.env.ERP_TOKEN;
+    // Usar uma instância singleton do axios para evitar múltiplas sessões
+    if (!BaseERPService.axiosInstance) {
+      BaseERPService.axiosInstance = _axios2.default.create({
+        baseURL: process.env.ERP_API_URL,
+        timeout: 20000,
+        headers: {
+          "Riosoft-Token": process.env.ERP_TOKEN,
+          Accept: "application/json, text/plain, */*",
+        },
+      });
+    }
 
-    this.axiosInstance = _axios2.default.create({
-      baseURL: this.apiUrl,
-      timeout: 20000,
-      headers: {
-        "Riosoft-Token": this.token,
-        Accept: "application/json, text/plain, */*",
-      },
-    });
+    this.axiosInstance = BaseERPService.axiosInstance;
+    this.apiUrl = process.env.ERP_API_URL;
+    this.token = process.env.ERP_TOKEN;
   }
 
   handleError(error) {

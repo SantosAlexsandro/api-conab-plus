@@ -1,19 +1,9 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _BaseERPService = require('./BaseERPService'); var _BaseERPService2 = _interopRequireDefault(_BaseERPService);
 var _City = require('../models/City'); var _City2 = _interopRequireDefault(_City);
 
-class CitiesService {
+class CitiesService extends _BaseERPService2.default {
   constructor() {
-    this.apiUrl = process.env.ERP_API_URL;
-    this.token = process.env.ERP_TOKEN;
-
-    // Instância configurada do Axios
-    this.axiosInstance = _axios2.default.create({
-      baseURL: `${this.apiUrl}/api/Cidade`,
-      headers: {
-        "Riosoft-Token": this.token,
-        Accept: "application/json, text/plain, */*",
-      },
-    });
+    super();
   }
 
   // Método para buscar todas as cidades
@@ -22,7 +12,7 @@ class CitiesService {
     filter = "( !ISNULL(CodigoMunicipioIBGE) )"
   ) {
     const pageSize = 25000;
-    const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=${page}`;
+    const url = `/api/Cidade/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=${page}`;
 
     try {
       const { data } = await this.axiosInstance.get(url);

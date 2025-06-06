@@ -1,22 +1,8 @@
-import axios from "axios";
-import https from "https";
+import BaseERPService from './BaseERPService';
 
-class WorkOrderService {
+class WorkOrderService extends BaseERPService {
   constructor() {
-    //this.apiUrl = process.env.REACT_APP_API_URL;
-    //this.token = process.env.REACT_APP_API_TOKEN;
-    this.apiUrl = process.env.ERP_API_URL;
-    this.token = process.env.ERP_TOKEN;
-
-    // Instância configurada do Axios
-    this.axiosInstance = axios.create({
-      baseURL: this.apiUrl,
-      timeout: 20000, // 10 segundos de timeout
-      headers: {
-        "Riosoft-Token": this.token,
-        Accept: "application/json, text/plain, */*",
-      },
-    });
+    super();
   }
 
   // Método para criar uma nova entidade

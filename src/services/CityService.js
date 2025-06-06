@@ -1,19 +1,9 @@
-import axios from "axios";
+import BaseERPService from './BaseERPService';
 import City from "../models/City";
 
-class CitiesService {
+class CitiesService extends BaseERPService {
   constructor() {
-    this.apiUrl = process.env.ERP_API_URL;
-    this.token = process.env.ERP_TOKEN;
-
-    // Instância configurada do Axios
-    this.axiosInstance = axios.create({
-      baseURL: `${this.apiUrl}/api/Cidade`,
-      headers: {
-        "Riosoft-Token": this.token,
-        Accept: "application/json, text/plain, */*",
-      },
-    });
+    super();
   }
 
   // Método para buscar todas as cidades
@@ -22,7 +12,7 @@ class CitiesService {
     filter = "( !ISNULL(CodigoMunicipioIBGE) )"
   ) {
     const pageSize = 25000;
-    const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=${page}`;
+    const url = `/api/Cidade/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=${page}`;
 
     try {
       const { data } = await this.axiosInstance.get(url);

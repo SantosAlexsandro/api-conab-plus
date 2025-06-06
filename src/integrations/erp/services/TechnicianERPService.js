@@ -1,15 +1,8 @@
-import axios from 'axios';
+import BaseERPService from './BaseERPService';
 
-class TechnicianERPService {
+class TechnicianERPService extends BaseERPService {
   constructor() {
-    this.axiosInstance = axios.create({
-      baseURL: process.env.ERP_API_URL,
-      timeout: 20000,
-      headers: {
-        'Riosoft-Token': process.env.ERP_TOKEN,
-        'Accept': 'application/json, text/plain, */*',
-      },
-    });
+    super();
   }
 
   async getTechnicianFromOrder(orderNumber) {

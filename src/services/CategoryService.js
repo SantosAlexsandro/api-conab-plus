@@ -1,27 +1,18 @@
-import axios from 'axios';
-import https from 'https';
+import BaseERPService from './BaseERPService';
 
-class CategoryService {
+class CategoryService extends BaseERPService {
   constructor() {
-    //this.apiUrl = process.env.REACT_APP_API_URL;
-    //this.token = process.env.REACT_APP_API_TOKEN;
-    this.apiUrl = process.env.ERP_API_URL;
-    this.token = process.env.ERP_TOKEN;
-
-    // Instância configurada do Axios
-    this.axiosInstance = axios.create({
-      baseURL: `${this.apiUrl}/api/Categoria`,
-      headers: {
-        'Riosoft-Token': this.token,
-        'Accept': 'application/json, text/plain, */*',
-      }
-    });
+    super();
+    // CategoryService usa um endpoint específico, então sobrescreve a baseURL
+    this.categoryAxiosInstance = this.axiosInstance.create ?
+      this.axiosInstance.create({ baseURL: `${this.apiUrl}/api/Categoria` }) :
+      this.axiosInstance;
   }
 
-  // Método para buscar todas as regiões
+  // Método para buscar todas as categorias
   async getAll(page = 1, filter = '') {
     const pageSize = 50;
-    const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
+    const url = `/api/Categoria/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
 
     try {
       const { data, headers } = await this.axiosInstance.get(url);
@@ -34,32 +25,14 @@ class CategoryService {
     }
   }
 
-  // Método para buscar uma região específica por ID
+  // Método para buscar uma categoria específica por ID
   async getById(id) {
     try {
-      const { data } = await this.axiosInstance.get(`/${id}`);
+      const { data } = await this.axiosInstance.get(`/api/Categoria/${id}`);
       return data;
     } catch (error) {
       this.handleError(error);
     }
-  }
-
-  // Método para lidar com erros de forma padronizada
-  handleError(error) {
-    if (error.response) {
-      // Erro de resposta da API
-      console.error('Erro na resposta da API:', error.response.data);
-      console.error('Status:', error.response.status);
-      console.error('Headers:', error.response.headers);
-    } else if (error.request) {
-      // Nenhuma resposta foi recebida
-      console.error('Nenhuma resposta da API foi recebida:', error.request);
-    } else {
-      // Erro ao configurar a requisição
-      console.error('Erro ao configurar a requisição:', error.message);
-    }
-
-    throw new Error('Erro ao processar a requisição.');
   }
 }
 

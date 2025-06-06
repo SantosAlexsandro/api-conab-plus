@@ -1,47 +1,20 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// EntityService.js
 
-var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+var _BaseERPService = require('./BaseERPService'); var _BaseERPService2 = _interopRequireDefault(_BaseERPService);
 var _moment = require('moment'); var _moment2 = _interopRequireDefault(_moment);
-var _https = require('https'); var _https2 = _interopRequireDefault(_https);
 
-class EntityService {
+class EntityService extends _BaseERPService2.default {
   constructor() {
-    this.apiUrl = process.env.ERP_API_URL;
-
-    // Token padrão do ERP se não for fornecido
-    const defaultToken = process.env.ERP_TOKEN;
-
-    this.axiosInstance = _axios2.default.create({
-      baseURL: this.apiUrl,
-      timeout: 20000, // Timeout de 20 segundos
-      headers: {
-        Accept: "application/json, text/plain, */*",
-      },
-      httpsAgent: new _https2.default.Agent({
-        rejectUnauthorized: false
-      })
-    });
-
-    // Armazena o token localmente no serviço (usa o token fornecido ou o padrão)
-    this.token = defaultToken;
-
-    // Configura o interceptor para adicionar o token antes de cada requisição
-    this.axiosInstance.interceptors.request.use(
-      (config) => {
-        if (this.token) {
-          config.headers["Riosoft-Token"] = this.token; // Adiciona o token nos cabeçalhos
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error); // Lida com erros na configuração da requisição
-      }
-    );
+    super();
   }
 
   // Método para atualizar dinamicamente o token
   setToken(token) {
     this.token = token;
+    // Atualizar o header da instância singleton
+    if (_BaseERPService2.default.axiosInstance) {
+      _BaseERPService2.default.axiosInstance.defaults.headers["Riosoft-Token"] = token;
+    }
   }
 
   // Método para criar uma nova entidade
