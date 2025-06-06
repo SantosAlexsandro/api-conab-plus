@@ -24,6 +24,11 @@ class BaseERPService {
           console.log(`[BaseERPService] 📤 Fazendo requisição para: ${config.url}`);
           console.log(`[BaseERPService] 🔑 Token sendo usado (primeiros 10 chars): ${tokenInUse?.substring(0, 10)}...`);
           console.log(`[BaseERPService] 📋 Método: ${config.method?.toUpperCase()}`);
+          console.log(`[BaseERPService] 🏷️ Token definido no env: ${process.env.ERP_TOKEN?.substring(0, 10)}...`);
+
+          // ✅ GARANTIA: Sempre usa o token do .env para evitar conflitos
+          config.headers["Riosoft-Token"] = process.env.ERP_TOKEN;
+
           return config;
         },
         (error) => {
@@ -57,6 +62,8 @@ class BaseERPService {
     this.axiosInstance = BaseERPService.axiosInstance;
     this.apiUrl = process.env.ERP_API_URL;
     this.token = process.env.ERP_TOKEN;
+
+    console.log(`[BaseERPService] 🔧 Instância configurada com token: ${this.token?.substring(0, 10)}...`);
   }
 
   handleError(error) {

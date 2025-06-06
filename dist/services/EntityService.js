@@ -8,15 +8,6 @@ class EntityService extends _BaseERPService2.default {
     super();
   }
 
-  // Método para atualizar dinamicamente o token
-  setToken(token) {
-    this.token = token;
-    // Atualizar o header da instância singleton
-    if (_BaseERPService2.default.axiosInstance) {
-      _BaseERPService2.default.axiosInstance.defaults.headers["Riosoft-Token"] = token;
-    }
-  }
-
   // Método para criar uma nova entidade
   async create(data) {
     const url = "/api/Entidade/InserirAlterarEntidade";
