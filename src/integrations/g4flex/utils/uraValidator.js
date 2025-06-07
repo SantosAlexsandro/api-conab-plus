@@ -9,22 +9,29 @@ export function validateURAQuery({ customerIdentifier, uraRequestId }) {
   const numericIdentifier = customerIdentifier.replace(/\D/g, '');
 
   // CPF tem 11 dígitos
-  if (numericIdentifier.length === 11 && !formatCPF(customerIdentifier)) {
-    return 'Invalid CPF';
+  if (numericIdentifier.length === 11) {
+    if (!formatCPF(customerIdentifier)) {
+      return 'Invalid CPF';
+    }
+    return null; // CPF válido
   }
-  console.log('numericIdentifier', numericIdentifier);
 
   // CNPJ tem 14 dígitos
-  if (numericIdentifier.length === 14 && !formatCNPJ(customerIdentifier)) {
-    return 'Invalid CNPJ';
+  if (numericIdentifier.length === 14) {
+    if (!formatCNPJ(customerIdentifier)) {
+      return 'Invalid CNPJ';
+    }
+    return null; // CNPJ válido
   }
 
-  // ID do cliente normalmente tem menos de 8 caracteres
-  if (numericIdentifier.length < 8 && !formatCustomerId(customerIdentifier)) {
-    return 'Invalid Customer ID';
+  // ID do cliente normalmente tem entre 1 e 7 dígitos
+  if (numericIdentifier.length >= 1 && numericIdentifier.length <= 7) {
+    // Customer ID é sempre válido se estiver no range correto
+    return null; // Customer ID válido
   }
 
-  return null;
+  // Se não corresponde a nenhum formato conhecido
+  return 'Invalid customer identifier format';
 }
 
 // Validação específica para falhas da URA - customerIdentifier é opcional
@@ -37,19 +44,29 @@ export function validateURAFailureQuery({ customerIdentifier, uraRequestId }) {
     const numericIdentifier = customerIdentifier.replace(/\D/g, '');
 
     // CPF tem 11 dígitos
-    if (numericIdentifier.length === 11 && !formatCPF(customerIdentifier)) {
-      return 'Invalid CPF';
+    if (numericIdentifier.length === 11) {
+      if (!formatCPF(customerIdentifier)) {
+        return 'Invalid CPF';
+      }
+      return null; // CPF válido
     }
 
     // CNPJ tem 14 dígitos
-    if (numericIdentifier.length === 14 && !formatCNPJ(customerIdentifier)) {
-      return 'Invalid CNPJ';
+    if (numericIdentifier.length === 14) {
+      if (!formatCNPJ(customerIdentifier)) {
+        return 'Invalid CNPJ';
+      }
+      return null; // CNPJ válido
     }
 
-    // ID do cliente normalmente tem menos de 8 caracteres
-    if (numericIdentifier.length < 8 && !formatCustomerId(customerIdentifier)) {
-      return 'Invalid Customer ID';
+    // ID do cliente normalmente tem entre 1 e 7 dígitos
+    if (numericIdentifier.length >= 1 && numericIdentifier.length <= 7) {
+      // Customer ID é sempre válido se estiver no range correto
+      return null; // Customer ID válido
     }
+
+    // Se não corresponde a nenhum formato conhecido
+    return 'Invalid customer identifier format';
   }
 
   return null;
@@ -66,15 +83,14 @@ export function determineIdentifierType(identifier) {
   if (numericIdentifier.length === 11) {
     return 'CPF';
   }
-  console.log('numericIdentifier', numericIdentifier);
 
   // CNPJ tem 14 dígitos
   if (numericIdentifier.length === 14) {
     return 'CNPJ';
   }
 
-  // ID do cliente normalmente tem menos de 8 caracteres
-  if (identifier.length < 8) {
+  // ID do cliente normalmente tem entre 1 e 7 dígitos
+  if (numericIdentifier.length >= 1 && numericIdentifier.length <= 7) {
     return 'CUSTOMER_ID';
   }
 
