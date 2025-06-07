@@ -5,6 +5,7 @@ var _express3 = require('@bull-board/express');
 var _api = require('@bull-board/api');
 var _bullMQAdapter = require('@bull-board/api/bullMQAdapter');
 var _workOrderqueue = require('./workOrder.queue'); var _workOrderqueue2 = _interopRequireDefault(_workOrderqueue);
+var _teamsTokenRefreshQueuejs = require('../../teams/queues/teamsTokenRefreshQueue.js');
 
 const app = _express2.default.call(void 0, );
 
@@ -15,7 +16,10 @@ const serverAdapter = new (0, _express3.ExpressAdapter)();
 serverAdapter.setBasePath('/admin/queues');
 
 _api.createBullBoard.call(void 0, {
-  queues: [new (0, _bullMQAdapter.BullMQAdapter)(_workOrderqueue2.default)],
+  queues: [
+    new (0, _bullMQAdapter.BullMQAdapter)(_workOrderqueue2.default),
+    new (0, _bullMQAdapter.BullMQAdapter)(_teamsTokenRefreshQueuejs.teamsTokenQueue)
+  ],
   serverAdapter,
 });
 

@@ -8,7 +8,8 @@ import TeamsAuthService from '../src/integrations/teams/services/TeamsAuthServic
 console.log('🔧 Configuração Teams - Gerar URL de Autorização\n');
 
 try {
-  const url = TeamsAuthService.generateAuthUrl('work_order_bot');
+  const teamsService = new TeamsAuthService();
+  const url = teamsService.generateAuthUrl('work_order_bot');
 
   console.log('🔗 URL DE AUTORIZAÇÃO:');
   console.log(url);

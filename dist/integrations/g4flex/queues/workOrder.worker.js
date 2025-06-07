@@ -11,6 +11,7 @@ var _workOrderqueue = require('./workOrder.queue'); var _workOrderqueue2 = _inte
 var _WhatsAppService = require('../services/WhatsAppService'); var _WhatsAppService2 = _interopRequireDefault(_WhatsAppService);
 var _WorkOrderWaitingQueueService = require('../../../services/WorkOrderWaitingQueueService'); var _WorkOrderWaitingQueueService2 = _interopRequireDefault(_WorkOrderWaitingQueueService);
 var _TechnicianService = require('../services/TechnicianService'); var _TechnicianService2 = _interopRequireDefault(_TechnicianService);
+var _TeamsWorkOrderNotificationServicejs = require('../../teams/services/TeamsWorkOrderNotificationService.js'); var _TeamsWorkOrderNotificationServicejs2 = _interopRequireDefault(_TeamsWorkOrderNotificationServicejs);
 
 const RETRY_INTERVAL_MS = 1 * 60 * 1000;
 const TIMEZONE_BRASILIA = 'America/Sao_Paulo';
@@ -107,6 +108,30 @@ async function processCreateWorkOrder(job) {
     console.log(
       `📨 Ordem ${result.workOrder} adicionada à fila de atribuição de técnico`
     );
+
+    // Enviar notificação para o Teams
+    try {
+      const notificationData = {
+        workOrder: result.workOrder,
+        customerName: orderData.customerName,
+        priority: orderData.priority,
+        requesterContact: orderData.requesterContact,
+        incidentAndReceiverName: orderData.incidentAndReceiverName,
+        callerPhoneNumber: orderData.callerPhoneNumber,
+        uraRequestId: orderData.uraRequestId
+      };
+
+      const teamsResult = await _TeamsWorkOrderNotificationServicejs2.default.sendWorkOrderCreatedNotification(notificationData);
+
+      if (teamsResult.success) {
+        console.log(`📱 Notificação Teams enviada com sucesso para OS ${result.workOrder}`);
+      } else {
+        console.warn(`⚠️ Falha ao enviar notificação Teams: ${teamsResult.reason}`);
+      }
+    } catch (teamsError) {
+      console.error(`❌ Erro ao enviar notificação Teams:`, teamsError.message);
+      // Não falha o job principal se a notificação Teams falhar
+    }
 
     return { success: true, workOrder: result.workOrder };
   } catch (error) {
@@ -267,6 +292,34 @@ async function processAssignTechnician(job) {
           result.technicianName || result.technicianId
         );
         console.log(`✅ Técnico ${result.technicianName || result.technicianId} registrado para ordem ${orderId}`);
+
+        // Enviar notificação Teams de técnico atribuído
+        try {
+          const technicianNotificationData = {
+            orderId,
+            customerName,
+            requesterContact,
+            uraRequestId: validUraRequestId
+          };
+
+          const technicianData = {
+            id: result.technicianId,
+            name: result.technicianName || result.technicianId
+          };
+
+          const teamsResult = await _TeamsWorkOrderNotificationServicejs2.default.sendTechnicianAssignedNotification(
+            technicianNotificationData,
+            technicianData
+          );
+
+          if (teamsResult.success) {
+            console.log(`📱 Notificação Teams de técnico atribuído enviada para OS ${orderId}`);
+          } else {
+            console.warn(`⚠️ Falha ao enviar notificação Teams de técnico: ${teamsResult.reason}`);
+          }
+        } catch (teamsError) {
+          console.error(`❌ Erro ao enviar notificação Teams de técnico:`, teamsError.message);
+        }
       }
 
       // Adicionar na fila de verificação de chegada no cliente
@@ -329,6 +382,34 @@ async function processAssignTechnician(job) {
           result.technicianName || result.technicianId
         );
         console.log(`✅ Técnico ${result.technicianName || result.technicianId} registrado para ordem ${oldestOrderId}`);
+
+        // Enviar notificação Teams de técnico atribuído
+        try {
+          const technicianNotificationData = {
+            orderId: oldestOrderId,
+            customerName: oldestCustomerName,
+            requesterContact: oldestRequesterContact,
+            uraRequestId: oldestUraRequestId
+          };
+
+          const technicianData = {
+            id: result.technicianId,
+            name: result.technicianName || result.technicianId
+          };
+
+          const teamsResult = await _TeamsWorkOrderNotificationServicejs2.default.sendTechnicianAssignedNotification(
+            technicianNotificationData,
+            technicianData
+          );
+
+          if (teamsResult.success) {
+            console.log(`📱 Notificação Teams de técnico atribuído enviada para OS ${oldestOrderId}`);
+          } else {
+            console.warn(`⚠️ Falha ao enviar notificação Teams de técnico: ${teamsResult.reason}`);
+          }
+        } catch (teamsError) {
+          console.error(`❌ Erro ao enviar notificação Teams de técnico:`, teamsError.message);
+        }
       }
 
       // Adicionar na fila de verificação de chegada no cliente

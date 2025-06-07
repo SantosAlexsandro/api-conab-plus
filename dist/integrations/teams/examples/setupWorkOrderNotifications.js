@@ -1,17 +1,17 @@
-import dotenv from 'dotenv';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _dotenv = require('dotenv'); var _dotenv2 = _interopRequireDefault(_dotenv);
 
 // IMPORTANTE: Carregar .env ANTES de qualquer import que use variáveis de ambiente
-dotenv.config();
+_dotenv2.default.config();
 
-import TeamsAuthService from '../services/TeamsAuthService.js';
-import teamsWorkOrderNotificationService from '../services/TeamsWorkOrderNotificationService.js';
+var _TeamsAuthServicejs = require('../services/TeamsAuthService.js'); var _TeamsAuthServicejs2 = _interopRequireDefault(_TeamsAuthServicejs);
+var _TeamsWorkOrderNotificationServicejs = require('../services/TeamsWorkOrderNotificationService.js'); var _TeamsWorkOrderNotificationServicejs2 = _interopRequireDefault(_TeamsWorkOrderNotificationServicejs);
 
 // Script para configurar notificações de Work Orders no Teams
 
 class WorkOrderNotificationSetup {
   constructor() {
-    this.teamsAuth = new TeamsAuthService();
-    this.notificationService = teamsWorkOrderNotificationService; // já é uma instância
+    this.teamsAuth = new (0, _TeamsAuthServicejs2.default)();
+    this.notificationService = _TeamsWorkOrderNotificationServicejs2.default; // já é uma instância
   }
 
   // Configurar usuário de notificação
@@ -165,7 +165,7 @@ class WorkOrderNotificationSetup {
   }
 }
 
-export default new WorkOrderNotificationSetup();
+exports. default = new WorkOrderNotificationSetup();
 
 // Exemplo de uso:
 // const setup = new WorkOrderNotificationSetup();

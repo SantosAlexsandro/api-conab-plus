@@ -1,4 +1,9 @@
-import setup from '../src/integrations/teams/examples/setupWorkOrderNotifications';
+import dotenv from 'dotenv';
+
+// IMPORTANTE: Carregar .env ANTES de qualquer import que use variáveis de ambiente
+dotenv.config();
+
+import setup from '../src/integrations/teams/examples/setupWorkOrderNotifications.js';
 
 console.log('🧪 Testando notificação Teams...\n');
 

@@ -1,12 +1,12 @@
-import { Queue, Worker } from 'bullmq';
-import redisConnection from '../../g4flex/queues/redis.js';
-import TeamsAuthService from '../services/TeamsAuthService.js';
-import TeamsToken from '../../../models/TeamsToken.js';
-import { Op } from 'sequelize';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _bullmq = require('bullmq');
+var _redisjs = require('../../g4flex/queues/redis.js'); var _redisjs2 = _interopRequireDefault(_redisjs);
+var _TeamsAuthServicejs = require('../services/TeamsAuthService.js'); var _TeamsAuthServicejs2 = _interopRequireDefault(_TeamsAuthServicejs);
+var _TeamsTokenjs = require('../../../models/TeamsToken.js'); var _TeamsTokenjs2 = _interopRequireDefault(_TeamsTokenjs);
+var _sequelize = require('sequelize');
 
 // Queue para renovação de tokens
-export const teamsTokenQueue = new Queue('teams-token-refresh', {
-  connection: redisConnection,
+ const teamsTokenQueue = new (0, _bullmq.Queue)('teams-token-refresh', {
+  connection: _redisjs2.default,
   defaultJobOptions: {
     removeOnComplete: 10, // Manter apenas os últimos 10 jobs completados
     removeOnFail: 20,     // Manter os últimos 20 jobs falhados para debug
@@ -16,10 +16,10 @@ export const teamsTokenQueue = new Queue('teams-token-refresh', {
       delay: 2000,        // Delay inicial de 2 segundos
     },
   },
-});
+}); exports.teamsTokenQueue = teamsTokenQueue;
 
 // Worker para processar renovação de tokens
-export const teamsTokenWorker = new Worker(
+ const teamsTokenWorker = new (0, _bullmq.Worker)(
   'teams-token-refresh',
   async (job) => {
     const { type, userId } = job.data;
@@ -46,15 +46,15 @@ export const teamsTokenWorker = new Worker(
     }
   },
   {
-    connection: redisConnection,
+    connection: _redisjs2.default,
     concurrency: 5, // Processar até 5 jobs simultaneamente
   }
-);
+); exports.teamsTokenWorker = teamsTokenWorker;
 
 // Função para renovar token de um usuário específico
 async function refreshSingleUser(userId) {
   try {
-    const teamsService = new TeamsAuthService();
+    const teamsService = new (0, _TeamsAuthServicejs2.default)();
     const isAuthenticated = await teamsService.isUserAuthenticated(userId);
 
     if (!isAuthenticated) {
@@ -66,7 +66,7 @@ async function refreshSingleUser(userId) {
     // Buscar token diretamente do MySQL (sem cache)
     console.log(`[TeamsTokenWorker] Buscando token do usuário ${userId} no MySQL...`);
 
-    const tokenRecord = await TeamsToken.findOne({
+    const tokenRecord = await _TeamsTokenjs2.default.findOne({
       where: { user_id: userId, is_active: true }
     });
 
@@ -120,7 +120,7 @@ async function refreshAllUsers() {
     // Buscar todos os tokens ativos diretamente do MySQL (sem cache)
     console.log('[TeamsTokenWorker] Buscando tokens ativos do MySQL...');
 
-    const activeTokens = await TeamsToken.findAll({
+    const activeTokens = await _TeamsTokenjs2.default.findAll({
       where: { is_active: true }
     });
 
@@ -136,7 +136,7 @@ async function refreshAllUsers() {
 
         if (expiresAt <= tenMinutesFromNow) {
           // Agendar renovação individual
-          await teamsTokenQueue.add('refresh-single-user', {
+          await exports.teamsTokenQueue.add('refresh-single-user', {
             type: 'refresh-single-user',
             userId
           }, {
@@ -173,11 +173,11 @@ async function cleanupExpiredTokens() {
     console.log('[TeamsTokenWorker] Buscando tokens expirados no MySQL...');
 
     // Buscar tokens expirados diretamente do MySQL
-    const expiredTokens = await TeamsToken.findAll({
+    const expiredTokens = await _TeamsTokenjs2.default.findAll({
       where: {
         is_active: true,
         expires_at: {
-          [Op.lte]: oneDayAgo
+          [_sequelize.Op.lte]: oneDayAgo
         }
       }
     });
@@ -186,7 +186,7 @@ async function cleanupExpiredTokens() {
 
     // Remover tokens expirados e cancelar jobs
     for (const userId of expiredUsers) {
-      const teamsService = new TeamsAuthService();
+      const teamsService = new (0, _TeamsAuthServicejs2.default)();
       await teamsService.revokeUserTokens(userId);
       await cancelUserRefreshJobs(userId);
     }
@@ -201,7 +201,7 @@ async function cleanupExpiredTokens() {
 }
 
 // Função para agendar renovação de token para usuário específico
-export async function scheduleUserTokenRefresh(userId, expiresAt) {
+ async function scheduleUserTokenRefresh(userId, expiresAt) {
   try {
     // Cancelar jobs existentes para este usuário
     await cancelUserRefreshJobs(userId);
@@ -211,7 +211,7 @@ export async function scheduleUserTokenRefresh(userId, expiresAt) {
     const delay = Math.max(0, refreshTime.getTime() - Date.now());
 
     // Agendar novo job
-    const job = await teamsTokenQueue.add(
+    const job = await exports.teamsTokenQueue.add(
       'refresh-single-user',
       {
         type: 'refresh-single-user',
@@ -231,15 +231,15 @@ export async function scheduleUserTokenRefresh(userId, expiresAt) {
     console.error(`[TeamsTokenQueue] Erro ao agendar renovação para usuário ${userId}:`, error.message);
     throw error;
   }
-}
+} exports.scheduleUserTokenRefresh = scheduleUserTokenRefresh;
 
 // Função para cancelar jobs de renovação de um usuário
-export async function cancelUserRefreshJobs(userId) {
+ async function cancelUserRefreshJobs(userId) {
   try {
     const jobId = `refresh-${userId}`;
 
     // Tentar remover job agendado
-    const job = await teamsTokenQueue.getJob(jobId);
+    const job = await exports.teamsTokenQueue.getJob(jobId);
     if (job) {
       await job.remove();
       console.log(`[TeamsTokenQueue] Job cancelado para usuário ${userId}`);
@@ -250,18 +250,18 @@ export async function cancelUserRefreshJobs(userId) {
     console.error(`[TeamsTokenQueue] Erro ao cancelar jobs para usuário ${userId}:`, error.message);
     return false;
   }
-}
+} exports.cancelUserRefreshJobs = cancelUserRefreshJobs;
 
 // Função para agendar verificação periódica de todos os usuários
-export async function schedulePeriodicRefresh() {
+ async function schedulePeriodicRefresh() {
   try {
     // Remover job existente se houver
-    await teamsTokenQueue.removeRepeatable('refresh-all-users', {
+    await exports.teamsTokenQueue.removeRepeatable('refresh-all-users', {
       pattern: '*/30 * * * *', // A cada 30 minutos
     });
 
     // Agendar nova verificação periódica
-    await teamsTokenQueue.add(
+    await exports.teamsTokenQueue.add(
       'refresh-all-users',
       { type: 'refresh-all-users' },
       {
@@ -275,7 +275,7 @@ export async function schedulePeriodicRefresh() {
     console.log('[TeamsTokenQueue] Verificação periódica agendada (a cada 30 minutos)');
 
     // Agendar limpeza diária
-    await teamsTokenQueue.add(
+    await exports.teamsTokenQueue.add(
       'cleanup-expired',
       { type: 'cleanup-expired' },
       {
@@ -292,27 +292,27 @@ export async function schedulePeriodicRefresh() {
     console.error('[TeamsTokenQueue] Erro ao agendar verificação periódica:', error.message);
     throw error;
   }
-}
+} exports.schedulePeriodicRefresh = schedulePeriodicRefresh;
 
 // Event listeners para monitoramento
-teamsTokenWorker.on('completed', (job, result) => {
+exports.teamsTokenWorker.on('completed', (job, result) => {
   console.log(`[TeamsTokenWorker] Job ${job.id} completado:`, result);
 });
 
-teamsTokenWorker.on('failed', (job, err) => {
-  console.error(`[TeamsTokenWorker] Job ${job?.id} falhou:`, err.message);
+exports.teamsTokenWorker.on('failed', (job, err) => {
+  console.error(`[TeamsTokenWorker] Job ${_optionalChain([job, 'optionalAccess', _ => _.id])} falhou:`, err.message);
 });
 
-teamsTokenWorker.on('error', (err) => {
+exports.teamsTokenWorker.on('error', (err) => {
   console.error('[TeamsTokenWorker] Erro no worker:', err.message);
 });
 
 // Função para obter estatísticas da queue
-export async function getQueueStats() {
-  const waiting = await teamsTokenQueue.getWaiting();
-  const active = await teamsTokenQueue.getActive();
-  const completed = await teamsTokenQueue.getCompleted();
-  const failed = await teamsTokenQueue.getFailed();
+ async function getQueueStats() {
+  const waiting = await exports.teamsTokenQueue.getWaiting();
+  const active = await exports.teamsTokenQueue.getActive();
+  const completed = await exports.teamsTokenQueue.getCompleted();
+  const failed = await exports.teamsTokenQueue.getFailed();
 
   return {
     waiting: waiting.length,
@@ -321,11 +321,11 @@ export async function getQueueStats() {
     failed: failed.length,
     totalJobs: waiting.length + active.length + completed.length + failed.length
   };
-}
+} exports.getQueueStats = getQueueStats;
 
-export default {
-  queue: teamsTokenQueue,
-  worker: teamsTokenWorker,
+exports. default = {
+  queue: exports.teamsTokenQueue,
+  worker: exports.teamsTokenWorker,
   scheduleUserTokenRefresh,
   cancelUserRefreshJobs,
   schedulePeriodicRefresh,

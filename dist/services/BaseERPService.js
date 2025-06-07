@@ -4,9 +4,9 @@ class BaseERPService {
   constructor() {
     // Usar uma instância singleton do axios para evitar múltiplas sessões
     if (!BaseERPService.axiosInstance) {
-      console.log('[BaseERPService] 🔐 Criando nova instância singleton do axios para ERP');
-      console.log('[BaseERPService] 🌐 ERP_API_URL:', process.env.ERP_API_URL);
-      console.log('[BaseERPService] 🔑 ERP_TOKEN (primeiros 10 chars):', _optionalChain([process, 'access', _ => _.env, 'access', _2 => _2.ERP_TOKEN, 'optionalAccess', _3 => _3.substring, 'call', _4 => _4(0, 10)]) + '...');
+      // console.log('[BaseERPService] 🔐 Criando nova instância singleton do axios para ERP');
+      // console.log('[BaseERPService] 🌐 ERP_API_URL:', process.env.ERP_API_URL);
+      // console.log('[BaseERPService] 🔑 ERP_TOKEN (primeiros 10 chars):', process.env.ERP_TOKEN?.substring(0, 10) + '...');
 
       BaseERPService.axiosInstance = _axios2.default.create({
         baseURL: process.env.ERP_API_URL,
@@ -20,11 +20,11 @@ class BaseERPService {
       // Interceptor para logar todas as requisições
       BaseERPService.axiosInstance.interceptors.request.use(
         (config) => {
-          const tokenInUse = config.headers["Riosoft-Token"];
-          console.log(`[BaseERPService] 📤 Fazendo requisição para: ${config.url}`);
-          console.log(`[BaseERPService] 🔑 Token sendo usado (primeiros 10 chars): ${_optionalChain([tokenInUse, 'optionalAccess', _5 => _5.substring, 'call', _6 => _6(0, 10)])}...`);
-          console.log(`[BaseERPService] 📋 Método: ${_optionalChain([config, 'access', _7 => _7.method, 'optionalAccess', _8 => _8.toUpperCase, 'call', _9 => _9()])}`);
-          console.log(`[BaseERPService] 🏷️ Token definido no env: ${_optionalChain([process, 'access', _10 => _10.env, 'access', _11 => _11.ERP_TOKEN, 'optionalAccess', _12 => _12.substring, 'call', _13 => _13(0, 10)])}...`);
+          // const tokenInUse = config.headers["Riosoft-Token"];
+          // console.log(`[BaseERPService] 📤 Fazendo requisição para: ${config.url}`);
+          // console.log(`[BaseERPService] 🔑 Token sendo usado (primeiros 10 chars): ${tokenInUse?.substring(0, 10)}...`);
+          // console.log(`[BaseERPService] 📋 Método: ${config.method?.toUpperCase()}`);
+          // console.log(`[BaseERPService] 🏷️ Token definido no env: ${process.env.ERP_TOKEN?.substring(0, 10)}...`);
 
           // ✅ GARANTIA: Sempre usa o token do .env para evitar conflitos
           config.headers["Riosoft-Token"] = process.env.ERP_TOKEN;
@@ -40,30 +40,30 @@ class BaseERPService {
       // Interceptor para logar respostas
       BaseERPService.axiosInstance.interceptors.response.use(
         (response) => {
-          console.log(`[BaseERPService] ✅ Resposta recebida: ${response.status} - ${response.config.url}`);
+          // console.log(`[BaseERPService] ✅ Resposta recebida: ${response.status} - ${response.config.url}`);
           return response;
         },
         (error) => {
-          const url = _optionalChain([error, 'access', _14 => _14.config, 'optionalAccess', _15 => _15.url]) || 'URL desconhecida';
-          const status = _optionalChain([error, 'access', _16 => _16.response, 'optionalAccess', _17 => _17.status]) || 'Status desconhecido';
+          const url = _optionalChain([error, 'access', _ => _.config, 'optionalAccess', _2 => _2.url]) || 'URL desconhecida';
+          const status = _optionalChain([error, 'access', _3 => _3.response, 'optionalAccess', _4 => _4.status]) || 'Status desconhecido';
           console.error(`[BaseERPService] ❌ Erro na resposta: ${status} - ${url}`);
-          if (_optionalChain([error, 'access', _18 => _18.response, 'optionalAccess', _19 => _19.data, 'optionalAccess', _20 => _20.Message])) {
+          if (_optionalChain([error, 'access', _5 => _5.response, 'optionalAccess', _6 => _6.data, 'optionalAccess', _7 => _7.Message])) {
             console.error(`[BaseERPService] 📝 Mensagem do ERP: ${error.response.data.Message}`);
           }
           return Promise.reject(error);
         }
       );
 
-      console.log('[BaseERPService] ✅ Instância singleton criada com sucesso');
+      // console.log('[BaseERPService] ✅ Instância singleton criada com sucesso');
     } else {
-      console.log('[BaseERPService] ♻️ Reutilizando instância singleton existente do axios');
+      // console.log('[BaseERPService] ♻️ Reutilizando instância singleton existente do axios');
     }
 
     this.axiosInstance = BaseERPService.axiosInstance;
     this.apiUrl = process.env.ERP_API_URL;
     this.token = process.env.ERP_TOKEN;
 
-    console.log(`[BaseERPService] 🔧 Instância configurada com token: ${_optionalChain([this, 'access', _21 => _21.token, 'optionalAccess', _22 => _22.substring, 'call', _23 => _23(0, 10)])}...`);
+    // console.log(`[BaseERPService] 🔧 Instância configurada com token: ${this.token?.substring(0, 10)}...`);
   }
 
   handleError(error) {

@@ -18,6 +18,7 @@
     "teams:setup": "node -r sucrase/register scripts/teams-setup.js",
     "teams:complete": "node -r sucrase/register scripts/teams-complete.js",
     "teams:test": "node -r sucrase/register scripts/teams-test.js",
+    "teams:test-direct": "node -r sucrase/register test-simple.js",
     "teams:status": "node -r sucrase/register scripts/teams-status.js"
   },
   "keywords": [],

@@ -1,6 +1,6 @@
-import axios from 'axios';
-import TeamsToken from '../../../models/TeamsToken.js';
-import { Op } from 'sequelize';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+var _TeamsTokenjs = require('../../../models/TeamsToken.js'); var _TeamsTokenjs2 = _interopRequireDefault(_TeamsTokenjs);
+var _sequelize = require('sequelize');
 
 class TeamsAuthService {
   constructor() {
@@ -60,7 +60,7 @@ class TeamsAuthService {
         grant_type: 'authorization_code'
       };
 
-      const response = await axios.post(`${this.baseUrl}/token`,
+      const response = await _axios2.default.post(`${this.baseUrl}/token`,
         new URLSearchParams(tokenData).toString(),
         {
           headers: {
@@ -82,7 +82,7 @@ class TeamsAuthService {
 
       // Persistir no banco MySQL usando upsert do Sequelize v6
       try {
-        const [instance, created] = await TeamsToken.upsert({
+        const [instance, created] = await _TeamsTokenjs2.default.upsert({
           user_id: userId,
           access_token: response.data.access_token,
           refresh_token: response.data.refresh_token,
@@ -107,7 +107,7 @@ class TeamsAuthService {
 
       // Agendar renovação automática usando BullMQ
       try {
-        const { scheduleUserTokenRefresh } = await import('../queues/teamsTokenRefreshQueue.js');
+        const { scheduleUserTokenRefresh } = await Promise.resolve().then(() => require('../queues/teamsTokenRefreshQueue.js'));
         await scheduleUserTokenRefresh(userId, expiresAt);
       } catch (error) {
         console.warn(`[TeamsAuthService] Erro ao agendar renovação automática: ${error.message}`);
@@ -116,8 +116,8 @@ class TeamsAuthService {
       console.log(`[TeamsAuthService] Tokens obtidos e persistidos no MySQL para usuário ${userId}`);
       return tokens;
     } catch (error) {
-      console.error(`[TeamsAuthService] Erro ao trocar código por tokens: ${error.response?.data?.error_description || error.message}`);
-      throw new Error(`Erro ao obter tokens de acesso: ${error.response?.data?.error_description || error.message}`);
+      console.error(`[TeamsAuthService] Erro ao trocar código por tokens: ${_optionalChain([error, 'access', _ => _.response, 'optionalAccess', _2 => _2.data, 'optionalAccess', _3 => _3.error_description]) || error.message}`);
+      throw new Error(`Erro ao obter tokens de acesso: ${_optionalChain([error, 'access', _4 => _4.response, 'optionalAccess', _5 => _5.data, 'optionalAccess', _6 => _6.error_description]) || error.message}`);
     }
   }
 
@@ -128,7 +128,7 @@ class TeamsAuthService {
       let storedTokens = this.tokenCache.get(userId);
 
       if (!storedTokens) {
-                const tokenRecord = await TeamsToken.findOne({
+                const tokenRecord = await _TeamsTokenjs2.default.findOne({
           where: { user_id: userId, is_active: true }
         });
 
@@ -145,7 +145,7 @@ class TeamsAuthService {
         };
       }
 
-      if (!storedTokens?.refreshToken) {
+      if (!_optionalChain([storedTokens, 'optionalAccess', _7 => _7.refreshToken])) {
         throw new Error('Refresh token não encontrado para o usuário');
       }
 
@@ -167,7 +167,7 @@ class TeamsAuthService {
       console.log(`[TeamsAuthService] Grant type: ${tokenData.grant_type}`);
       console.log(`[TeamsAuthService] Refresh token length: ${storedTokens.refreshToken.length}`);
 
-      const response = await axios.post(`${this.baseUrl}/token`,
+      const response = await _axios2.default.post(`${this.baseUrl}/token`,
         new URLSearchParams(tokenData).toString(),
         {
           headers: {
@@ -188,7 +188,7 @@ class TeamsAuthService {
       };
 
       // Atualizar no banco MySQL
-      await TeamsToken.update({
+      await _TeamsTokenjs2.default.update({
         access_token: response.data.access_token,
         refresh_token: response.data.refresh_token || storedTokens.refreshToken,
         token_type: response.data.token_type,
@@ -203,7 +203,7 @@ class TeamsAuthService {
 
       // Reagendar próxima renovação usando BullMQ
       try {
-        const { scheduleUserTokenRefresh } = await import('../queues/teamsTokenRefreshQueue.js');
+        const { scheduleUserTokenRefresh } = await Promise.resolve().then(() => require('../queues/teamsTokenRefreshQueue.js'));
         await scheduleUserTokenRefresh(userId, expiresAt);
       } catch (error) {
         console.warn(`[TeamsAuthService] Erro ao reagendar renovação automática: ${error.message}`);
@@ -212,8 +212,8 @@ class TeamsAuthService {
       console.log(`[TeamsAuthService] Access token renovado e atualizado no MySQL para usuário ${userId}`);
       return newTokens;
     } catch (error) {
-      console.error(`[TeamsAuthService] Erro ao renovar access token: ${error.response?.data?.error_description || error.message}`);
-      throw new Error(`Erro ao renovar token de acesso: ${error.response?.data?.error_description || error.message}`);
+      console.error(`[TeamsAuthService] Erro ao renovar access token: ${_optionalChain([error, 'access', _8 => _8.response, 'optionalAccess', _9 => _9.data, 'optionalAccess', _10 => _10.error_description]) || error.message}`);
+      throw new Error(`Erro ao renovar token de acesso: ${_optionalChain([error, 'access', _11 => _11.response, 'optionalAccess', _12 => _12.data, 'optionalAccess', _13 => _13.error_description]) || error.message}`);
     }
   }
 
@@ -223,7 +223,7 @@ class TeamsAuthService {
       console.log(`[TeamsAuthService] Buscando token do banco para usuário: ${userId}`);
 
       // Buscar sempre do banco (sem cache)
-      const tokenRecord = await TeamsToken.findOne({
+      const tokenRecord = await _TeamsTokenjs2.default.findOne({
         where: { user_id: userId, is_active: true }
       });
 
@@ -264,12 +264,12 @@ class TeamsAuthService {
       console.log(`[TeamsAuthService] Verificando autenticação no banco para usuário: ${userId}`);
 
       // Verificar sempre no banco (sem cache)
-      const tokenRecord = await TeamsToken.findOne({
+      const tokenRecord = await _TeamsTokenjs2.default.findOne({
         where: {
           user_id: userId,
           is_active: true,
           expires_at: {
-            [Op.gt]: new Date()
+            [_sequelize.Op.gt]: new Date()
           }
         }
       });
@@ -292,7 +292,7 @@ class TeamsAuthService {
   async revokeUserTokens(userId) {
     try {
       // Desativar no banco (soft delete)
-      await TeamsToken.update({
+      await _TeamsTokenjs2.default.update({
         is_active: false
       }, {
         where: { user_id: userId, is_active: true }
@@ -311,7 +311,7 @@ class TeamsAuthService {
     try {
       const accessToken = await this.getValidAccessToken(userId);
 
-      const response = await axios.get('https://graph.microsoft.com/v1.0/me', {
+      const response = await _axios2.default.get('https://graph.microsoft.com/v1.0/me', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json'
@@ -321,8 +321,8 @@ class TeamsAuthService {
       console.log(`[TeamsAuthService] Informações do usuário obtidas: ${response.data.userPrincipalName}`);
       return response.data;
     } catch (error) {
-      console.error(`[TeamsAuthService] Erro ao obter informações do usuário: ${error.response?.data?.error?.message || error.message}`);
-      throw new Error(`Erro ao obter informações do usuário: ${error.response?.data?.error?.message || error.message}`);
+      console.error(`[TeamsAuthService] Erro ao obter informações do usuário: ${_optionalChain([error, 'access', _14 => _14.response, 'optionalAccess', _15 => _15.data, 'optionalAccess', _16 => _16.error, 'optionalAccess', _17 => _17.message]) || error.message}`);
+      throw new Error(`Erro ao obter informações do usuário: ${_optionalChain([error, 'access', _18 => _18.response, 'optionalAccess', _19 => _19.data, 'optionalAccess', _20 => _20.error, 'optionalAccess', _21 => _21.message]) || error.message}`);
     }
   }
 
@@ -337,4 +337,4 @@ class TeamsAuthService {
   }
 }
 
-export default TeamsAuthService;
+exports. default = TeamsAuthService;

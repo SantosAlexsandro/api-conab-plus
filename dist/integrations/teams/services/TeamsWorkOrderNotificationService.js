@@ -1,6 +1,6 @@
-import TeamsService from './TeamsService.js';
-import TeamsAuthService from './TeamsAuthService.js';
-import axios from 'axios';
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _TeamsServicejs = require('./TeamsService.js'); var _TeamsServicejs2 = _interopRequireDefault(_TeamsServicejs);
+var _TeamsAuthServicejs = require('./TeamsAuthService.js'); var _TeamsAuthServicejs2 = _interopRequireDefault(_TeamsAuthServicejs);
+var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
 
 // Serviço especializado para notificações de Work Orders no Teams
 class TeamsWorkOrderNotificationService {
@@ -11,8 +11,8 @@ class TeamsWorkOrderNotificationService {
     // Usuário padrão para envio de notificações
     this.defaultNotificationUser = process.env.TEAMS_NOTIFICATION_USER_ID || 'work_order_bot';
 
-    this.teamsService = TeamsService;
-    this.teamsAuth = new TeamsAuthService();
+    this.teamsService = _TeamsServicejs2.default;
+    this.teamsAuth = new (0, _TeamsAuthServicejs2.default)();
   }
 
   // Envia notificação de nova ordem de serviço criada
@@ -135,7 +135,7 @@ class TeamsWorkOrderNotificationService {
     try {
       const accessToken = await this.teamsAuth.getValidAccessToken(this.defaultNotificationUser);
 
-      const response = await axios.post(
+      const response = await _axios2.default.post(
         `https://graph.microsoft.com/v1.0/chats/${this.targetChatId}/messages`,
         {
           body: {
@@ -160,7 +160,7 @@ class TeamsWorkOrderNotificationService {
       };
 
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || error.message;
+      const errorMessage = _optionalChain([error, 'access', _ => _.response, 'optionalAccess', _2 => _2.data, 'optionalAccess', _3 => _3.error, 'optionalAccess', _4 => _4.message]) || error.message;
       console.error(`[TeamsWorkOrderNotification] ❌ Erro ao enviar para chat específico:`, errorMessage);
       throw new Error(`Teams API Error: ${errorMessage}`);
     }
@@ -336,7 +336,7 @@ ${additionalInfo.message}
 
   // Retorna badge de prioridade formatado
   getPriorityBadge(priority) {
-    switch (priority?.toLowerCase()) {
+    switch (_optionalChain([priority, 'optionalAccess', _5 => _5.toLowerCase, 'call', _6 => _6()])) {
       case 'high':
       case 'alta':
         return '🔴 <strong style="color: #cc0000;">ALTA</strong>';
@@ -421,4 +421,4 @@ ${additionalInfo.message}
 }
 
 const teamsWorkOrderNotificationService = new TeamsWorkOrderNotificationService();
-export default teamsWorkOrderNotificationService;
+exports. default = teamsWorkOrderNotificationService;
