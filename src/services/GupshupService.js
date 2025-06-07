@@ -1,4 +1,3 @@
-
 // GupshupService
 
 import jwt from "jsonwebtoken";
@@ -9,7 +8,7 @@ import { decryptPassword } from "../utils/string/crypto";
 
 class GupshupService {
   constructor() {
-    this.apiUrl = "https://erpteste.conab.com.br:7211";
+    this.apiUrl = process.env.ERP_API_URL;
 
     if (!process.env.JWT_TOKEN_SECRET) {
       throw new Error("JWT_TOKEN_SECRET não está definido nas variáveis de ambiente.");

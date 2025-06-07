@@ -1,7 +1,6 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _jsonwebtoken = require('jsonwebtoken'); var _jsonwebtoken2 = _interopRequireDefault(_jsonwebtoken);
 var _UserSession = require('../models/UserSession'); var _UserSession2 = _interopRequireDefault(_UserSession);
 var _AuthService = require('../services/AuthService'); var _AuthService2 = _interopRequireDefault(_AuthService);
-var _EntityService = require('../services/EntityService'); var _EntityService2 = _interopRequireDefault(_EntityService);
 
 exports. default = async (req, res, next) => {
   try {
@@ -63,9 +62,6 @@ exports. default = async (req, res, next) => {
     req.userName = session.userName;
 
     console.log('✅ [authUser] User data set:', { userId: req.userId, userName: req.userName });
-
-    // Injeta o token ERP dinamicamente no EntityService
-    _EntityService2.default.setToken(req.sessionToken);
 
     next();
   } catch (error) {

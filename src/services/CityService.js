@@ -1,20 +1,9 @@
-import axios from "axios";
+import BaseERPService from './BaseERPService';
 import City from "../models/City";
 
-class CitiesService {
+class CitiesService extends BaseERPService {
   constructor() {
-    this.apiUrl = "https://erpteste.conab.com.br:7211/api/Cidade";
-    this.token =
-      "fwqSxis3uU79zWrAxDMAhvtLCMLlyrjQZ44veS2MoTSppX9k4xFJURiEt+UQwpEqFLV77fhb+35l0hVovHB/am51s0ieQvhGCh7FZ2IEnOpdQAHZlltOxVO19iawFO9r8s/3ynyM4BjsRhSq/gJF8mF1nszLuNMwuxKZ74T7eXlMLjpxjmkmX4SxdIa6PlMXgC/PwPRTisBm1Dz7/1KSVpmgokToGoVV/91pVS8DNAXTSI9eR91xccZkOqyVjzDUlO7sj9vRlz9owJ6JUULmt+utMcnDI/gM9PUyCPUSSFJn0sFLmTbenEQnLQJLNf53dxqE+NmuXlB9GDPbnkPeCAcsfBq2CXnqRvPfKy1zBR8HpTSD120NSS2R6ccQkT6kTya1DIzASi3D6/ZgE69cJyXNcwl1nJhhbbv1znxU22AnX4plGMi3kvbv7Ten+QsEKqNDvvqpYCtbsAdanIAMVkkGyQDscZ92TIIrpZ1KHSM=";
-
-    // Instância configurada do Axios
-    this.axiosInstance = axios.create({
-      baseURL: this.apiUrl,
-      headers: {
-        "Riosoft-Token": this.token,
-        Accept: "application/json, text/plain, */*",
-      },
-    });
+    super();
   }
 
   // Método para buscar todas as cidades
@@ -23,7 +12,7 @@ class CitiesService {
     filter = "( !ISNULL(CodigoMunicipioIBGE) )"
   ) {
     const pageSize = 25000;
-    const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=${page}`;
+    const url = `/api/Cidade/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=${page}`;
 
     try {
       const { data } = await this.axiosInstance.get(url);

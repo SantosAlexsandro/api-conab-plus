@@ -1,27 +1,18 @@
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
-var _https = require('https'); var _https2 = _interopRequireDefault(_https);
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }var _BaseERPService = require('./BaseERPService'); var _BaseERPService2 = _interopRequireDefault(_BaseERPService);
 
-class CategoryService {
+class CategoryService extends _BaseERPService2.default {
   constructor() {
-    //this.apiUrl = process.env.REACT_APP_API_URL;
-    //this.token = process.env.REACT_APP_API_TOKEN;
-    this.apiUrl = 'https://erpteste.conab.com.br:7211/api/Categoria';
-    this.token = 'fwqSxis3uU79zWrAxDMAhvtLCMLlyrjQZ44veS2MoTSppX9k4xFJURiEt+UQwpEqFLV77fhb+35l0hVovHB/am51s0ieQvhGCh7FZ2IEnOpdQAHZlltOxVO19iawFO9r8s/3ynyM4BjsRhSq/gJF8mF1nszLuNMwuxKZ74T7eXlMLjpxjmkmX4SxdIa6PlMXgC/PwPRTisBm1Dz7/1KSVpmgokToGoVV/91pVS8DNAXTSI9eR91xccZkOqyVjzDUlO7sj9vRlz9owJ6JUULmt+utMcnDI/gM9PUyCPUSSFJn0sFLmTbenEQnLQJLNf53dxqE+NmuXlB9GDPbnkPeCAcsfBq2CXnqRvPfKy1zBR8HpTSD120NSS2R6ccQkT6kTya1DIzASi3D6/ZgE69cJyXNcwl1nJhhbbv1znxU22AnX4plGMi3kvbv7Ten+QsEKqNDvvqpYCtbsAdanIAMVkkGyQDscZ92TIIrpZ1KHSM=';
-
-    // Instância configurada do Axios
-    this.axiosInstance = _axios2.default.create({
-      baseURL: this.apiUrl,
-      headers: {
-        'Riosoft-Token': this.token,
-        'Accept': 'application/json, text/plain, */*',
-      }
-    });
+    super();
+    // CategoryService usa um endpoint específico, então sobrescreve a baseURL
+    this.categoryAxiosInstance = this.axiosInstance.create ?
+      this.axiosInstance.create({ baseURL: `${this.apiUrl}/api/Categoria` }) :
+      this.axiosInstance;
   }
 
-  // Método para buscar todas as regiões
+  // Método para buscar todas as categorias
   async getAll(page = 1, filter = '') {
     const pageSize = 50;
-    const url = `/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
+    const url = `/api/Categoria/RetrievePage?filter=${filter}&order&pageSize=${pageSize}&pageIndex=1`;
 
     try {
       const { data, headers } = await this.axiosInstance.get(url);
@@ -34,32 +25,14 @@ class CategoryService {
     }
   }
 
-  // Método para buscar uma região específica por ID
+  // Método para buscar uma categoria específica por ID
   async getById(id) {
     try {
-      const { data } = await this.axiosInstance.get(`/${id}`);
+      const { data } = await this.axiosInstance.get(`/api/Categoria/${id}`);
       return data;
     } catch (error) {
       this.handleError(error);
     }
-  }
-
-  // Método para lidar com erros de forma padronizada
-  handleError(error) {
-    if (error.response) {
-      // Erro de resposta da API
-      console.error('Erro na resposta da API:', error.response.data);
-      console.error('Status:', error.response.status);
-      console.error('Headers:', error.response.headers);
-    } else if (error.request) {
-      // Nenhuma resposta foi recebida
-      console.error('Nenhuma resposta da API foi recebida:', error.request);
-    } else {
-      // Erro ao configurar a requisição
-      console.error('Erro ao configurar a requisição:', error.message);
-    }
-
-    throw new Error('Erro ao processar a requisição.');
   }
 }
 

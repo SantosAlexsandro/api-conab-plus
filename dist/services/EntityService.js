@@ -1,43 +1,11 @@
 "use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }// EntityService.js
 
-var _axios = require('axios'); var _axios2 = _interopRequireDefault(_axios);
+var _BaseERPService = require('./BaseERPService'); var _BaseERPService2 = _interopRequireDefault(_BaseERPService);
 var _moment = require('moment'); var _moment2 = _interopRequireDefault(_moment);
 
-class EntityService {
-  constructor(token) {
-    this.apiUrl = "https://erpteste.conab.com.br:7211";
-
-    // Token padrão do ERP se não for fornecido
-    const defaultToken = "fwqSxis3uU79zWrAxDMAhvtLCMLlyrjQZ44veS2MoTSppX9k4xFJURiEt+UQwpEqFLV77fhb+35l0hVovHB/am51s0ieQvhGCh7FZ2IEnOpdQAHZlltOxVO19iawFO9r8s/3ynyM4BjsRhSq/gJF8mF1nszLuNMwuxKZ74T7eXlMLjpxjmkmX4SxdIa6PlMXgC/PwPRTisBm1Dz7/1KSVpmgokToGoVV/91pVS8DNAXTSI9eR91xccZkOqyVjzDUlO7sj9vRlz9owJ6JUULmt+utMcnDI/gM9PUyCPUSSFJn0sFLmTbenEQnLQJLNf53dxqE+NmuXlB9GDPbnkPeCAcsfBq2CXnqRvPfKy1zBR8HpTSD120NSS2R6ccQkT6kTya1DIzASi3D6/ZgE69cJyXNcwl1nJhhbbv1znxU22AnX4plGMi3kvbv7Ten+QsEKqNDvvqpYCtbsAdanIAMVkkGyQDscZ92TIIrpZ1KHSM=";
-
-    this.axiosInstance = _axios2.default.create({
-      baseURL: this.apiUrl,
-      timeout: 20000, // Timeout de 20 segundos
-      headers: {
-        Accept: "application/json, text/plain, */*",
-      },
-    });
-
-    // Armazena o token localmente no serviço (usa o token fornecido ou o padrão)
-    this.token = token || defaultToken;
-
-    // Configura o interceptor para adicionar o token antes de cada requisição
-    this.axiosInstance.interceptors.request.use(
-      (config) => {
-        if (this.token) {
-          config.headers["Riosoft-Token"] = this.token; // Adiciona o token nos cabeçalhos
-        }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error); // Lida com erros na configuração da requisição
-      }
-    );
-  }
-
-  // Método para atualizar dinamicamente o token
-  setToken(token) {
-    this.token = token;
+class EntityService extends _BaseERPService2.default {
+  constructor() {
+    super();
   }
 
   // Método para criar uma nova entidade

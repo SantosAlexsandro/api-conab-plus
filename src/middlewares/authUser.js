@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import UserSession from "../models/UserSession";
 import AuthService from "../services/AuthService";
-import EntityService from "../services/EntityService";
 
 export default async (req, res, next) => {
   try {
@@ -63,9 +62,6 @@ export default async (req, res, next) => {
     req.userName = session.userName;
 
     console.log('✅ [authUser] User data set:', { userId: req.userId, userName: req.userName });
-
-    // Injeta o token ERP dinamicamente no EntityService
-    EntityService.setToken(req.sessionToken);
 
     next();
   } catch (error) {

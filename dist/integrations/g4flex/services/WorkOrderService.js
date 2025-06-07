@@ -9,11 +9,10 @@ var _ContractService = require('./ContractService'); var _ContractService2 = _in
 var _WorkOrderService = require('../../../integrations/erp/services/WorkOrderService'); var _WorkOrderService2 = _interopRequireDefault(_WorkOrderService);
 var _WorkOrderMobileService = require('../../../integrations/erp/services/WorkOrderMobileService'); var _WorkOrderMobileService2 = _interopRequireDefault(_WorkOrderMobileService);
 var _EmployeeERPService = require('../../../integrations/erp/services/EmployeeERPService'); var _EmployeeERPService2 = _interopRequireDefault(_EmployeeERPService);
-var _BaseERPService3 = require('../../../services/BaseERPService'); var _BaseERPService4 = _interopRequireDefault(_BaseERPService3);
 var _NotificationService = require('../../../services/NotificationService'); var _NotificationService2 = _interopRequireDefault(_NotificationService);
 var _WorkOrderWaitingQueueService = require('../../../services/WorkOrderWaitingQueueService'); var _WorkOrderWaitingQueueService2 = _interopRequireDefault(_WorkOrderWaitingQueueService);
 
-class WorkOrderService extends _BaseERPService4.default {
+class WorkOrderService extends _BaseERPService2.default {
   constructor() {
     super();
     // Constants for date range

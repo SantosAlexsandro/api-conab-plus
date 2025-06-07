@@ -2,17 +2,68 @@ import axios from 'axios';
 
 class BaseERPService {
   constructor() {
-    this.apiUrl = "https://erpteste.conab.com.br:7211";
-    this.token = "fwqSxis3uU79zWrAxDMAhvtLCMLlyrjQZ44veS2MoTSppX9k4xFJURiEt+UQwpEqFLV77fhb+35l0hVovHB/am51s0ieQvhGCh7FZ2IEnOpdQAHZlltOxVO19iawFO9r8s/3ynyM4BjsRhSq/gJF8mF1nszLuNMwuxKZ74T7eXlMLjpxjmkmX4SxdIa6PlMXgC/PwPRTisBm1Dz7/1KSVpmgokToGoVV/91pVS8DNAXTSI9eR91xccZkOqyVjzDUlO7sj9vRlz9owJ6JUULmt+utMcnDI/gM9PUyCPUSSFJn0sFLmTbenEQnLQJLNf53dxqE+NmuXlB9GDPbnkPeCAcsfBq2CXnqRvPfKy1zBR8HpTSD120NSS2R6ccQkT6kTya1DIzASi3D6/ZgE69cJyXNcwl1nJhhbbv1znxU22AnX4plGMi3kvbv7Ten+QsEKqNDvvqpYCtbsAdanIAMVkkGyQDscZ92TIIrpZ1KHSM=";
+    // Usar uma instância singleton do axios para evitar múltiplas sessões
+    if (!BaseERPService.axiosInstance) {
+      // console.log('[BaseERPService] 🔐 Criando nova instância singleton do axios para ERP');
+      // console.log('[BaseERPService] 🌐 ERP_API_URL:', process.env.ERP_API_URL);
+      // console.log('[BaseERPService] 🔑 ERP_TOKEN (primeiros 10 chars):', process.env.ERP_TOKEN?.substring(0, 10) + '...');
 
-    this.axiosInstance = axios.create({
-      baseURL: this.apiUrl,
-      timeout: 20000,
-      headers: {
-        "Riosoft-Token": this.token,
-        Accept: "application/json, text/plain, */*",
-      },
-    });
+      BaseERPService.axiosInstance = axios.create({
+        baseURL: process.env.ERP_API_URL,
+        timeout: 20000,
+        headers: {
+          "Riosoft-Token": process.env.ERP_TOKEN,
+          Accept: "application/json, text/plain, */*",
+        },
+      });
+
+      // Interceptor para logar todas as requisições
+      BaseERPService.axiosInstance.interceptors.request.use(
+        (config) => {
+          // const tokenInUse = config.headers["Riosoft-Token"];
+          // console.log(`[BaseERPService] 📤 Fazendo requisição para: ${config.url}`);
+          // console.log(`[BaseERPService] 🔑 Token sendo usado (primeiros 10 chars): ${tokenInUse?.substring(0, 10)}...`);
+          // console.log(`[BaseERPService] 📋 Método: ${config.method?.toUpperCase()}`);
+          // console.log(`[BaseERPService] 🏷️ Token definido no env: ${process.env.ERP_TOKEN?.substring(0, 10)}...`);
+
+          // ✅ GARANTIA: Sempre usa o token do .env para evitar conflitos
+          config.headers["Riosoft-Token"] = process.env.ERP_TOKEN;
+
+          return config;
+        },
+        (error) => {
+          console.error('[BaseERPService] ❌ Erro na configuração da requisição:', error);
+          return Promise.reject(error);
+        }
+      );
+
+      // Interceptor para logar respostas
+      BaseERPService.axiosInstance.interceptors.response.use(
+        (response) => {
+          // console.log(`[BaseERPService] ✅ Resposta recebida: ${response.status} - ${response.config.url}`);
+          return response;
+        },
+        (error) => {
+          const url = error.config?.url || 'URL desconhecida';
+          const status = error.response?.status || 'Status desconhecido';
+          console.error(`[BaseERPService] ❌ Erro na resposta: ${status} - ${url}`);
+          if (error.response?.data?.Message) {
+            console.error(`[BaseERPService] 📝 Mensagem do ERP: ${error.response.data.Message}`);
+          }
+          return Promise.reject(error);
+        }
+      );
+
+      // console.log('[BaseERPService] ✅ Instância singleton criada com sucesso');
+    } else {
+      // console.log('[BaseERPService] ♻️ Reutilizando instância singleton existente do axios');
+    }
+
+    this.axiosInstance = BaseERPService.axiosInstance;
+    this.apiUrl = process.env.ERP_API_URL;
+    this.token = process.env.ERP_TOKEN;
+
+    // console.log(`[BaseERPService] 🔧 Instância configurada com token: ${this.token?.substring(0, 10)}...`);
   }
 
   handleError(error) {
