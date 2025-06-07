@@ -1,3 +1,8 @@
+import dotenv from 'dotenv';
+
+// IMPORTANTE: Carregar .env ANTES de qualquer import que use variáveis de ambiente
+dotenv.config();
+
 import TeamsUsageExample from './src/integrations/teams/examples/teamsUsageExample.js';
 
 // Script de teste para a integração Teams
