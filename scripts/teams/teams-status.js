@@ -1,4 +1,4 @@
-import setup from '../src/integrations/teams/examples/setupWorkOrderNotifications';
+import setup from '../../src/integrations/teams/examples/setupWorkOrderNotifications.js';
 
 console.log('📊 Verificando status da configuração Teams...\n');
 

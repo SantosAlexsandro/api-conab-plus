@@ -53,22 +53,19 @@ async function processRefreshSingleUser(job) {
   const { userId } = job.data;
 
   try {
-    const isAuthenticated = TeamsAuthService.isUserAuthenticated(userId);
+    // Correção: adicionar await para o método async isUserAuthenticated
+    const isAuthenticated = await TeamsAuthService.isUserAuthenticated(userId);
 
     if (!isAuthenticated) {
-      console.log(`[TeamsTokenWorker] Usuário ${userId} não autenticado`);
+      console.log(`[TeamsTokenWorker] Usuário ${userId} não autenticado ou token expirado`);
       return { success: false, reason: 'not_authenticated' };
     }
 
-    const tokenInfo = TeamsAuthService.tokenCache.get(userId);
-    const fifteenMinutesFromNow = new Date(Date.now() + (15 * 60 * 1000));
-
-    if (tokenInfo.expiresAt > fifteenMinutesFromNow) {
-      return { success: true, reason: 'token_still_valid' };
-    }
+    // Como removemos o cache, vamos buscar diretamente do banco para verificar expiração
+    console.log(`[TeamsTokenWorker] Usuário ${userId} autenticado, iniciando renovação do token`);
 
     const newTokens = await TeamsAuthService.refreshAccessToken(userId);
-    console.log(`[TeamsTokenWorker] Token renovado para usuário ${userId}`);
+    console.log(`[TeamsTokenWorker] Token renovado com sucesso para usuário ${userId}`);
 
     return { success: true, expiresAt: newTokens.expiresAt };
 
@@ -76,7 +73,7 @@ async function processRefreshSingleUser(job) {
     console.error(`[TeamsTokenWorker] Erro ao renovar token para usuário ${userId}:`, error.message);
 
     if (error.message.includes('invalid_grant') || error.message.includes('expired')) {
-      TeamsAuthService.revokeUserTokens(userId);
+      await TeamsAuthService.revokeUserTokens(userId);
       console.log(`[TeamsTokenWorker] Usuário ${userId} removido - refresh token expirado`);
     }
 
@@ -87,13 +84,20 @@ async function processRefreshSingleUser(job) {
 // Processa verificação e renovação de todos os usuários
 async function processRefreshAllUsers(job) {
   try {
-    const tokenCache = TeamsAuthService.tokenCache;
+    // Como removemos o cache, vamos buscar todos os tokens ativos do banco
+    const TeamsToken = (await import('../../models/TeamsToken.js')).default;
+    const activeTokens = await TeamsToken.findAll({
+      where: { is_active: true },
+      attributes: ['user_id', 'expires_at']
+    });
+
     const results = [];
+    const tenMinutesFromNow = new Date(Date.now() + (10 * 60 * 1000));
 
-    for (const [userId, tokenInfo] of tokenCache.entries()) {
-      const tenMinutesFromNow = new Date(Date.now() + (10 * 60 * 1000));
+    for (const token of activeTokens) {
+      const { user_id: userId, expires_at: expiresAt } = token;
 
-      if (tokenInfo.expiresAt <= tenMinutesFromNow) {
+      if (new Date(expiresAt) <= tenMinutesFromNow) {
         await teamsTokenQueue.add('refresh-single-user', {
           type: 'refresh-single-user',
           userId
@@ -116,19 +120,27 @@ async function processRefreshAllUsers(job) {
 // Processa limpeza de tokens expirados
 async function processCleanupExpired(job) {
   try {
-    const tokenCache = TeamsAuthService.tokenCache;
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+    // Como removemos o cache, vamos buscar tokens expirados do banco
+    const TeamsToken = (await import('../../models/TeamsToken.js')).default;
+    const { Op } = await import('sequelize');
+
+    const oneDayAgo = new Date(Date.now() - (24 * 60 * 60 * 1000));
+
+    // Buscar tokens expirados há mais de 1 dia
+    const expiredTokens = await TeamsToken.findAll({
+      where: {
+        is_active: true,
+        expires_at: { [Op.lte]: oneDayAgo }
+      },
+      attributes: ['user_id']
+    });
+
     const expiredUsers = [];
 
-    for (const [userId, tokenInfo] of tokenCache.entries()) {
-      if (tokenInfo.expiresAt <= oneDayAgo) {
-        expiredUsers.push(userId);
-      }
-    }
-
-    for (const userId of expiredUsers) {
-      TeamsAuthService.revokeUserTokens(userId);
+    for (const token of expiredTokens) {
+      const userId = token.user_id;
+      await TeamsAuthService.revokeUserTokens(userId);
+      expiredUsers.push(userId);
     }
 
     console.log(`[TeamsTokenWorker] Limpeza: ${expiredUsers.length} tokens expirados removidos`);

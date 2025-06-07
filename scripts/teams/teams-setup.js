@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 // IMPORTANTE: Carregar .env ANTES de qualquer import que use variáveis de ambiente
 dotenv.config();
 
-import TeamsAuthService from '../src/integrations/teams/services/TeamsAuthService.js';
+import TeamsAuthService from '../../src/integrations/teams/services/TeamsAuthService.js';
 
 console.log('🔧 Configuração Teams - Gerar URL de Autorização\n');
 
